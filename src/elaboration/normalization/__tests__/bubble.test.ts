@@ -11,7 +11,7 @@ import * as Eff from "@yap/utils/effects";
 import * as Evaluation from "../evaluation.v2";
 import * as Stack from "../machine/actions";
 import { handlers } from "../machine/handlers";
-import { Env, Level, Mode, scope, type Handling } from "../effects";
+import { Env, ResidualScope, Mode, scope, type Handling } from "../effects";
 import { mkCtx, runEB, runNF } from "../../inference/__tests__/util";
 
 const ctx = mkCtx();
@@ -32,7 +32,7 @@ const resume = (value: NF.Value, argument: NF.Value) => {
 		});
 	return runNF(ctx, function* () {
 		const [resumed] = yield* Eff.with(
-			[handlers<NF.Scope, EB.Term>(2000), Env.handlers(ctx), Mode.handlers(NF.defaultMode), Level.handlers(ctx.env.length)],
+			[handlers<NF.Scope, EB.Term>(2000), Env.handlers(ctx), Mode.handlers(NF.defaultMode), ResidualScope.handlers(ctx.env.length)],
 			() =>
 				Evaluation.drive(
 					(function* () {

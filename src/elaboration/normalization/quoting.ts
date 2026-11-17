@@ -4,7 +4,7 @@ import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from "./syntax/term";
 import * as R from "@yap/shared/rows";
 import { display } from "./syntax/pretty";
-import { Do, Env, Level, group, result, scope, type Evaluation, type Machine } from "./effects";
+import { Do, group, result, scope, type Evaluation, type Machine } from "./effects";
 import { schedule } from "./evaluation.v2";
 import * as NbE from "./nbe";
 import * as Stack from "./machine/actions";
@@ -42,7 +42,7 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 					return yield* result(EB.Constructors.Var({ type: "DepLabel", name: v.name, index: lvl - v.lvl - 1, annotation: v.annotation }));
 				})
 				.with({ type: "NuLabel" }, function* (v) {
-					const { local } = yield* Env.ask();
+					const { local } = yield* NbE.Env.ask();
 					return yield* result(EB.Constructors.Var({ type: "NuLabel", name: v.name, index: local.length - v.lvl - 1, annotation: v.annotation }));
 				})
 				.with({ type: "Meta" }, function* (v) {
@@ -75,7 +75,7 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 			return yield* quote(lvl, value, unfold);
 		})
 		.with(NF.Patterns.Existential, ({ assumptions, body }) =>
-			Env.local(
+			NbE.Env.local(
 				_ => body.ctx,
 				Do.let("statements", () =>
 					group(
@@ -107,16 +107,8 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		.with({ type: "Abs", binder: { type: "Lambda" } }, function* ({ binder, closure }) {
 			const { variable, icit, annotation } = binder;
 
-			return yield* Do.let("applied", () =>
-				Level.local(
-					_ => lvl + 1,
-					(function* () {
-						yield* Stack.enter(yield* scope());
-						return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
-					})(),
-				),
-			).in(({ applied }) =>
-				Do.let("body", () => Env.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
+			return yield* Do.let("applied", () => NbE.open(binder, closure)).in(({ applied }) =>
+				Do.let("body", () => NbE.Env.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
 					.let("ann", () => quote(lvl, annotation, unfold))
 					.in(({ body, ann }) => result(EB.Constructors.Lambda(variable, icit, body, ann))),
 			);
@@ -124,16 +116,8 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		.with({ type: "Abs", binder: { type: "Pi" } }, function* ({ binder, closure }) {
 			const { variable, icit, annotation } = binder;
 
-			return yield* Do.let("applied", () =>
-				Level.local(
-					_ => lvl + 1,
-					(function* () {
-						yield* Stack.enter(yield* scope());
-						return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
-					})(),
-				),
-			).in(({ applied }) =>
-				Do.let("body", () => Env.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
+			return yield* Do.let("applied", () => NbE.open(binder, closure)).in(({ applied }) =>
+				Do.let("body", () => NbE.Env.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
 					.let("ann", () => quote(lvl, annotation, unfold))
 					.in(({ body, ann }) => result(EB.Constructors.Pi(variable, icit, ann, body))),
 			);
@@ -141,16 +125,8 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		.with({ type: "Abs", binder: { type: "Mu" } }, function* ({ binder, closure }) {
 			const { variable, source, annotation } = binder;
 
-			return yield* Do.let("applied", () =>
-				Level.local(
-					_ => lvl + 1,
-					(function* () {
-						yield* Stack.enter(yield* scope());
-						return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
-					})(),
-				),
-			).in(({ applied }) =>
-				Do.let("body", () => Env.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
+			return yield* Do.let("applied", () => NbE.open(binder, closure)).in(({ applied }) =>
+				Do.let("body", () => NbE.Env.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
 					.let("ann", () => quote(lvl, annotation, unfold))
 					.in(({ body, ann }) => result(EB.Constructors.Mu(variable, source, ann, body))),
 			);
@@ -164,7 +140,7 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 				yield* Stack.enter(yield* scope());
 				return yield* schedule.apply(binder, closure, NF.Constructors.Row(symbolicRow(annotation)));
 			}).in(({ applied }) =>
-				Do.let("body", () => Env.local(_ => closure.ctx, quote(lvl, applied, unfold)))
+				Do.let("body", () => NbE.Env.local(_ => closure.ctx, quote(lvl, applied, unfold)))
 					.let("ann", () => quote(lvl, annotation, unfold))
 					.in(({ body, ann }) => result(EB.Constructors.Sigma(variable, ann, body))),
 			);
@@ -172,16 +148,8 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		.with({ type: "Abs", binder: { type: "SigmaV2" } }, function* ({ binder, closure }) {
 			const { variable, annotation } = binder;
 
-			return yield* Do.let("applied", () =>
-				Level.local(
-					_ => lvl + 1,
-					(function* () {
-						yield* Stack.enter(yield* scope());
-						return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
-					})(),
-				),
-			).in(({ applied }) =>
-				Do.let("body", () => Env.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
+			return yield* Do.let("applied", () => NbE.open(binder, closure)).in(({ applied }) =>
+				Do.let("body", () => NbE.Env.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
 					.let("ann", () => quote(lvl, annotation, unfold))
 					.in(({ body, ann }) => result(EB.Constructors.SigmaV2(variable, ann, body))),
 			);
@@ -190,14 +158,14 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 			/* The frame is opened without field terms, so a `$label` finds nothing to evaluate and quotes back as a reference. */
 			const held = EB.open({ ...binder, scoped: R.Constructors.Empty() }, closure.ctx);
 			const back = (term: EB.Term) =>
-				Env.local(
+				NbE.Env.local(
 					_ => held,
 					Do.let("value", () => NbE.eval(term)).in(({ value }) => quote(lvl, value, unfold)),
 				);
 
 			return yield* Do.let("body", () => back(closure.term))
 				.let("scoped", () => back(EB.Constructors.Row(binder.scoped)))
-				.let("annotation", () => Env.local(_ => held, quote(lvl, binder.annotation, unfold)))
+				.let("annotation", () => NbE.Env.local(_ => held, quote(lvl, binder.annotation, unfold)))
 				.in(function* ({ body, scoped, annotation }) {
 					assert(scoped.type === "Row", "A row reads back as a row");
 					return yield* result(EB.Constructors.Nu({ mode: binder.mode, labels: binder.labels, scoped: scoped.row, annotation }, body));
@@ -220,11 +188,11 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		.otherwise(function* (nf) {
 			throw new Error("Quote: Not implemented yet: " + (yield* display(nf)));
 		});
-	return yield* Level.local(_ => lvl, work);
+	return yield* NbE.local({ residualScope: _ => lvl }, work);
 }
 
 const quoteRow = function* (lvl: number, row: NF.Row, unfold: NF.Unfolding): Evaluation<Machine<EB.Row>> {
-	const { local } = yield* Env.ask();
+	const { local } = yield* NbE.Env.ask();
 	const tail = match(row.tail)
 		.with(P.nullish, () => undefined)
 		.with({ type: "Bound" }, (b): EB.Variable => ({ type: "Bound", index: lvl - b.lvl - 1 }))
@@ -249,7 +217,7 @@ const quoteRow = function* (lvl: number, row: NF.Row, unfold: NF.Unfolding): Eva
 };
 
 export function* closeVal(value: NF.Value): Evaluation<Machine<NF.Closure>> {
-	const ctx = yield* Env.ask();
+	const ctx = yield* NbE.Env.ask();
 
 	return yield* Do.let("term", () => quote(ctx.env.length + 1, value)).in(({ term }) => result({ type: "Closure", ctx, term }));
 }
