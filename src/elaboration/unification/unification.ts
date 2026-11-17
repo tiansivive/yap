@@ -428,7 +428,9 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 			.with(NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, ({ closure }) => inTerm(closure.term))
 			.with(NF.Patterns.App, ({ func, arg }) => check(func) || check(arg))
 			.with(NF.Patterns.Modal, ({ value: inner, modalities }) => check(inner) || check(modalities.liquid))
-			.with(NF.Patterns.Bubble, ({ ann, values, operation: { identity, payload } }) => check(ann) || values.some(check) || check(identity) || check(payload))
+			.with(NF.Patterns.Bubble, ({ ann, values, identity, payload }) => check(ann) || values.some(check) || check(identity) || check(payload))
+			.with(NF.Patterns.Reset, ({ value, handling }) => check(value) || check(handling.identity) || check(handling.handler))
+			.with(NF.Patterns.Existential, ({ annotation, assumptions, body }) => check(annotation) || [...assumptions.values()].some(check) || check(body.value))
 
 			.with(NF.Patterns.Row, ({ row }) =>
 				R.fold(
@@ -474,6 +476,8 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 			)
 			.with({ type: "Proj" }, ({ term }) => inTerm(term))
 			.with({ type: "Inj" }, ({ value, term }) => inTerm(value) || inTerm(term))
+			.with(EB.CtorPatterns.Bubble, ({ ann, values, identity, payload }) => inTerm(ann) || values.some(check) || inTerm(identity) || inTerm(payload))
+			.with({ type: "Reset" }, ({ term, handling }) => inTerm(term) || (!!handling && (inTerm(handling.identity) || inTerm(handling.handler))))
 			.with({ type: "Lit" }, () => false)
 			.with({ type: "Modal" }, ({ term }) => inTerm(term))
 			.otherwise(() => false);

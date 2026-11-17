@@ -356,13 +356,31 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 		.with({ type: "Neutral" }, function* ({ kind, value }) {
 			return NF.Constructors.Neutral(kind, yield* instantiate(value));
 		})
-		.with({ type: "Bubble" }, function* ({ meta, ann, values, operation: { identity, payload }, pending }) {
+		.with(NF.Patterns.Bubble, function* ({ meta, ann, values, identity, payload }) {
 			return NF.Constructors.Bubble(
 				meta,
 				yield* instantiate(ann),
 				yield* M.traverse(values, instantiate),
-				{ type: "Suspend", identity: yield* instantiate(identity), payload: yield* instantiate(payload) },
-				pending,
+				yield* instantiate(identity),
+				yield* instantiate(payload),
+			);
+		})
+		.with(NF.Patterns.Reset, function* ({ value, handling }) {
+			return NF.Constructors.Reset(yield* instantiate(value), {
+				identity: yield* instantiate(handling.identity),
+				handler: yield* instantiate(handling.handler),
+			});
+		})
+		.with(NF.Patterns.Existential, function* ({ variable, annotation, assumptions, body }) {
+			return NF.Constructors.Exists(
+				variable,
+				yield* instantiate(annotation),
+				{ ctx: body.ctx, value: yield* instantiate(body.value) },
+				new Map(
+					yield* M.traverse([...assumptions], function* ([key, value]) {
+						return [key, yield* instantiate(value)] as const;
+					}),
+				),
 			);
 		})
 		.with(NF.Patterns.Glued, function* ({ folded, unfolded }) {
@@ -418,14 +436,8 @@ export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
 			),
 		)
 		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(kind, trimClosureEnvs(value)))
-		.with({ type: "Bubble" }, ({ meta, ann, values, operation, pending }) =>
-			NF.Constructors.Bubble(
-				meta,
-				trimClosureEnvs(ann),
-				values.map(trimClosureEnvs),
-				{ type: "Suspend", identity: trimClosureEnvs(operation.identity), payload: trimClosureEnvs(operation.payload) },
-				pending,
-			),
+		.with(NF.Patterns.Bubble, ({ meta, ann, values, identity, payload }) =>
+			NF.Constructors.Bubble(meta, trimClosureEnvs(ann), values.map(trimClosureEnvs), trimClosureEnvs(identity), trimClosureEnvs(payload)),
 		)
 		.with(NF.Patterns.Glued, ({ folded, unfolded }) => NF.Constructors.Glued(trimClosureEnvs(folded), trimClosureEnvs(unfolded)))
 		.with(NF.Patterns.Modal, ({ value, modalities }) =>

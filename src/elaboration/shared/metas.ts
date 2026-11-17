@@ -194,7 +194,9 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 				),
 			)
 			.with({ type: "Neutral" }, ({ value }) => nf(value))
-			.with({ type: "Bubble" }, ({ ann, values, operation: { identity, payload } }) => [...nf(ann), ...values.flatMap(nf), ...nf(identity), ...nf(payload)])
+			.with(NF.Patterns.Bubble, ({ ann, values, identity, payload }) => [...nf(ann), ...values.flatMap(nf), ...nf(identity), ...nf(payload)])
+			.with(NF.Patterns.Reset, ({ value, handling }) => [...nf(value), ...nf(handling.identity), ...nf(handling.handler)])
+			.with(NF.Patterns.Existential, ({ annotation, assumptions, body }) => [...nf(annotation), ...[...assumptions.values()].flatMap(nf), ...nf(body.value)])
 			/* Both faces: quotation emits the folded one, so a meta only it mentions still has to be found. */
 			.with(NF.Patterns.Glued, ({ folded, unfolded }) => [...nf(folded), ...nf(unfolded)])
 			.with(NF.Patterns.Lambda, ({ closure }) => eb(closure.term))
@@ -260,9 +262,8 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) => [...eb(scrutinee), ...alternatives.flatMap(alt => eb(alt.term))])
 			.with({ type: "Block" }, ({ return: ret, statements }) => [...eb(ret), ...statements.flatMap(s => eb(s.value))])
 			.with({ type: "Modal" }, ({ term }) => eb(term))
-			.with({ type: "Suspend" }, ({ identity, payload, annotation }) => [...eb(identity), ...eb(payload), ...eb(annotation)])
 			.with({ type: "Shift" }, ({ body }) => eb(body))
-			.with({ type: "Bubble" }, ({ ann, values, shift }) => [...nf(ann), ...values.flatMap(nf), ...eb(shift)])
+			.with(EB.CtorPatterns.Bubble, ({ ann, values, identity, payload }) => [...eb(ann), ...values.flatMap(nf), ...eb(identity), ...eb(payload)])
 			.with({ type: "Reset" }, ({ term, handling }) => [...eb(term), ...(handling ? [...eb(handling.identity), ...eb(handling.handler)] : [])])
 			.otherwise(() => {
 				throw new Error("metas: Not implemented yet");

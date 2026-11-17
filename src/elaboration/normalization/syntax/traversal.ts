@@ -35,13 +35,27 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 			),
 		)
 		.with({ type: "Neutral" }, ({ kind, value }) => Constructors.Neutral(kind, traverse(value, onVar, onTerm)))
-		.with({ type: "Bubble" }, ({ meta, ann, values, operation, pending }) =>
+		.with(Patterns.Bubble, ({ meta, ann, values, identity, payload }) =>
 			Constructors.Bubble(
 				meta,
 				traverse(ann, onVar, onTerm),
 				values.map(value => traverse(value, onVar, onTerm)),
-				{ type: "Suspend", identity: traverse(operation.identity, onVar, onTerm), payload: traverse(operation.payload, onVar, onTerm) },
-				pending,
+				traverse(identity, onVar, onTerm),
+				traverse(payload, onVar, onTerm),
+			),
+		)
+		.with(Patterns.Reset, ({ value, handling }) =>
+			Constructors.Reset(traverse(value, onVar, onTerm), {
+				identity: traverse(handling.identity, onVar, onTerm),
+				handler: traverse(handling.handler, onVar, onTerm),
+			}),
+		)
+		.with(Patterns.Existential, ({ variable, annotation, assumptions, body }) =>
+			Constructors.Exists(
+				variable,
+				traverse(annotation, onVar, onTerm),
+				{ ctx: body.ctx, value: traverse(body.value, onVar, onTerm) },
+				new Map([...assumptions].map(([key, value]) => [key, traverse(value, onVar, onTerm)])),
 			),
 		)
 		.with(Patterns.Glued, ({ folded, unfolded }) => Constructors.Glued(traverse(folded, onVar, onTerm), traverse(unfolded, onVar, onTerm)))
