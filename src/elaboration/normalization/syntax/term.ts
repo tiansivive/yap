@@ -8,6 +8,7 @@ import { match, P } from "ts-pattern";
 import { Types } from "@yap/utils";
 
 import * as Modal from "@yap/verification/modalities/shared";
+import type { Handling } from "../effects";
 
 export const nf_tag: unique symbol = Symbol("NF");
 
@@ -23,6 +24,7 @@ type Constructor =
 	| { type: "Abs"; binder: Binder; closure: Closure }
 	| { type: "Neutral"; kind: Neutral; value: Value }
 	| { type: "Bubble"; meta: number; ann: Value; values: Value[]; identity: Value; payload: Value }
+	| { type: "Reset"; value: Value; handling: Handling }
 	| { type: "Modal"; value: Value; modalities: Modalities }
 	| { type: "External"; name: string; arity: number; compute: (...args: Value[]) => Value; args: Value[] }
 	/**
@@ -166,6 +168,7 @@ export const Constructors = {
 		}),
 	Bubble: (meta: number, ann: Value, values: Value[], identity: Value, payload: Value): Extract<Value, { type: "Bubble" }> =>
 		mk({ type: "Bubble", meta, ann, values, identity, payload }),
+	Reset: (value: Value, handling: Handling): Value => mk({ type: "Reset", value, handling }),
 	App: (func: Value, arg: Value, icit: Implicitness) =>
 		mk({
 			type: "App" as const,
@@ -255,6 +258,7 @@ const TaggedRow = (row: Row): row is Row => !!tagged(row);
 export const Patterns = {
 	Existential: { type: "Existential" } as const,
 	Bubble: { type: "Bubble" } as const,
+	Reset: { type: "Reset" } as const,
 	Var: { type: "Var" } as const,
 	Rigid: { type: "Var", variable: { type: "Bound" } } as const,
 	Flex: { type: "Var", variable: { type: "Meta" } } as const,
