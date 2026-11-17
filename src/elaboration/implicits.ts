@@ -179,14 +179,13 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 				},
 			);
 		})
-		.with(EB.CtorPatterns.Bubble, function* ({ meta, ann, values, shift }) {
-			return EB.Constructors.Bubble(meta, ann, values, yield* instantiate(shift, resolutions));
-		})
-		.with({ type: "Suspend" }, function* ({ identity, payload, annotation }) {
-			return EB.Constructors.Suspend(
+		.with(EB.CtorPatterns.Bubble, function* ({ meta, ann, values, identity, payload }) {
+			return EB.Constructors.Bubble(
+				meta,
+				yield* instantiate(ann, resolutions),
+				yield* M.traverse(values, NF.instantiate),
 				yield* instantiate(identity, resolutions),
 				yield* instantiate(payload, resolutions),
-				yield* instantiate(annotation, resolutions),
 			);
 		})
 		.with({ type: "Modal" }, function* ({ term, modalities }) {
