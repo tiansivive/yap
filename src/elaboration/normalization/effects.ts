@@ -2,7 +2,6 @@ import * as Eff from "@yap/utils/effects";
 
 import type { Value } from "./syntax/term";
 import type * as EB from "@yap/elaboration";
-import * as M from "@yap/elaboration/shared/effects";
 import type * as Metas from "@yap/elaboration/shared/metas";
 import type * as Stack from "./machine/actions";
 import type * as Frames from "./machine/frames";
@@ -18,14 +17,15 @@ export type EvalMode = {
 export const defaultMode: EvalMode = { noInlineBindings: false, noReduceEliminations: false };
 
 export const Mode = Eff.reader<EvalMode, "EvalMode">("EvalMode");
+export const Env = Eff.reader<EB.Context>();
+export const Level = Eff.reader<number, "EvalLevel">("EvalLevel");
 
-/** What NbE needs handed back with a frame: the environment a term reads under, and the mode it reads in. */
-export type Scope = { env: EB.Context; mode: EvalMode };
+/** Saved with scheduled work so closure lookup and retained binder scope survive independently. */
+export type Scope = { env: EB.Context; mode: EvalMode; level: number };
 
-/** Everything the machine does not provide: the metacontext and the two readers. */
-type Ambient = Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typeof M.reader> | Eff.Actions<typeof Mode>;
+type Ambient = Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typeof Env> | Eff.Actions<typeof Mode> | Eff.Actions<typeof Level>;
 
-/** NbE is the machine instantiated at a scope of env and mode, terms as control, and values as results. */
+/** NbE instantiates the machine with its scope, Core terms and operation handlers. */
 export type Evaluation<A> = Eff.Eff<Stack.Actions<Scope, EB.Term, Handling> | Ambient, A>;
 
 export type Handling = { identity: { name: string; args: Value[] }; handler: Value };
@@ -37,7 +37,7 @@ export type StackFrame = Frames.StackFrame<Scope, EB.Term, Handling>;
 export type Captured = Frames.Captured<Scope, EB.Term, Handling>;
 
 export const scope = function* (): Eff.Eff<Ambient, Scope> {
-	return { env: yield* M.reader.ask(), mode: yield* Mode.ask() };
+	return { env: yield* Env.ask(), mode: yield* Mode.ask(), level: yield* Level.ask() };
 };
 
 export const { result, step, group, Do } = notation<Scope, EB.Term, Ambient, Handling>(scope);

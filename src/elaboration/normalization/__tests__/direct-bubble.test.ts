@@ -120,11 +120,20 @@ describe("direct Bubble representation", () => {
 		const value = evaluate(app(atom("Box"), operation));
 
 		expect(value).toMatchObject({
-			type: "App",
-			func: { type: "Lit", value: { type: "Atom", value: "Box" } },
-			arg: { type: "Neutral", kind: "Blocked", value: { type: "Bubble", meta: 7 } },
+			type: "Existential",
+			body: {
+				value: {
+					type: "App",
+					func: { type: "Lit", value: { type: "Atom", value: "Box" } },
+					arg: { type: "Neutral", kind: "Symbolic", value: { type: "Var", variable: { type: "Bound", lvl: 0 } } },
+				},
+			},
 		});
-		expect(quote(value)).toMatchObject({ type: "App", arg: { type: "Bubble", meta: 7 } });
+		expect(quote(value)).toMatchObject({
+			type: "Block",
+			statements: [{ type: "Let", value: { type: "Bubble", meta: 7 } }],
+			return: { type: "App", arg: { type: "Var", variable: { type: "Bound", index: 0 } } },
+		});
 	});
 
 	it("displays the operation in Core and NF", () => {

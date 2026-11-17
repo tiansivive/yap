@@ -1,6 +1,6 @@
 import type * as EB from "@yap/elaboration";
 
-import { scope, type Evaluation, type Machine } from "./effects";
+import { Level, scope, type Evaluation, type Machine } from "./effects";
 import { schedule } from "./evaluation.v2";
 import * as Stack from "./machine/actions";
 import type { Unfolding, Value } from "./syntax/term";
@@ -21,6 +21,11 @@ export { evaluate as eval };
  * The caller provides a result receiver through `drive` or `Do.let` first.
  */
 export function* quote(lvl: number, value: Value, unfold?: Unfolding): Evaluation<Machine<EB.Term>> {
-	yield* Stack.enter(yield* scope());
-	return yield* schedule.quote(lvl, value, unfold);
+	return yield* Level.local(
+		_ => lvl,
+		(function* () {
+			yield* Stack.enter(yield* scope());
+			return yield* schedule.quote(lvl, value, unfold);
+		})(),
+	);
 }

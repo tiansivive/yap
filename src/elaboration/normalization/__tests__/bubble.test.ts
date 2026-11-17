@@ -11,7 +11,7 @@ import * as Eff from "@yap/utils/effects";
 import * as Evaluation from "../evaluation.v2";
 import * as Stack from "../machine/actions";
 import { handlers } from "../machine/handlers";
-import { Mode, scope, type Handling } from "../effects";
+import { Env, Level, Mode, scope, type Handling } from "../effects";
 import { mkCtx, runEB, runNF } from "../../inference/__tests__/util";
 
 const ctx = mkCtx();
@@ -31,14 +31,16 @@ const resume = (value: NF.Value, argument: NF.Value) => {
 			throw new Error("Expected a Bubble with saved work");
 		});
 	return runNF(ctx, function* () {
-		const [resumed] = yield* Eff.with([handlers<NF.Scope, EB.Term>(2000), Mode.handlers(NF.defaultMode)], () =>
-			Evaluation.drive(
-				(function* () {
-					yield* Stack.enter(yield* scope());
-					return yield* Stack.resume<NF.Value, NF.Scope, EB.Term, Handling>(pending, argument);
-				})(),
-				steps => `Evaluation exceeded ${steps} steps`,
-			),
+		const [resumed] = yield* Eff.with(
+			[handlers<NF.Scope, EB.Term>(2000), Env.handlers(ctx), Mode.handlers(NF.defaultMode), Level.handlers(ctx.env.length)],
+			() =>
+				Evaluation.drive(
+					(function* () {
+						yield* Stack.enter(yield* scope());
+						return yield* Stack.resume<NF.Value, NF.Scope, EB.Term, Handling>(pending, argument);
+					})(),
+					steps => `Evaluation exceeded ${steps} steps`,
+				),
 		);
 		return resumed;
 	});

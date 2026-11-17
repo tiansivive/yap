@@ -14,7 +14,7 @@ import * as Quoting from "./quoting";
 import * as NbE from "./nbe";
 import * as Recursion from "./recursion";
 import { handlers } from "./machine/handlers";
-import { Mode, defaultMode, type EvalMode, type Evaluation } from "./effects";
+import { Env, Level, Mode, defaultMode, type EvalMode, type Evaluation } from "./effects";
 import type { Closure, Unfolding, Value } from "./syntax/term";
 import { Patterns } from "./syntax/term";
 
@@ -31,7 +31,8 @@ import { Patterns } from "./syntax/term";
 
 /** Runs an internal-layer program on a fresh machine, under its own fuel cap. */
 function* fresh<A>(program: () => Evaluation<A>, mode: EvalMode = defaultMode, maxSteps = options.maxSteps) {
-	const [value] = yield* Eff.with([handlers(maxSteps), Mode.handlers(mode)], program);
+	const ctx = yield* M.reader.ask();
+	const [value] = yield* Eff.with([handlers(maxSteps), Env.handlers(ctx), Mode.handlers(mode), Level.handlers(ctx.env.length)], program);
 
 	return value;
 }
