@@ -164,7 +164,10 @@ const variable = (v: EB.Variable, tid: number, st: State): [NodeId, State] =>
 				/* A lowering boundary: quote the solution under a blank scope and a registry built from the zonker. */
 				const blank: EB.Context = { env: [], implicits: [], labels: {}, sigma: {}, record: {}, local: [], imports: {}, ffi: {}, trace: [] };
 				const registry: Metas.Registry = Object.fromEntries(
-					Object.entries(st.zonker ?? {}).map(([id, solution]) => [id, { meta: { type: "Meta", val: Number(id), lvl: 0 }, annotation: solution, solution }]),
+					Object.entries(st.zonker ?? {}).map(([id, solution]) => [
+						id,
+						{ kind: "Elaboration", meta: { type: "Meta", val: Number(id), lvl: 0 }, annotation: solution, solution },
+					]),
 				);
 				const term = Eff.run(() => NF.quote(lvl, zonked), [M.reader.handlers(blank), Metas.registry.handlers(registry)])[0];
 

@@ -16,7 +16,7 @@ describe("Normalization: force() and apply()", () => {
 		const flex = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 		// solve it to a concrete literal in the registry
 		const registry = Metas.solve(
-			Metas.register(Metas.empty, { meta: { type: "Meta", val: 1, lvl: 0 }, annotation: NF.Type }),
+			Metas.register(Metas.empty, { kind: "Elaboration", meta: { type: "Meta", val: 1, lvl: 0 }, annotation: NF.Type }),
 			1,
 			NF.Constructors.Lit(Lit.Num(1)),
 		);
@@ -159,7 +159,7 @@ describe("Normalization: force() and apply()", () => {
 		const partial = runNF(ctx, () => NF.reduce(flex, first, "Explicit"));
 		const application = runNF(ctx, () => NF.reduce(partial, second, "Explicit"));
 		const chooseFirst = NF.Constructors.External("chooseFirst", 2, value => value, []);
-		const registry = Metas.solve(Metas.register(Metas.empty, { meta, annotation: NF.Type }), meta.val, chooseFirst);
+		const registry = Metas.solve(Metas.register(Metas.empty, { kind: "Elaboration", meta, annotation: NF.Type }), meta.val, chooseFirst);
 
 		expect(runNF(ctx, () => NF.force(application), registry)).toBe(first);
 	});
@@ -196,7 +196,7 @@ describe("Normalization: force() and apply()", () => {
 		const ctx = mkCtx();
 		const meta = { type: "Meta", val: 7, lvl: 0 } as const;
 		const structure = NF.Constructors.Struct(NF.Constructors.Extension("x", NF.Constructors.Flex(meta), R.Constructors.Empty()));
-		const registry = Metas.solve(Metas.register(Metas.empty, { meta, annotation: NF.Type }), meta.val, NF.Constructors.Lit(Lit.Num(42)));
+		const registry = Metas.solve(Metas.register(Metas.empty, { kind: "Elaboration", meta, annotation: NF.Type }), meta.val, NF.Constructors.Lit(Lit.Num(42)));
 
 		expect(runNF(ctx, () => NF.force(structure), registry)).toBe(structure);
 	});
@@ -223,7 +223,7 @@ describe("Normalization: force() and apply()", () => {
 		const ctx = mkCtx();
 		const [outer, inner] = [{ type: "Meta", val: 10, lvl: 0 } as const, { type: "Meta", val: 11, lvl: 0 } as const];
 		const glued = NF.Constructors.Glued(NF.Constructors.Var({ type: "Free", name: "alias" }), NF.Constructors.Flex(inner));
-		const registered = [outer, inner].reduce((registry, meta) => Metas.register(registry, { meta, annotation: NF.Type }), Metas.empty);
+		const registered = [outer, inner].reduce((registry, meta) => Metas.register(registry, { kind: "Elaboration", meta, annotation: NF.Type }), Metas.empty);
 		const registry = Metas.solve(Metas.solve(registered, outer.val, glued), inner.val, NF.Constructors.Lit(Lit.Num(3)));
 
 		expect(runNF(ctx, () => NF.force(NF.Constructors.Flex(outer)), registry)).toBe(glued);
@@ -259,7 +259,7 @@ describe("Normalization: force() and apply()", () => {
 
 		expect(stuck).toMatchObject({ type: "Neutral", kind: "Blocked", value: { type: "Match", scrutinee: { kind: "Symbolic" } } });
 
-		const registry = Metas.solve(Metas.register(Metas.empty, { meta, annotation: NF.Type }), meta.val, NF.Constructors.Lit(Lit.Num(3)));
+		const registry = Metas.solve(Metas.register(Metas.empty, { kind: "Elaboration", meta, annotation: NF.Type }), meta.val, NF.Constructors.Lit(Lit.Num(3)));
 		expect(runNF(ctx, () => NF.force(stuck), registry)).toMatchObject({ type: "Lit", value: Lit.Num(2) });
 	});
 });

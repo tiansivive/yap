@@ -87,7 +87,7 @@ export const generalize = function* (ty: NF.Value, tm: EB.Term, resolutions: EB.
 
 	// Filter out metas from outer scopes - only generalize metas created in the current scope
 	// A meta's lvl indicates the context depth when it was created
-	const ms = allMetas.filter(m => m.lvl >= ctx.env.length);
+	const ms = allMetas.filter(m => m.lvl >= ctx.env.length && Metas.entry(registry, m.val).kind === "Elaboration");
 
 	if (ms.length === 0) {
 		return [ty, false];
@@ -134,7 +134,7 @@ export const generalize = function* (ty: NF.Value, tm: EB.Term, resolutions: EB.
 	 */
 	const generalizedIds = new Set(ms.map(m => m.val));
 	const containers = Object.values(registry).filter(
-		entry => entry.solution && entry.meta.lvl < ctx.env.length && nf(entry.solution).some(m => generalizedIds.has(m.val)),
+		entry => entry.kind === "Elaboration" && entry.solution && entry.meta.lvl < ctx.env.length && nf(entry.solution).some(m => generalizedIds.has(m.val)),
 	);
 	yield* Eff.traverse(containers, function* (container): Generalization<void> {
 		const snapshot = container.solution;
@@ -178,7 +178,7 @@ export const abstract = function* (ty: NF.Value, value: NF.Value, resolutions: E
 	const { nf } = yield* Metas.collectors();
 	const seed = fp.uniqBy((m: Meta) => m.val, [...nf(ty), ...nf(value)]);
 	const allMetas = (yield* Metas.Annotations.closeOver(seed)).filter(m => !resolutions[m.val]);
-	const ms = allMetas.filter(m => m.lvl >= ctx.env.length);
+	const ms = allMetas.filter(m => m.lvl >= ctx.env.length && Metas.entry(registry, m.val).kind === "Elaboration");
 
 	if (ms.length === 0) {
 		return { term: yield* NF.quote(ctx.env.length, value), type: ty };
@@ -233,7 +233,7 @@ export const abstract = function* (ty: NF.Value, value: NF.Value, resolutions: E
 	/* Rewiring: same first-order move as generalize — see the comment there. */
 	const generalizedIds = new Set(ms.map(m => m.val));
 	const containers = Object.values(registry).filter(
-		entry => entry.solution && entry.meta.lvl < ctx.env.length && nf(entry.solution).some(m => generalizedIds.has(m.val)),
+		entry => entry.kind === "Elaboration" && entry.solution && entry.meta.lvl < ctx.env.length && nf(entry.solution).some(m => generalizedIds.has(m.val)),
 	);
 	yield* Eff.traverse(containers, function* (container): Abstraction<void> {
 		const snapshot = container.solution;
@@ -287,7 +287,7 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 
 			// Don't instantiate metas from outer scopes - they should remain unsolved
 			// and will be handled at their original scope level
-			if (v.variable.lvl < ctx.env.length) {
+			if (v.variable.lvl < ctx.env.length || Metas.entry(registry, v.variable.val).kind !== "Elaboration") {
 				return v;
 			}
 

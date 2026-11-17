@@ -12,12 +12,11 @@ import * as Eff from "@yap/utils/effects";
 import * as Sub from "../unification/substitution";
 import * as M from "./effects";
 
-/**
- * The authoritative metacontext.  A meta's syntax, annotation, and eventual
- * semantic solution move together so consumers cannot accidentally observe
- * different versions of those three facts.
- */
+export type Kind = "Elaboration" | "Predicate" | "State";
+
+/** A meta's kind, syntax, annotation and semantic solution share one authoritative entry. */
 export type Entry = {
+	kind: Kind;
 	meta: EB.Meta;
 	annotation: NF.Value;
 	solution?: NF.Value;
@@ -59,7 +58,7 @@ export const solutions = (metas: Registry): Sub.Subst =>
  * constraint that reads `Num ~~ Num` after the fact says nothing.
  */
 export const unsolved = (metas: Registry): Registry =>
-	Object.fromEntries(Object.entries(metas).map(([id, { meta, annotation }]) => [id, { meta, annotation }]));
+	Object.fromEntries(Object.entries(metas).map(([id, { kind, meta, annotation }]) => [id, { kind, meta, annotation }]));
 
 export const withSolutions = (metas: Registry, subst: Sub.Subst): Registry =>
 	Object.entries(subst).reduce((entries, [id, value]) => solve(entries, Number(id), value), metas);
@@ -144,11 +143,11 @@ export type Effect<A> = Eff.Eff<Eff.Actions<typeof registry>, A>;
 /** Minting: a fresh id and its registration, nothing else. */
 export type Minting<A> = Eff.Eff<Eff.Actions<typeof M.supply> | Eff.Only<typeof registry, "Registry.register">, A>;
 
-export const fresh = function* (lvl: number, annotation: NF.Value): Minting<EB.Meta> {
+export const fresh = function* (lvl: number, annotation: NF.Value, kind: Kind = "Elaboration"): Minting<EB.Meta> {
 	const id = yield* M.supply.fresh("meta");
 	const meta: EB.Meta = { type: "Meta", val: id, lvl };
 
-	yield* registry.register({ meta, annotation });
+	yield* registry.register({ kind, meta, annotation });
 
 	return meta;
 };
