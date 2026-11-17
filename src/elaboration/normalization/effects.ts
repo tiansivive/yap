@@ -18,10 +18,13 @@ export const defaultMode: EvalMode = { noInlineBindings: false, noReduceEliminat
 
 export const Mode = Eff.reader<EvalMode, "EvalMode">("EvalMode");
 export const Env = Eff.reader<EB.Context>();
-// We package blocked arguments as existentials to preserve their computations.
-// Each package adds a result binder. A closure can restore an environment captured
-// before that binder existed, so we count the surrounding binders separately
-// to assign rigid levels that quote back to the correct variables.
+
+/**
+ * We package blocked arguments as existentials to preserve their computations.  
+ * Each package adds a result binder but a closure can restore an environment captured
+ * before that binder existed. We count the surrounding binders separately in order to
+ * assign rigid levels that quote back to the correct variables.
+ **/
 export const ResidualScope = Eff.reader<number, "ResidualScope">("ResidualScope");
 
 /** Saved with scheduled work so closure lookup and retained binder scope survive independently. */
