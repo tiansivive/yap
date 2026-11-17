@@ -13,8 +13,22 @@ import assert from "assert";
 /** Zonking resolves metas through the registry under the current scope, nothing else. */
 export type Zonking<A> = Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Actions<typeof Metas.registry>, A>;
 
+export function* predicates(node: EB.AST): M.Elaboration<EB.AST> {
+	const [term, type, usages] = node;
+	const ctx = yield* M.reader.ask();
+	return yield* match(yield* NF.view(type))
+		.with(NF.View.Sealed(NF.Patterns.Phi), function* ({ value: { binder, closure } }) {
+			const meta = yield* EB.freshMeta(ctx.env.length, binder.annotation, "Predicate");
+			const argument = EB.Constructors.Var(meta);
+			const body = yield* NF.apply(binder, closure, yield* NF.normalize(argument));
+			return yield* predicates([EB.Constructors.App("Phi", term, argument), body, usages]);
+		})
+		.otherwise(() => M.of(node));
+}
+
 export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
-	const [term, ty, us] = node;
+	const instantiated = yield* predicates(node);
+	const [term, ty, us] = instantiated;
 	const ctx = yield* M.reader.ask();
 
 	const r = match(yield* NF.view(ty))
@@ -32,7 +46,7 @@ export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
 				return yield* insert([tm, bodyNF, us]);
 			})(),
 		)
-		.otherwise(() => M.of<EB.AST>(node));
+		.otherwise(() => M.of<EB.AST>(instantiated));
 
 	return yield* r;
 }
@@ -119,6 +133,11 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 			const scoped = yield* M.reader.local(_ => within, instantiateRow(binding.scoped));
 			const annotation = yield* M.reader.local(_ => within, instantiate(binding.annotation, resolutions));
 			return EB.Constructors.Nu({ ...binding, scoped, annotation }, yield* M.reader.local(_ => within, instantiate(body, resolutions)));
+		})
+		.with(EB.CtorPatterns.Psi, function* ({ binding, body }) {
+			const requirement = yield* instantiate(binding.requirement, resolutions);
+			const extended = EB.bind(ctx, binding, NF.State);
+			return EB.Constructors.Psi(binding.variable, requirement, yield* M.reader.local(_ => extended, instantiate(body, resolutions)));
 		})
 		.with({ type: "Abs" }, function* (abs) {
 			const annotation = yield* instantiate(abs.binding.annotation, resolutions);

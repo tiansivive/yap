@@ -27,7 +27,7 @@ import { Option } from "fp-ts/lib/Option";
 import * as O from "fp-ts/lib/Option";
 import * as A from "fp-ts/lib/Array";
 import * as Modal from "@yap/verification/modalities/shared";
-import { Implicitness } from "@yap/shared/implicitness";
+import { Elimination } from "@yap/shared/implicitness";
 import { update } from "@yap/utils";
 import assert from "assert";
 
@@ -251,6 +251,16 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				result(NF.Constructors.Pi(binding.variable, binding.icit, ann, NF.Constructors.Closure(ctx, body))),
 			);
 		})
+		.with(EB.CtorPatterns.Psi, ({ binding, body }) =>
+			Do.let("requirement", () => schedule.eval(binding.requirement)).in(({ requirement }) =>
+				result(NF.Constructors.Psi(binding.variable, requirement, NF.Constructors.Closure(ctx, body))),
+			),
+		)
+		.with(EB.CtorPatterns.Phi, ({ binding, body }) =>
+			Do.let("annotation", () => schedule.eval(binding.annotation)).in(({ annotation }) =>
+				result(NF.Constructors.Phi(binding.variable, annotation, NF.Constructors.Closure(ctx, body))),
+			),
+		)
 		.with({ type: "Abs", binding: { type: "Sigma" } }, function* ({ body, binding }) {
 			assert(binding.annotation.type === "Row", "Sigma binder annotation must be a Row");
 			const annotation = binding.annotation.row;
@@ -765,7 +775,7 @@ export const schedule = {
 	},
 
 	/** Applies a function value to an argument, deferring the body rather than driving it. */
-	*reduce(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evaluation<Machine<NF.Value>> {
+	*reduce(nff: NF.Value, nfa: NF.Value, icit: Elimination): Evaluation<Machine<NF.Value>> {
 		return yield* match([nff, nfa])
 			.with([{ type: "Neutral", kind: "Sealed" }, P._], function* ([{ value }]) {
 				return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(value, nfa, icit)));
@@ -803,6 +813,16 @@ export const schedule = {
 						.with([{ type: "Neutral", kind: "Symbolic" }, P._], function* () {
 							return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.App(nff, nfa, icit)));
 						})
+						.with(
+							[{ type: "Abs", binder: { type: P.union("Psi", "Phi") } }, P._],
+							([{ binder }]) => binder.type === icit,
+							([{ closure, binder }]) => schedule.apply(binder, closure, nfa),
+						)
+						.with(
+							[{ type: "Abs" }, P._],
+							([{ binder }]) => binder.type === "Psi" || binder.type === "Phi" || icit === "Psi" || icit === "Phi",
+							() => result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit))),
+						)
 						.with([{ type: "Abs" }, P._], ([{ closure, binder }]) => schedule.apply(binder, closure, nfa))
 						.with([{ type: "Lit", value: { type: "Atom" } }, P._], function* ([{ value }]) {
 							return yield* result(NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit));
@@ -1159,7 +1179,7 @@ export const schedule = {
 };
 
 /** The driven form of `schedule.reduce`, for consumers outside the evaluation path. */
-export function* reduce(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evaluation<NF.Value> {
+export function* reduce(nff: NF.Value, nfa: NF.Value, icit: Elimination): Evaluation<NF.Value> {
 	const ctx = yield* NbE.Env.ask();
 
 	return yield* drive(

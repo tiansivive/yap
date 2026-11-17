@@ -17,6 +17,10 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 			const { annotation } = binder;
 			return Constructors.Pi(binder.variable, binder.icit, traverse(annotation, onVar, onTerm), update(closure, "term", onTerm));
 		})
+		.with(Patterns.Psi, ({ binder, closure }) =>
+			Constructors.Psi(binder.variable, traverse(binder.requirement, onVar, onTerm), update(closure, "term", onTerm)),
+		)
+		.with(Patterns.Phi, ({ binder, closure }) => Constructors.Phi(binder.variable, traverse(binder.annotation, onVar, onTerm), update(closure, "term", onTerm)))
 		.with(Patterns.Mu, ({ binder, closure }) => {
 			const { annotation } = binder;
 			return Constructors.Mu(binder.variable, binder.source, traverse(annotation, onVar, onTerm), update(closure, "term", onTerm));

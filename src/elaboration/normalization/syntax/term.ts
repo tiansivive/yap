@@ -3,7 +3,7 @@ import * as EB from "@yap/elaboration";
 
 import * as Lit from "@yap/shared/literals";
 import { Literal } from "@yap/shared/literals";
-import { Implicitness } from "@yap/shared/implicitness";
+import { Elimination, Implicitness } from "@yap/shared/implicitness";
 import { match, P } from "ts-pattern";
 import { Types } from "@yap/utils";
 
@@ -16,7 +16,7 @@ export type Value = Types.Brand<typeof nf_tag, Constructor> & { id: number };
 type Constructor =
 	| { type: "Var"; variable: Variable }
 	| { type: "Lit"; value: Literal }
-	| { type: "App"; func: Value; arg: Value; icit: Implicitness }
+	| { type: "App"; func: Value; arg: Value; icit: Elimination }
 	| { type: "Proj"; base: Value; label: string }
 	| { type: "Match"; closure: Closure; scrutinee: Value }
 	| { type: "Inj"; base: Value; label: string; injected: Value }
@@ -62,6 +62,8 @@ export type Unfolding = "none" | "definitions";
 
 export type Binder =
 	| { type: "Pi"; variable: string; annotation: Value; icit: Implicitness }
+	| { type: "Psi"; variable: string; annotation: Value; requirement: Value }
+	| { type: "Phi"; variable: string; annotation: Value }
 	| { type: "Lambda"; variable: string; annotation: Value; icit: Implicitness }
 	| { type: "Mu"; variable: string; annotation: Value; source: string }
 	| { type: "Sigma"; variable: string; annotation: Value }
@@ -106,6 +108,9 @@ export const Constructors = {
 			binder: { type: "Pi" as const, variable, icit, annotation },
 			closure,
 		}),
+	Psi: (variable: string, requirement: Value, closure: Closure) =>
+		mk({ type: "Abs" as const, binder: { type: "Psi", variable, annotation: State, requirement }, closure }),
+	Phi: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "Phi", variable, annotation }, closure }),
 	Sigma: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "Sigma", variable, annotation }, closure }),
 	SigmaV2: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "SigmaV2", variable, annotation }, closure }),
 	Nu: (
@@ -169,7 +174,7 @@ export const Constructors = {
 	Bubble: (meta: number, ann: Value, values: Value[], identity: Value, payload: Value): Extract<Value, { type: "Bubble" }> =>
 		mk({ type: "Bubble", meta, ann, values, identity, payload }),
 	Reset: (value: Value, handling: Handling): Value => mk({ type: "Reset", value, handling }),
-	App: (func: Value, arg: Value, icit: Implicitness) =>
+	App: (func: Value, arg: Value, icit: Elimination) =>
 		mk({
 			type: "App" as const,
 			func,
@@ -299,6 +304,8 @@ export const Patterns = {
 	StuckInj: { type: "Neutral", kind: "Blocked", value: { type: "Inj" } } as const,
 
 	App: { type: "App" } as const,
+	Psi: { type: "Abs", binder: { type: "Psi" } } as const,
+	Phi: { type: "Abs", binder: { type: "Phi" } } as const,
 	Pi: { type: "Abs", binder: { type: "Pi" } } as const,
 	ImplicitPi: { type: "Abs", binder: { type: "Pi", icit: "Implicit" } } as const,
 	Sigma: { type: "Abs", binder: { type: "Sigma" } } as const,
@@ -356,3 +363,5 @@ export const Patterns = {
 export const TaggedValue = {
 	extract: tagged,
 } as const;
+
+export const State: Value = Constructors.Atom("State");

@@ -52,6 +52,19 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 		function* structural(term: Src.Term, structure: NF.Value): M.Elaboration<Result> {
 			return yield* match<[Src.Term, NF.Value], M.Elaboration<Result>>([term, structure])
 				.with([P._, NF.Patterns.Existential], ([tm, { body }]) => Check.val(tm, body.value))
+				.with([P._, NF.Patterns.Phi], function* ([tm, { binder, closure }]) {
+					const body = yield* NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length));
+					const annotation = yield* NF.quote(ctx.env.length, binder.annotation);
+					const [checked, [, ...usages]] = yield* M.reader.local(ctx => EB.bind(ctx, binder, binder.annotation, "inserted"), Check.val(tm, body));
+					return [EB.Constructors.Phi(binder.variable, annotation, checked), usages] satisfies Result;
+				})
+
+				.with([{ type: "lambda" }, NF.Patterns.Psi], function* ([tm, { binder, closure }]) {
+					const body = yield* NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length));
+					const requirement = yield* NF.quote(ctx.env.length, binder.requirement);
+					const [checked, [, ...usages]] = yield* M.reader.local(ctx => EB.bind(ctx, binder, NF.State, "inserted"), Check.val(tm, body));
+					return [EB.Constructors.Psi(binder.variable, requirement, checked), usages] satisfies Result;
+				})
 				.with(
 					[{ type: "lambda" }, NF.Patterns.Pi],
 					([tm, ty]) => tm.icit === ty.binder.icit,

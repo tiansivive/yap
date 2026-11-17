@@ -150,6 +150,13 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 					yield* unify(body1, body2, lvl + 1);
 				},
 			)
+			/* State requirement entailment belongs to verification. */
+			.with([NF.Patterns.Psi, NF.Patterns.Psi], [NF.Patterns.Phi, NF.Patterns.Phi], function* ([left, right]) {
+				yield* unify(left.binder.annotation, right.binder.annotation, lvl);
+				const lbody = yield* NF.apply(left.binder, left.closure, NF.Constructors.Rigid(lvl));
+				const rbody = yield* NF.apply(right.binder, right.closure, NF.Constructors.Rigid(lvl));
+				yield* unify(lbody, rbody, lvl + 1);
+			})
 			.with([NF.Patterns.Mu, NF.Patterns.Mu], function* ([mu1, mu2]) {
 				yield* unify(mu1.binder.annotation, mu2.binder.annotation, lvl);
 				const body1 = yield* NF.apply(mu1.binder, mu1.closure, NF.Constructors.Rigid(lvl));
@@ -424,6 +431,8 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 			.with(NF.Patterns.Match, ({ closure, scrutinee }) => check(scrutinee) || inTerm(closure.term))
 			.with(NF.Patterns.Inj, ({ base, injected }) => check(base) || check(injected))
 			.with(NF.Patterns.Lambda, ({ closure }) => inTerm(closure.term))
+			.with(NF.Patterns.Psi, ({ binder, closure }) => check(binder.requirement) || inTerm(closure.term))
+			.with(NF.Patterns.Phi, ({ binder, closure }) => check(binder.annotation) || inTerm(closure.term))
 			.with(NF.Patterns.Pi, ({ closure }) => inTerm(closure.term))
 			.with(NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, ({ closure }) => inTerm(closure.term))
 			.with(NF.Patterns.App, ({ func, arg }) => check(func) || check(arg))
@@ -453,6 +462,7 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 
 				return _.isEqual(variable, v);
 			})
+			.with(EB.CtorPatterns.Psi, ({ binding, body }) => inTerm(binding.requirement) || inTerm(body))
 			.with({ type: "Abs" }, ({ binding, body }) => inTerm(binding.annotation) || inTerm(body))
 			.with({ type: "App" }, ({ func, arg }) => inTerm(func) || inTerm(arg))
 			.with({ type: "Ann" }, ({ term }) => inTerm(term))

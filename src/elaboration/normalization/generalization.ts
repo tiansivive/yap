@@ -312,6 +312,18 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 			const term = yield* M.reader.local(_ => xtended, EB.Icit.instantiate(closure.term, {}));
 			return NF.Constructors.Pi(binder.variable, binder.icit, ann, { ...closure, term });
 		})
+		.with(NF.Patterns.Psi, function* ({ binder, closure }) {
+			const requirement = yield* instantiate(binder.requirement);
+			const extended = EB.bind(closure.ctx, binder, NF.State);
+			const term = yield* M.reader.local(_ => extended, EB.Icit.instantiate(closure.term, {}));
+			return NF.Constructors.Psi(binder.variable, requirement, { ...closure, term });
+		})
+		.with(NF.Patterns.Phi, function* ({ binder, closure }) {
+			const annotation = yield* instantiate(binder.annotation);
+			const extended = EB.bind(closure.ctx, binder, annotation);
+			const term = yield* M.reader.local(_ => extended, EB.Icit.instantiate(closure.term, {}));
+			return NF.Constructors.Phi(binder.variable, annotation, { ...closure, term });
+		})
 		.with(NF.Patterns.Mu, function* ({ binder, closure }) {
 			const ann = yield* instantiate(binder.annotation);
 			const xtended = EB.bind(closure.ctx, binder, ann);

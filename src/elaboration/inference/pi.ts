@@ -1,3 +1,4 @@
+import { match } from "ts-pattern";
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Q from "@yap/shared/modalities/multiplicity";
@@ -8,6 +9,17 @@ import * as Src from "@yap/src/index";
 type Pi = Extract<Src.Term, { type: "pi" } | { type: "arrow" }>;
 
 export const infer = (pi: Pi): M.Elaboration<EB.AST> =>
+	M.tracer.track({ tag: "src", type: "term", term: pi, metadata: { action: "infer", description: "Call state" } }, function* () {
+		return yield* match(pi.icit)
+			.with("Implicit", () => arrow(pi))
+			.with("Explicit", function* () {
+				const [term, type, [, ...usages]] = yield* M.reader.local(ctx => EB.bind(ctx, { type: "Psi", variable: "$s" }, NF.State, "inserted"), arrow(pi));
+				return [EB.Constructors.Psi("$s", EB.Unrestricted, term), type, usages] satisfies EB.AST;
+			})
+			.exhaustive();
+	});
+
+const arrow = (pi: Pi): M.Elaboration<EB.AST> =>
 	M.tracer.track({ tag: "src", type: "term", term: pi, metadata: { action: "infer", description: "Pi" } }, function* () {
 		const v = pi.type === "pi" ? pi.variable : `t${EB.nextCount()}`;
 		const body = pi.type === "pi" ? pi.body : pi.rhs;

@@ -5,7 +5,7 @@ import * as Eff from "@yap/utils/effects";
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
-import type { Implicitness } from "@yap/shared/implicitness";
+import type { Elimination } from "@yap/shared/implicitness";
 import { options } from "@yap/shared/config/options";
 
 import * as Arity from "./arity";
@@ -99,7 +99,7 @@ export function* apply(binder: EB.Binder, closure: Closure, value: Value) {
 	return yield* fresh(() => Machine.apply(binder, closure, value));
 }
 
-export function* reduce(nff: Value, nfa: Value, icit: Implicitness) {
+export function* reduce(nff: Value, nfa: Value, icit: Elimination) {
 	return yield* fresh(() => Machine.reduce(nff, nfa, icit));
 }
 

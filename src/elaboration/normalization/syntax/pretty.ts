@@ -92,6 +92,12 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 				.with({ type: "Lambda" }, function* ({ variable, annotation }) {
 					return ["λ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
+				.with({ type: "Psi" }, function* ({ variable, requirement }) {
+					return ["ψ", variable, " [| ", yield* go(requirement), " |]"] satisfies PP.Doc;
+				})
+				.with({ type: "Phi" }, function* ({ variable, annotation }) {
+					return ["φ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
+				})
 				.with({ type: "Pi" }, function* ({ variable, annotation }) {
 					return ["Π(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
@@ -107,7 +113,7 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 				.exhaustive();
 
 			const arrow = match(binder)
-				.with({ type: "Sigma" }, { type: "SigmaV2" }, { type: "Nu" }, () => ".")
+				.with({ type: "Sigma" }, { type: "SigmaV2" }, { type: "Nu" }, { type: "Psi" }, { type: "Phi" }, () => ".")
 				.with({ icit: "Implicit" }, () => "=>")
 				.otherwise(() => "->");
 

@@ -29,7 +29,7 @@ function* head(v: NF.Value): Evaluation<NF.Value> {
  */
 export function* inert(ty: NF.Value): Evaluation<boolean> {
 	return yield* match(yield* view(ty))
-		.with(View.Flex, View.Blocked(), View.Sealed(Patterns.Pi), function* () {
+		.with(View.Flex, View.Blocked(), View.Sealed(Patterns.Pi), View.Sealed(Patterns.Psi), View.Sealed(Patterns.Phi), function* () {
 			return false;
 		})
 		.with(View.Sealed(Patterns.Modal), ({ value }) => inert(value.value))
@@ -52,6 +52,11 @@ export function* inert(ty: NF.Value): Evaluation<boolean> {
  */
 export function* arity(ty: NF.Value): Evaluation<number> {
 	return yield* match(yield* view(ty))
+		.with(View.Sealed(Patterns.Psi), View.Sealed(Patterns.Phi), function* ({ value: { binder, closure } }) {
+			const ctx = yield* NbE.Env.ask();
+			const body = yield* apply(binder, closure, NF.Constructors.Rigid(ctx.env.length));
+			return yield* NbE.Env.local(_ => EB.bind(ctx, binder, binder.annotation), arity(body));
+		})
 		.with(View.Sealed(Patterns.Pi), function* ({ value: { binder, closure } }) {
 			const ctx = yield* NbE.Env.ask();
 			const rigid = NF.Constructors.Rigid(ctx.env.length);
