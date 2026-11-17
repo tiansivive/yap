@@ -67,6 +67,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 
 		// Force wraps unsolved metas in a Neutral, so we need to unwrap them again.
 		yield* match([NF.unwrapNeutral(l), NF.unwrapNeutral(r)])
+			.with([NF.Patterns.Existential, P._], ([{ body }]) => unify(body.value, r, lvl))
+			.with([P._, NF.Patterns.Existential], ([, { body }]) => unify(l, body.value, lvl))
 			.with([NF.Patterns.Flex, NF.Patterns.Flex], function* ([meta1, meta2]) {
 				yield* Sub.subst.bind(yield* bind(meta1.variable, meta2));
 				const registry = yield* Metas.registry.get();
