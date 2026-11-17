@@ -293,8 +293,13 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) =>
 			Do.let("func", () => schedule.eval(func))
+				// :FIXME: Observe pending functions through Modal wrappers so an argument handler preserves the earlier computation.
 				.bind("known", ({ func }) => schedule.view(func))
 				.bind("arg", ({ known }) =>
+					/*
+					 * :QUESTION:TODO: Investigate eagerly handling argument effects while retaining the earlier function computation
+					 * in an existential, accounting for shallow delimiters consumed by that earlier computation.
+					 */
 					match(known)
 						.with(View.Blocked(), { value: NF.Patterns.Existential }, function* () {
 							yield* Stack.enter(yield* scope());
