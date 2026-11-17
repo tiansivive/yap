@@ -74,6 +74,12 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		.with({ type: "Neutral" }, function* ({ value }) {
 			return yield* quote(lvl, value, unfold);
 		})
+		.with(NF.Patterns.Reset, ({ value, handling }) =>
+			Do.let("identity", () => quote(lvl, handling.identity, unfold))
+				.let("handler", () => quote(lvl, handling.handler, unfold))
+				.let("body", () => quote(lvl, value, unfold))
+				.in(({ identity, handler, body }) => result(EB.Constructors.Reset(body, { identity, handler }))),
+		)
 		.with(NF.Patterns.Existential, ({ assumptions, body }) =>
 			NbE.Env.local(
 				_ => body.ctx,

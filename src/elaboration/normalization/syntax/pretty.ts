@@ -72,6 +72,9 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 		.with({ type: "Bubble" }, function* ({ meta, identity, payload }) {
 			return ["bubble#", `${meta}`, " (suspend @", yield* go(identity), " ", yield* go(payload), ")"] satisfies PP.Doc;
 		})
+		.with(NF.Patterns.Reset, function* ({ value, handling }) {
+			return ["reset @", yield* go(handling.identity), " ", yield* go(handling.handler), " in ", yield* go(value)] satisfies PP.Doc;
+		})
 		.with(NF.Patterns.Proj, function* ({ base, label }) {
 			return [yield* go(base), ".", label] satisfies PP.Doc;
 		})

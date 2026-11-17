@@ -291,12 +291,19 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				result(NF.Constructors.Mu(mu.binding.variable, mu.binding.source, ann, NF.Constructors.Closure(ctx, mu.body))),
 			);
 		})
-		.with({ type: "App" }, function* ({ func, arg, icit }) {
-			// Evaluate func and arg, then reduce
-			return yield* Do.let("funcVal", () => schedule.eval(func))
-				.let("argVal", () => schedule.eval(arg))
-				.in(({ funcVal, argVal }) => schedule.reduce(funcVal, argVal, icit));
-		})
+		.with({ type: "App" }, ({ func, arg, icit }) =>
+			Do.let("func", () => schedule.eval(func))
+				.bind("known", ({ func }) => schedule.view(func))
+				.bind("arg", ({ known }) =>
+					match(known)
+						.with(View.Blocked(), { value: NF.Patterns.Existential }, function* () {
+							yield* Stack.enter(yield* scope());
+							return yield* schedule.eval(arg);
+						})
+						.otherwise(() => schedule.eval(arg)),
+				)
+				.in(({ func, arg }) => schedule.reduce(func, arg, icit)),
+		)
 		.with({ type: "Row" }, function* ({ row }) {
 			const record = row.entries.reduce<EB.Context["record"]>((rec, { label, value: term }) => {
 				if (rec[label]) {
@@ -379,8 +386,20 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 					if (tag.args.length) {
 						throw new Error("Specialized foreign handler installation is pending");
 					}
-					yield* Stack.delimit(yield* scope(), { identity: tag, handler });
-					return yield* schedule.eval(term);
+					const handling = { identity, handler };
+					yield* Stack.delimit(yield* scope(), handling);
+					return yield* Do.let("value", () => schedule.eval(term))
+						.bind("known", ({ value }) => schedule.view(value))
+						.in(function* ({ value, known }) {
+							const active = yield* Stack.find<Scope, EB.Term, Handling>(frame => frame.type === "Delimiter" && frame.handling === handling);
+							return yield* result(
+								match(known)
+									.with(View.Blocked(), { value: NF.Patterns.Existential }, () =>
+										active ? NF.Constructors.Neutral("Blocked", NF.Constructors.Reset(value, handling)) : value,
+									)
+									.otherwise(() => value),
+							);
+						});
 				});
 		})
 		.with({ type: "Reset" }, function* ({ term }) {
@@ -440,7 +459,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 
 const Anonymous = { name: "$anonymous" } as const;
 
-const identify = (value: NF.Value, args: NF.Value[] = []): Handling["identity"] | undefined =>
+const identify = (value: NF.Value, args: NF.Value[] = []): { name: string; args: NF.Value[] } | undefined =>
 	match(value)
 		.with(NF.Patterns.Glued, ({ unfolded }) => identify(unfolded, args))
 		.with({ type: "Neutral", kind: "Sealed" }, ({ value }) => identify(value, args))
@@ -453,7 +472,11 @@ const identify = (value: NF.Value, args: NF.Value[] = []): Handling["identity"] 
 function* suspend(bubble: Extract<NF.Value, { type: "Bubble" }>): Evaluation<Machine<NF.Value>> {
 	const { identity, payload, ann: annotation } = bubble;
 	const tag = identify(identity);
-	const selected = tag && (yield* Stack.find<Scope, EB.Term, Handling>(frame => frame.type === "Delimiter" && frame.handling?.identity.name === tag.name));
+	const selected =
+		tag &&
+		(yield* Stack.find<Scope, EB.Term, Handling>(
+			frame => frame.type === "Delimiter" && !!frame.handling && identify(frame.handling.identity)?.name === tag.name,
+		));
 	if (!selected) {
 		return yield* result(NF.Constructors.Neutral("Blocked", bubble));
 	}
