@@ -160,7 +160,7 @@ describe("Bubble quotation", () => {
 	it("retains a solved lambda's suspension while quoting inside a reset", () => {
 		const meta = { type: "Meta", val: 100, lvl: 0 } as const;
 		const solution = evaluate(lambda(bubble(atom("E"), atom("Unit"))));
-		const registry = Metas.register(Metas.empty, { meta, annotation: NF.Type, solution });
+		const registry = Metas.register(Metas.empty, { kind: "Elaboration", meta, annotation: NF.Type, solution });
 		const value = runNF(ctx, () => NF.evaluate(C.Reset(C.Var(meta))), registry);
 
 		expect(quote(value)).toMatchObject({ type: "Abs", body: { type: "Bubble", shift: { type: "Suspend" } } });
@@ -184,7 +184,7 @@ describe("Bubble quotation", () => {
 	it.fails("instantiates an unconstrained type meta used only after the suspension", () => {
 		const meta = { type: "Meta", val: 9, lvl: 0 } as const;
 		const value = evaluate(C.App("Explicit", lambda(C.Var(meta)), bubble(atom("E"), atom("Unit"))));
-		const registry = Metas.register(Metas.empty, { meta, annotation: NF.Type });
+		const registry = Metas.register(Metas.empty, { kind: "Elaboration", meta, annotation: NF.Type });
 		const [instantiated] = Eff.run(() => NF.instantiate(value), [M.reader.handlers(ctx), Metas.registry.handlers(registry), M.supply.handlers()]);
 
 		expect(quote(instantiated)).toMatchObject({ type: "Block", return: { type: "Lit", value: { value: "Any" } } });
@@ -204,7 +204,7 @@ describe("Bubble quotation", () => {
 
 	it.fails("unifies a retained Bubble with itself", () => {
 		const value = evaluate(bubble(atom("E"), atom("Unit")));
-		const registry = Metas.register(Metas.empty, { meta: { type: "Meta", val: 7, lvl: 0 }, annotation: NF.Type });
+		const registry = Metas.register(Metas.empty, { kind: "Elaboration", meta: { type: "Meta", val: 7, lvl: 0 }, annotation: NF.Type });
 		const checked = runEB(
 			ctx,
 			function* () {
@@ -219,7 +219,7 @@ describe("Bubble quotation", () => {
 
 	it("rejects a meta solution containing itself in a Bubble payload", () => {
 		const meta = { type: "Meta", val: 9, lvl: 0 } as const;
-		const registry = Metas.register(Metas.empty, { meta, annotation: NF.Type });
+		const registry = Metas.register(Metas.empty, { kind: "Elaboration", meta, annotation: NF.Type });
 		const value = evaluate(bubble(atom("E"), C.Var(meta)));
 
 		expect(() =>

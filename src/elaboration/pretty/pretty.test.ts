@@ -57,7 +57,7 @@ describe("Displaying elaborated terms", () => {
 			const m = EB.Meta(1, 0);
 			const term = EB.Constructors.Var(m);
 
-			const registry = Metas.register(Metas.empty, { meta: m, annotation: EB.NF.Type });
+			const registry = Metas.register(Metas.empty, { kind: "Elaboration", meta: m, annotation: EB.NF.Type });
 			expect(display(term, registry)).toMatchSnapshot();
 		});
 

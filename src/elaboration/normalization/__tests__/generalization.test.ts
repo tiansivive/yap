@@ -12,7 +12,10 @@ import { mkCtx, runEB, runNF, shown } from "../../inference/__tests__/util";
 import * as F from "fp-ts/function";
 
 const seed = (...entries: Array<[number, NF.Value, number?]>): Metas.Registry =>
-	entries.reduce((reg, [val, annotation, lvl = 0]) => Metas.register(reg, { meta: EB.Constructors.Vars.Meta(val, lvl), annotation }), Metas.empty);
+	entries.reduce(
+		(reg, [val, annotation, lvl = 0]) => Metas.register(reg, { kind: "Elaboration", meta: EB.Constructors.Vars.Meta(val, lvl), annotation }),
+		Metas.empty,
+	);
 
 /** Runs an elaboration program that must not abort; answers with the final registry. */
 const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () => M.Elaboration<A>): [A, Metas.Registry] => {

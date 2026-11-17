@@ -16,7 +16,7 @@ import { runNF, shown } from "../../inference/__tests__/util";
 
 /* Metas these values mention: elaboration would have minted them, so the registry knows them. */
 const declared = (ids: readonly number[]): Metas.Registry =>
-	ids.reduce((registry, val) => Metas.register(registry, { meta: { type: "Meta", val, lvl: 0 }, annotation: NF.Any }), Metas.empty);
+	ids.reduce((registry, val) => Metas.register(registry, { kind: "Elaboration", meta: { type: "Meta", val, lvl: 0 }, annotation: NF.Any }), Metas.empty);
 
 const runUnify = (left: NF.Value, right: NF.Value, metas: readonly number[] = [], ctx: EB.Context = Lib.defaultContext()) => {
 	const [answer, subst, registry] = Eff.run(

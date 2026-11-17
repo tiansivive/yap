@@ -69,6 +69,11 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 		yield* match([NF.unwrapNeutral(l), NF.unwrapNeutral(r)])
 			.with([NF.Patterns.Existential, P._], ([{ body }]) => unify(body.value, r, lvl))
 			.with([P._, NF.Patterns.Existential], ([, { body }]) => unify(l, body.value, lvl))
+			.with(
+				[NF.Patterns.Flex, NF.Patterns.Flex],
+				([a, b]) => Metas.entry(registry, a.variable.val).kind !== "Elaboration" && Metas.entry(registry, b.variable.val).kind === "Elaboration",
+				() => unify(r, l, lvl),
+			)
 			.with([NF.Patterns.Flex, NF.Patterns.Flex], function* ([meta1, meta2]) {
 				yield* Sub.subst.bind(yield* bind(meta1.variable, meta2));
 				const registry = yield* Metas.registry.get();
@@ -387,17 +392,22 @@ export const bind = function* (v: Meta, ty: NF.Value): Unification<Subst> {
 		return Sub.empty;
 	}
 
-	const stuck = match(ty)
-		.with(NF.Patterns.StuckMatch, () => true)
-		.otherwise(() => false);
-	const canonical = stuck ? yield* NF.force(ty) : ty;
+	const registry = yield* Metas.registry.get();
+	return yield* match(Metas.entry(registry, v.val))
+		.with({ kind: "Elaboration" }, function* () {
+			const stuck = match(ty)
+				.with(NF.Patterns.StuckMatch, () => true)
+				.otherwise(() => false);
+			const canonical = stuck ? yield* NF.force(ty) : ty;
 
-	if (yield* occurs(v, canonical)) {
-		// solution is a mu type
-		throw new Error("Unification: Occurs check failed. Need to implement mu type");
-	}
+			if (yield* occurs(v, canonical)) {
+				// solution is a mu type
+				throw new Error("Unification: Occurs check failed. Need to implement mu type");
+			}
 
-	return Sub.of(v.val, canonical);
+			return Sub.of(v.val, canonical);
+		})
+		.otherwise(() => M.fail(Err.TypeMismatch(NF.Constructors.Var(v), ty)));
 };
 
 /** The occurs check: get() once, both walkers close over the snapshot and the needle. */

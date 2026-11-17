@@ -95,7 +95,7 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 
 			// Don't instantiate metas from outer scopes - they should remain unsolved
 			// and will be handled at their original scope level
-			if (v.variable.lvl < ctx.env.length) {
+			if (v.variable.lvl < ctx.env.length || Metas.entry(registry, v.variable.val).kind !== "Elaboration") {
 				return v;
 			}
 			const { annotation } = Metas.entry(registry, v.variable.val);

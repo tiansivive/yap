@@ -4,6 +4,7 @@ import * as E from "fp-ts/lib/Either";
 
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from "@yap/elaboration/normalization";
 import * as Sub from "./substitution";
 
@@ -19,6 +20,7 @@ export const unify = (r1: NF.Row, r2: NF.Row): U.Unification<void> =>
 		const ctx = yield* M.reader.ask();
 		const lvl = ctx.env.length;
 		const s = yield* Sub.subst.get();
+		const registry = yield* Metas.registry.get();
 
 		yield* match([r1, r2] as const)
 			.with([R.Patterns.Empty, R.Patterns.Empty], function* () {
@@ -44,6 +46,11 @@ export const unify = (r1: NF.Row, r2: NF.Row): U.Unification<void> =>
 				function* ([, { tail }]) {
 					yield* unify(r1, yield* solved(s[tail.val]));
 				},
+			)
+			.with(
+				[Tails.Meta, Tails.Meta],
+				([{ tail: a }, { tail: b }]) => Metas.entry(registry, a.val).kind !== "Elaboration" && Metas.entry(registry, b.val).kind === "Elaboration",
+				() => unify(r2, r1),
 			)
 			.with([Tails.Meta, P._], function* ([{ tail }]) {
 				yield* Sub.subst.bind(yield* bind(tail, NF.Constructors.Row(r2)));
@@ -127,11 +134,11 @@ const rewrite = (r: NF.Row, label: string): U.Unification<{ value: NF.Value; res
 						return { value: chased.value, rest: R.Constructors.Row([...r.entries, ...chased.rest.entries], chased.rest.tail) };
 					},
 				)
-				.with({ type: "Meta" }, function* ({ val }) {
+				.with({ type: "Meta" }, function* (tail) {
 					const kvar = NF.Constructors.Var(yield* EB.freshMeta(lvl, NF.Type));
 					const tvar = NF.Constructors.Var(yield* EB.freshMeta(lvl, kvar));
 					const fresh = yield* EB.freshMeta(lvl, NF.Row);
-					yield* Sub.subst.bind(Sub.of(val, NF.Constructors.Row(R.Constructors.Extension(label, tvar, R.Constructors.Variable(fresh)))));
+					yield* Sub.subst.bind(yield* bind(tail, NF.Constructors.Row(R.Constructors.Extension(label, tvar, R.Constructors.Variable(fresh)))));
 
 					return { value: tvar, rest: R.Constructors.Row(r.entries, fresh) };
 				})
