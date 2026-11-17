@@ -1,9 +1,9 @@
 import * as NF from "./syntax/term";
 import * as EB from "@yap/elaboration";
-import * as M from "@yap/elaboration/shared/effects";
 import { match } from "ts-pattern";
 
 import type { Evaluation } from "./effects";
+import * as NbE from "./nbe";
 import { apply, view, View } from "./evaluation.v2";
 
 const { Patterns } = NF;
@@ -53,12 +53,12 @@ export function* inert(ty: NF.Value): Evaluation<boolean> {
 export function* arity(ty: NF.Value): Evaluation<number> {
 	return yield* match(yield* view(ty))
 		.with(View.Sealed(Patterns.Pi), function* ({ value: { binder, closure } }) {
-			const ctx = yield* M.reader.ask();
+			const ctx = yield* NbE.Env.ask();
 			const rigid = NF.Constructors.Rigid(ctx.env.length);
 			const extended = EB.bind(ctx, { type: "Pi", variable: binder.variable }, binder.annotation);
 			const returnType = yield* apply(binder, closure, rigid);
 
-			return 1 + (yield* M.reader.local(_ => extended, arity(returnType)));
+			return 1 + (yield* NbE.Env.local(_ => extended, arity(returnType)));
 		})
 		.otherwise(function* () {
 			return yield* match(yield* inert(ty))

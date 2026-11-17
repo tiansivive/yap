@@ -44,11 +44,12 @@ type Constructor =
 			type: "Existential";
 			variable: string;
 			annotation: Value;
+			assumptions: ReadonlyMap<Extract<Variable, { type: "Bound" }>, Value>;
 			body: {
 				ctx: EB.Context;
 				value: Value;
 			};
-	  }; // Used during verification only
+	  };
 
 export type Row = R.Row<Value, Variable>;
 export type TaggedParts = { label: string; payload: Value };
@@ -120,12 +121,18 @@ export const Constructors = {
 			binder: { type: "Mu", variable, annotation, source },
 			closure,
 		}),
-	Exists: (variable: string, annotation: Value, body: { ctx: EB.Context; value: Value }): Value =>
+	Exists: (
+		variable: string,
+		annotation: Value,
+		body: { ctx: EB.Context; value: Value },
+		assumptions: ReadonlyMap<Extract<Variable, { type: "Bound" }>, Value> = new Map(),
+	): Value =>
 		mk({
 			type: "Existential",
 			variable,
 			annotation,
 			body,
+			assumptions,
 		}),
 	Lambda: (variable: string, icit: Implicitness, closure: Closure, annotation: Value): Value =>
 		mk({
@@ -246,6 +253,7 @@ const tagged = (row: Row): TaggedParts | undefined => {
 const TaggedRow = (row: Row): row is Row => !!tagged(row);
 
 export const Patterns = {
+	Existential: { type: "Existential" } as const,
 	Bubble: { type: "Bubble" } as const,
 	Var: { type: "Var" } as const,
 	Rigid: { type: "Var", variable: { type: "Bound" } } as const,

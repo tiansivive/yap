@@ -2,7 +2,6 @@ import * as Eff from "@yap/utils/effects";
 
 import type { Value } from "./syntax/term";
 import type * as EB from "@yap/elaboration";
-import * as M from "@yap/elaboration/shared/effects";
 import type * as Metas from "@yap/elaboration/shared/metas";
 import type * as Stack from "./machine/actions";
 import type * as Frames from "./machine/frames";
@@ -18,14 +17,22 @@ export type EvalMode = {
 export const defaultMode: EvalMode = { noInlineBindings: false, noReduceEliminations: false };
 
 export const Mode = Eff.reader<EvalMode, "EvalMode">("EvalMode");
+export const Env = Eff.reader<EB.Context>();
 
-/** What NbE needs handed back with a frame: the environment a term reads under, and the mode it reads in. */
-export type Scope = { env: EB.Context; mode: EvalMode };
+/**
+ * We package blocked arguments as existentials to preserve their computations.
+ * Each package adds a result binder but a closure can restore an environment captured
+ * before that binder existed. We count the surrounding binders separately in order to
+ * assign rigid levels that quote back to the correct variables.
+ **/
+export const ResidualScope = Eff.reader<number, "ResidualScope">("ResidualScope");
 
-/** Everything the machine does not provide: the metacontext and the two readers. */
-type Ambient = Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typeof M.reader> | Eff.Actions<typeof Mode>;
+/** Saved with scheduled work so closure lookup and retained binder scope survive independently. */
+export type Scope = { env: EB.Context; mode: EvalMode; residualScope: number };
 
-/** NbE is the machine instantiated at a scope of env and mode, terms as control, and values as results. */
+type Ambient = Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typeof Env> | Eff.Actions<typeof Mode> | Eff.Actions<typeof ResidualScope>;
+
+/** NbE instantiates the machine with its scope, Core terms and operation handlers. */
 export type Evaluation<A> = Eff.Eff<Stack.Actions<Scope, EB.Term, Handling> | Ambient, A>;
 
 export type Handling = { identity: { name: string; args: Value[] }; handler: Value };
@@ -37,7 +44,7 @@ export type StackFrame = Frames.StackFrame<Scope, EB.Term, Handling>;
 export type Captured = Frames.Captured<Scope, EB.Term, Handling>;
 
 export const scope = function* (): Eff.Eff<Ambient, Scope> {
-	return { env: yield* M.reader.ask(), mode: yield* Mode.ask() };
+	return { env: yield* Env.ask(), mode: yield* Mode.ask(), residualScope: yield* ResidualScope.ask() };
 };
 
 export const { result, step, group, Do } = notation<Scope, EB.Term, Ambient, Handling>(scope);
