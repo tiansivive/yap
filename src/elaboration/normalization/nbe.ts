@@ -1,12 +1,12 @@
 import type * as EB from "@yap/elaboration";
 
-import { ResidualScope, local, scope, type Evaluation, type Machine } from "./effects";
+import { Env, Mode, ResidualScope, scope, type EvalMode, type Evaluation, type Machine } from "./effects";
 import { schedule } from "./evaluation.v2";
 import * as Stack from "./machine/actions";
 import type { Unfolding, Value, Closure } from "./syntax/term";
 import { Constructors } from "./syntax/term";
 
-export { Env, Mode, ResidualScope, local } from "./effects";
+export { Env, Mode, ResidualScope } from "./effects";
 
 /**
  * Adds an entry marker, then schedules evaluation on the active machine.
@@ -42,5 +42,19 @@ export function* open(binder: EB.Binder, closure: Closure): Evaluation<Machine<V
 			yield* Stack.enter(yield* scope());
 			return yield* schedule.apply(binder, closure, Constructors.Rigid(depth));
 		})(),
+	);
+}
+
+export function* local<A>(
+	changes: {
+		env?: (env: EB.Context) => EB.Context;
+		mode?: (mode: EvalMode) => EvalMode;
+		residualScope?: (depth: number) => number;
+	},
+	program: Evaluation<A>,
+): Evaluation<A> {
+	return yield* Env.local(
+		changes.env ?? (value => value),
+		Mode.local(changes.mode ?? (value => value), ResidualScope.local(changes.residualScope ?? (value => value), program)),
 	);
 }

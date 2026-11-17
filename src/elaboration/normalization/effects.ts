@@ -20,7 +20,7 @@ export const Mode = Eff.reader<EvalMode, "EvalMode">("EvalMode");
 export const Env = Eff.reader<EB.Context>();
 
 /**
- * We package blocked arguments as existentials to preserve their computations.  
+ * We package blocked arguments as existentials to preserve their computations.
  * Each package adds a result binder but a closure can restore an environment captured
  * before that binder existed. We count the surrounding binders separately in order to
  * assign rigid levels that quote back to the correct variables.
@@ -48,17 +48,3 @@ export const scope = function* (): Eff.Eff<Ambient, Scope> {
 };
 
 export const { result, step, group, Do } = notation<Scope, EB.Term, Ambient, Handling>(scope);
-
-export function* local<A>(
-	changes: {
-		env?: (env: EB.Context) => EB.Context;
-		mode?: (mode: EvalMode) => EvalMode;
-		residualScope?: (depth: number) => number;
-	},
-	program: Evaluation<A>,
-): Evaluation<A> {
-	return yield* Env.local(
-		changes.env ?? (value => value),
-		Mode.local(changes.mode ?? (value => value), ResidualScope.local(changes.residualScope ?? (value => value), program)),
-	);
-}

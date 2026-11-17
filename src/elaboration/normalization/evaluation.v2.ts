@@ -738,76 +738,102 @@ export const schedule = {
 
 	/** Applies a function value to an argument, deferring the body rather than driving it. */
 	*reduce(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evaluation<Machine<NF.Value>> {
-		return yield* match(nff)
-			.with({ type: "Neutral", kind: "Sealed" }, function* ({ value }) {
+		return yield* match([nff, nfa])
+			.with([{ type: "Neutral", kind: "Sealed" }, P._], function* ([{ value }]) {
 				return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(value, nfa, icit)));
 			})
-			.with({ type: "Neutral", kind: "Blocked" }, function* ({ value }) {
+			.with([{ type: "Neutral", kind: "Blocked" }, P._], function* ([{ value }]) {
 				return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.App(value, nfa, icit)));
 			})
-			.with({ type: "Modal" }, function* ({ value }) {
+			.with([{ type: "Modal" }, P._], function* ([{ value }]) {
 				console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
 				return yield* schedule.reduce(value, nfa, icit);
 			})
 			/* The folded face grows with the glue itself at its head, so taking the application apart yields glued values, never a bare reference. */
-			.with(NF.Patterns.Glued, glued =>
+			.with([NF.Patterns.Glued, P._], ([glued]) =>
 				Do.let("applied", () => schedule.reduce(glued.unfolded, nfa, icit)).in(({ applied }) =>
 					result(NF.Constructors.Glued(NF.Constructors.App(glued, nfa, icit), applied)),
 				),
 			)
-			.with({ type: "Abs", binder: { type: "Mu" } }, NF.Patterns.Nu, function* () {
+			.with([{ type: "Abs", binder: { type: "Mu" } }, P._], [NF.Patterns.Nu, P._], function* () {
 				// Do not unfold mu during normalization - defer to unification
 				return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
 			})
-			.with(NF.Patterns.Existential, ({ variable, annotation, assumptions, body }) =>
-				NbE.local(
-					{
-						env: _ => body.ctx,
-						residualScope: depth => Math.max(depth, ...[...assumptions.keys()].map(({ lvl }) => lvl + 1)),
-					},
-					Do.let("value", function* () {
-						yield* Stack.enter(yield* scope());
-						return yield* schedule.reduce(body.value, nfa, icit);
-					}).in(({ value }) => result(NF.Constructors.Exists(variable, annotation, { ctx: body.ctx, value }, assumptions))),
-				),
-			)
-			.otherwise(() =>
-				Do.let("argument", () => schedule.assume(nfa)).in(({ argument }) =>
-					match(argument)
-						.with(NF.Patterns.Existential, ({ variable, annotation, assumptions, body }) =>
-							NbE.local(
-								{
-									env: _ => body.ctx,
-									residualScope: depth => Math.max(depth, ...[...assumptions.keys()].map(({ lvl }) => lvl + 1)),
-								},
-								Do.let("value", function* () {
-									yield* Stack.enter(yield* scope());
-									return yield* schedule.reduce(nff, body.value, icit);
-								}).in(({ value }) => result(NF.Constructors.Exists(variable, annotation, { ctx: body.ctx, value }, assumptions))),
-							),
-						)
-						.otherwise(() => schedule.call(nff, argument, icit)),
-				),
-			);
+			.with([NF.Patterns.Existential, P._], ([ex, arg]) => schedule.continue(ex, schedule.reduce(ex.body.value, arg, icit)))
+			.with([P._, NF.Patterns.Existential], ([fn, ex]) => schedule.continue(ex, schedule.reduce(fn, ex.body.value, icit)))
+			.otherwise(() => {
+				const observe = (value: NF.Value): Evaluation<Machine<View>> =>
+					Do.let("known", () => schedule.view(value)).in(({ known }) =>
+						match(known)
+							.with(View.Sealed(NF.Patterns.Modal), ({ value }) => observe(value.value))
+							.otherwise(() => result(known)),
+					);
+
+				return Do.let("argument", () => observe(nfa)).in(({ argument }) =>
+					match([nff, argument])
+						.with([P._, View.Blocked()], () => Do.let("packed", () => schedule.pack(nfa)).in(({ packed }) => schedule.reduce(nff, packed, icit)))
+						.with([{ type: "Neutral", kind: "Symbolic" }, P._], function* () {
+							return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.App(nff, nfa, icit)));
+						})
+						.with([{ type: "Abs" }, P._], ([{ closure, binder }]) => schedule.apply(binder, closure, nfa))
+						.with([{ type: "Lit", value: { type: "Atom" } }, P._], function* ([{ value }]) {
+							return yield* result(NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit));
+						})
+						.with([{ type: "Var", variable: { type: "Meta" } }, P._], function* () {
+							const symbolic = NF.Constructors.Neutral("Symbolic", nff);
+							return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.App(symbolic, nfa, icit)));
+						})
+						.with([{ type: "Var", variable: { type: "Foreign" } }, P._], function* () {
+							return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
+						})
+						/*
+						 * An over-applied constructor spine: reduce the inner application, then grow the
+						 * spine by one. Re-dispatching the result instead would not terminate — an atom
+						 * head reduces to the very node it came from.
+						 */
+						.with([{ type: "App" }, P._], function* ([{ func, arg, icit: argIcit }]) {
+							return yield* Do.let("intermediate", () => schedule.reduce(func, arg, argIcit)).in(({ intermediate }) =>
+								result(NF.Constructors.App(intermediate, nfa, icit)),
+							);
+						})
+						.with([{ type: "External" }, P._], function* ([{ name, args, arity, compute }]) {
+							if (arity === 0) {
+								return yield* result(compute());
+							}
+
+							const accumulated = [...args, nfa];
+
+							if (accumulated.length < arity) {
+								return yield* result(NF.Constructors.External(name, arity, compute, accumulated));
+							}
+
+							if (accumulated.some(blocksExternal)) {
+								return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.External(name, arity, compute, accumulated)));
+							}
+
+							return yield* result(compute(...accumulated.map(operand)));
+						})
+						.otherwise(function* () {
+							throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
+						}),
+				);
+			});
 	},
 
-	*assume(assumption: NF.Value): Evaluation<Machine<NF.Value>> {
-		const observe = (value: NF.Value): Evaluation<Machine<View>> =>
-			Do.let("known", () => schedule.view(value)).in(({ known }) =>
-				match(known)
-					.with(View.Sealed(NF.Patterns.Modal), ({ value }) => observe(value.value))
-					.otherwise(() => result(known)),
-			);
-
-		return yield* match(assumption)
-			.with(NF.Patterns.Existential, result)
-			.otherwise(() =>
-				Do.let("known", () => observe(assumption)).in(({ known }) =>
-					match(known)
-						.with(View.Blocked(), () => schedule.pack(assumption))
-						.otherwise(() => result(assumption)),
-				),
-			);
+	*continue(
+		{ variable, annotation, assumptions, body }: Extract<NF.Value, { type: "Existential" }>,
+		work: Evaluation<Machine<NF.Value>>,
+	): Evaluation<Machine<NF.Value>> {
+		return yield* NbE.local(
+			{
+				env: _ => body.ctx,
+				residualScope: depth => Math.max(depth, ...[...assumptions.keys()].map(({ lvl }) => lvl + 1)),
+			},
+			Do.let("value", function* () {
+				yield* Stack.enter(yield* scope());
+				return yield* work;
+			}).in(({ value }) => result(NF.Constructors.Exists(variable, annotation, { ctx: body.ctx, value }, assumptions))),
+		);
 	},
 
 	*pack(assumption: NF.Value): Evaluation<Machine<NF.Value>> {
@@ -819,54 +845,6 @@ export const schedule = {
 		const extended = EB.extend(ctx, { type: "Let", variable: name }, value);
 
 		return yield* result(NF.Constructors.Exists(name, NF.Irrelevant, { ctx: extended, value }, new Map([[variable, assumption]])));
-	},
-
-	*call(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evaluation<Machine<NF.Value>> {
-		return yield* match(nff)
-			.with({ type: "Neutral", kind: "Symbolic" }, function* () {
-				return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.App(nff, nfa, icit)));
-			})
-			.with({ type: "Abs" }, ({ closure, binder }) => schedule.apply(binder, closure, nfa))
-			.with({ type: "Lit", value: { type: "Atom" } }, function* ({ value }) {
-				return yield* result(NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit));
-			})
-			.with({ type: "Var", variable: { type: "Meta" } }, function* () {
-				const symbolic = NF.Constructors.Neutral("Symbolic", nff);
-				return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.App(symbolic, nfa, icit)));
-			})
-			.with({ type: "Var", variable: { type: "Foreign" } }, function* () {
-				return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
-			})
-			/*
-			 * An over-applied constructor spine: reduce the inner application, then grow the
-			 * spine by one. Re-dispatching the result instead would not terminate — an atom
-			 * head reduces to the very node it came from.
-			 */
-			.with({ type: "App" }, function* ({ func, arg, icit: argIcit }) {
-				return yield* Do.let("intermediate", () => schedule.reduce(func, arg, argIcit)).in(({ intermediate }) =>
-					result(NF.Constructors.App(intermediate, nfa, icit)),
-				);
-			})
-			.with({ type: "External" }, function* ({ name, args, arity, compute }) {
-				if (arity === 0) {
-					return yield* result(compute());
-				}
-
-				const accumulated = [...args, nfa];
-
-				if (accumulated.length < arity) {
-					return yield* result(NF.Constructors.External(name, arity, compute, accumulated));
-				}
-
-				if (accumulated.some(blocksExternal)) {
-					return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.External(name, arity, compute, accumulated)));
-				}
-
-				return yield* result(compute(...accumulated.map(operand)));
-			})
-			.otherwise(function* () {
-				throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
-			});
 	},
 
 	/** Consumes a closure with an argument: the body's scope, or the primop's result, or the continuation's replay. */
