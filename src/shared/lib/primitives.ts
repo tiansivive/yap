@@ -209,6 +209,7 @@ const concatenate = (x: NF.Value, y: NF.Value): NF.Value => {
 
 
 // Verification interprets membership after the ordinary External has collected its arguments.
+// TODO: Revisit this interpretation if user-defined state operations make membership expressible in ordinary Yap code.
 const live = (...args: NF.Value[]): NF.Value => NF.Constructors.Neutral("Sealed", NF.Constructors.External(OP_LIVE, 4, live, args));
 
 export const PrimOps: EB.Context['ffi'] = {
