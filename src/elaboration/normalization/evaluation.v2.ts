@@ -33,7 +33,6 @@ import assert from "assert";
 
 import * as Lit from "@yap/shared/literals";
 import * as Q from "@yap/shared/modalities/multiplicity";
-import { OP_EQ, OP_NEQ } from "@yap/shared/lib/primitives";
 
 /** Crash messages are plain expressions: a boundary run over snapshots, like any other boundary. */
 const shown = (ctx: EB.Context, program: () => ReturnType<typeof display>): string => Eff.run(program, [NbE.Env.handlers(ctx), Metas.registry.handlers({})])[0];
@@ -856,11 +855,11 @@ export const schedule = {
 								return yield* result(NF.Constructors.External(name, arity, compute, accumulated));
 							}
 
-							if (accumulated.some(value => blocksExternal(value, name))) {
+							if (accumulated.some(value => blocksExternal(value))) {
 								return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.External(name, arity, compute, accumulated)));
 							}
 
-							return yield* result(compute(...accumulated.map(value => operand(value, name))));
+							return yield* result(compute(...accumulated.map(operand)));
 						})
 						.otherwise(function* () {
 							throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
@@ -1167,11 +1166,11 @@ export const schedule = {
 					function* (forced) {
 						const changed = forced.some((arg, index) => arg !== ext.args[index]);
 
-						if (forced.some(value => blocksExternal(value, ext.name))) {
+						if (forced.some(value => blocksExternal(value))) {
 							return yield* result(changed ? NF.Constructors.Neutral("Blocked", NF.Constructors.External(ext.name, ext.arity, ext.compute, forced)) : value);
 						}
 
-						return yield* result(ext.compute(...forced.map(value => operand(value, ext.name))));
+						return yield* result(ext.compute(...forced.map(operand)));
 					},
 				);
 			})
@@ -1296,22 +1295,21 @@ export const ignoreModal = (value: NF.Value): NF.Value => {
 };
 
 /** What a primitive computes on: the value under its refinements and under the reference it was reached through. */
-const operand = (value: NF.Value, name: string): NF.Value =>
-	match([name, value])
-		.with([P._, NF.Patterns.Modal], ([, { value }]) => operand(value, name))
-		.with([P._, NF.Patterns.Glued], ([, { unfolded }]) => operand(unfolded, name))
-		.with([P.union(OP_EQ, OP_NEQ), NF.Patterns.Sealed], ([, { value }]) => operand(value, name))
+const operand = (value: NF.Value): NF.Value =>
+	match(value)
+		.with(NF.Patterns.Modal, NF.Patterns.Sealed, ({ value }) => operand(value))
+		.with(NF.Patterns.Glued, ({ unfolded }) => operand(unfolded))
 		.otherwise(() => value);
 
 /*
- * A foreign operand's value may be unavailable during normalization, so equality waits for
- * literal operands and leaves the comparison blocked.
- * :TODO: Use the same blocked-call path for arithmetic and ordering when a foreign operand's value is unavailable.
+ * An opaque foreign operand leaves an external call blocked because its value is unavailable during normalization.
+ * Partial externals remain callable while their argument list is incomplete.
  */
-const blocksExternal = (value: NF.Value, name: string): boolean =>
-	match([name, operand(value, name)])
-		.with([P.union(OP_EQ, OP_NEQ), NF.Patterns.Lit], () => false)
-		.with([P.union(OP_EQ, OP_NEQ), P._], [P._, NF.Patterns.Unresolved], () => true)
+const blocksExternal = (value: NF.Value, supplied = 0): boolean =>
+	match(operand(value))
+		.with(NF.Patterns.Unresolved, NF.Patterns.Foreign, () => true)
+		.with(NF.Patterns.App, ({ func }) => blocksExternal(func, supplied + 1))
+		.with(NF.Patterns.External, ({ args, arity }) => args.length + supplied >= arity)
 		.otherwise(() => false);
 
 export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "%"];
