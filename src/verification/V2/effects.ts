@@ -7,6 +7,7 @@ import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import type { IVL } from "../solver/ivl/types";
 import type { Obligation } from "./types";
+import { P } from "ts-pattern";
 
 /*
  * The verification row. Metacontext state solutions, reader
@@ -166,6 +167,22 @@ export const names = Eff.reader<ReadonlyMap<number, string>, "VC.Names">("VC.Nam
 export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
 export const definitions = Eff.reader<ReadonlyMap<number, NF.Value>, "VC.Definitions">("VC.Definitions");
 
+const heads = { empty: "$empty", insert: "$insert" } as const;
+
+export const State = {
+	heads,
+	Patterns: {
+		empty: { ...NF.Patterns.External, name: heads.empty, arity: 0, args: [] },
+		insert: { ...NF.Patterns.External, name: heads.insert, arity: 3, args: [P._, P._, P._] },
+	} as const,
+	insert: function* (current: NF.Value, identity: NF.Value, annotation: NF.Value) {
+		const head = yield* NF.evaluate(EB.DSL.foreign(heads.insert));
+		const typed = yield* NF.reduce(head, annotation, "Explicit");
+		const previous = yield* NF.reduce(typed, current, "Explicit");
+		return yield* NF.reduce(previous, identity, "Explicit");
+	},
+};
+
 // ─── Row ─────────────────────────────────────────────────────────────────────
 
 export type Verification<A> = Eff.Eff<
@@ -195,9 +212,29 @@ export const fail = function* (cause: import("@yap/elaboration/shared/errors").C
 export type VerificationOptions = { logging?: boolean; state?: NF.Value };
 
 export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () => Verification<A>, options: VerificationOptions = {}) => {
-	const empty = "$state.empty";
-	const initial = NF.Constructors.Var({ type: "Foreign", name: empty });
-	const context = { ...ctx, imports: { ...ctx.imports, [empty]: [EB.Constructors.Var({ type: "Foreign", name: empty }), NF.State, []] satisfies EB.AST } };
+	const foreign = (name: string, arity: number) => {
+		const compute = (...args: NF.Value[]): NF.Value => NF.Constructors.Neutral("Sealed", NF.Constructors.External(name, arity, compute, args));
+		return { arity, compute };
+	};
+	const insert = NF.Constructors.Pi(
+		"E",
+		"Explicit",
+		NF.Type,
+		NF.Constructors.Closure(ctx, EB.Constructors.Pi("s", "Explicit", EB.State, EB.Constructors.Pi("e", "Explicit", EB.DSL.bound(1), EB.State))),
+	);
+	const context = {
+		...ctx,
+		imports: {
+			...ctx.imports,
+			[State.heads.empty]: [EB.Constructors.Var({ type: "Foreign", name: State.heads.empty }), NF.State, []] satisfies EB.AST,
+			[State.heads.insert]: [EB.Constructors.Var({ type: "Foreign", name: State.heads.insert }), insert, []] satisfies EB.AST,
+		},
+		ffi: {
+			...ctx.ffi,
+			[State.heads.empty]: foreign(State.heads.empty, 0),
+			[State.heads.insert]: foreign(State.heads.insert, 3),
+		},
+	};
 	const initialized = function* () {
 		const outer = yield* Eff.traverse([...ctx.env].reverse(), entry => supply.freshFrom(entry.name.variable));
 		return yield* names.local(() => new Map(outer.map((name, lvl) => [lvl, name])), program());
@@ -210,7 +247,7 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 		obligations.handlers(),
 		supply.handlers(),
 		names.handlers(new Map()),
-		state.handlers(options.state ?? initial),
+		state.handlers(options.state ?? context.ffi[State.heads.empty].compute()),
 		definitions.handlers(new Map()),
 	]);
 

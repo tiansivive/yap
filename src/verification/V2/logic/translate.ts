@@ -27,9 +27,50 @@ import {
 
 import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
-import { reader, obligations, names, state, definitions, supply, type Verification } from "../effects";
+import { reader, obligations, names, state, State, definitions, supply, type Verification } from "../effects";
 
 const BooleanExternal = { ...NF.Patterns.External, name: P.union(OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LTE, OP_GTE, OP_AND, OP_OR, OP_NOT) } as const;
+const ForeignConstant = { ...NF.Patterns.External, arity: 0, args: [] } as const;
+
+export const live = function* (current: NF.Value, identity: NF.Value): Verification<IVL.Formula> {
+	const { value } = yield* NF.view(current);
+	const ambient = function* () {
+		const available = yield* term(current);
+		const requested = yield* term(identity);
+		return Build.atom("=", Build.app("$state.live", [available, requested], Build.Bool), Build.bool(true));
+	};
+	return yield* match(value)
+		.with(
+			NF.Patterns.Existential,
+			ex => ex.assumptions.size > 0,
+			function* ({ assumptions, body }) {
+				return yield* definitions.local(
+					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
+					live(body.value, identity),
+				);
+			},
+		)
+		.with(NF.Patterns.Rigid, function* ({ variable }) {
+			const env = yield* definitions.ask();
+			const definition = env.get(variable.lvl);
+			if (!definition) {
+				return yield* ambient();
+			}
+			return yield* live(definition, identity);
+		})
+		.with(State.Patterns.empty, function* () {
+			return Build.false_();
+		})
+		.with(State.Patterns.insert, function* ({ args: [, previous, added] }) {
+			const installed = yield* term(added);
+			const requested = yield* term(identity);
+			/* Installing an identity preserves every handler available in the previous state.
+			 * Membership holds when the requested identity matches this installation or was available before it. */
+			const availableBeforeInsertion = yield* live(previous, identity);
+			return Build.or(Build.atom("=", installed, requested), availableBeforeInsertion);
+		})
+		.otherwise(ambient);
+};
 
 export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
 	const ctx = yield* reader.ask();
@@ -229,6 +270,12 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 					throw new Error("Unsupported literal in logical formulas");
 				});
 		})
+		.with(State.Patterns.insert, function* ({ args: [, previous, installed] }) {
+			const current = yield* term(previous);
+			const identity = yield* term(installed);
+			const sort = yield* mkSort(NF.State);
+			return Build.app(State.heads.insert, [current, identity], sort);
+		})
 		.with(NF.Patterns.App, function* (fn) {
 			const { head, ret } = yield* getFnSorts(fn);
 			const args = yield* collectArgs(fn);
@@ -292,6 +339,12 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 				return Build.prop(yield* formula(nf));
 			},
 		)
+		.with(ForeignConstant, function* ({ name }) {
+			// TODO: Revisit this translation when atom introduction gains another form alongside foreign declarations.
+			const [, annotation] = ctx.imports[name];
+			const sort = yield* mkSort(annotation);
+			return Build.const_(name, sort);
+		})
 		.with({ type: "External" }, function* (e) {
 			if (e.args.length !== e.arity) {
 				throw new Error("External with wrong arity in logical formulas");

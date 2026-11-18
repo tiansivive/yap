@@ -855,7 +855,7 @@ export const schedule = {
 								return yield* result(NF.Constructors.External(name, arity, compute, accumulated));
 							}
 
-							if (accumulated.some(blocksExternal)) {
+							if (accumulated.some(value => blocksExternal(value))) {
 								return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.External(name, arity, compute, accumulated)));
 							}
 
@@ -1166,7 +1166,7 @@ export const schedule = {
 					function* (forced) {
 						const changed = forced.some((arg, index) => arg !== ext.args[index]);
 
-						if (forced.some(blocksExternal)) {
+						if (forced.some(value => blocksExternal(value))) {
 							return yield* result(changed ? NF.Constructors.Neutral("Blocked", NF.Constructors.External(ext.name, ext.arity, ext.compute, forced)) : value);
 						}
 
@@ -1297,13 +1297,19 @@ export const ignoreModal = (value: NF.Value): NF.Value => {
 /** What a primitive computes on: the value under its refinements and under the reference it was reached through. */
 const operand = (value: NF.Value): NF.Value =>
 	match(value)
-		.with(NF.Patterns.Modal, ({ value }) => operand(value))
+		.with(NF.Patterns.Modal, NF.Patterns.Sealed, ({ value }) => operand(value))
 		.with(NF.Patterns.Glued, ({ unfolded }) => operand(unfolded))
 		.otherwise(() => value);
 
-const blocksExternal = (value: NF.Value): boolean =>
+/*
+ * An opaque foreign operand leaves an external call blocked because its value is unavailable during normalization.
+ * Partial externals remain callable while their argument list is incomplete.
+ */
+const blocksExternal = (value: NF.Value, supplied = 0): boolean =>
 	match(operand(value))
-		.with(NF.Patterns.Unresolved, () => true)
+		.with(NF.Patterns.Unresolved, NF.Patterns.Foreign, () => true)
+		.with(NF.Patterns.App, ({ func }) => blocksExternal(func, supplied + 1))
+		.with(NF.Patterns.External, ({ args, arity }) => args.length + supplied >= arity)
 		.otherwise(() => false);
 
 export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "%"];

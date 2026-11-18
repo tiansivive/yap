@@ -9,8 +9,8 @@ import * as Eff from "@yap/utils/effects";
 import { mkCtx, runNF } from "../../elaboration/inference/__tests__/util";
 import { elaborateModule } from "../../elaboration/__tests__/module";
 import { VerificationServiceV2 } from "../V2/service";
-import { run, state } from "../V2/effects";
-import { scope, term } from "../V2/logic/translate";
+import { reader, run, state, State } from "../V2/effects";
+import { live, scope, term } from "../V2/logic/translate";
 import { Build } from "../solver/ivl/build";
 import { Validity } from "../validity";
 
@@ -52,7 +52,7 @@ describe("Psi verification", () => {
 		const { answer, registry } = VerificationServiceV2().synth(core, ctx, registered());
 		assert(!Eff.failed(answer));
 		expect(Validity.check(answer[1].vc).tag).toBe(expected);
-		expect(registry[meta.val].solution).toMatchObject({ type: "Var", variable: { type: "Foreign", name: "$state.empty" } });
+		expect(registry[meta.val].solution).toMatchObject({ type: "Neutral", kind: "Sealed", value: { type: "External", name: "$empty", args: [] } });
 		expect(registered()[meta.val].solution).toBeUndefined();
 	});
 
@@ -121,7 +121,64 @@ describe("Psi verification", () => {
 			return yield* term(current);
 		});
 		assert(!Eff.failed(answer));
-		expect(answer).toEqual(Build.const_("$state.empty", Build.uninterpreted("State")));
+		expect(answer).toEqual(Build.const_("$empty", Build.uninterpreted("State")));
+	});
+
+	it("preserves carrier typing and nested state membership through quotation", () => {
+		const carrier = normalize(D.app(D.app(D.type("Effect"), D.type("Unit")), num));
+		const ambient = EB.bind(mkCtx(), { type: "Pi", variable: "s" }, NF.State);
+		const first = EB.bind(ambient, { type: "Pi", variable: "Ask" }, carrier);
+		const ctx = EB.bind(first, { type: "Pi", variable: "Tell" }, carrier);
+		const { answer } = run(
+			ctx,
+			Metas.empty,
+			function* () {
+				const current = yield* state.ask();
+				const ask = NF.Constructors.Rigid(1);
+				const tell = NF.Constructors.Rigid(2);
+				const inserted = yield* State.insert(current, ask, carrier);
+				const nested = yield* State.insert(inserted, tell, carrier);
+				const quoted = yield* NF.quote(ctx.env.length, nested);
+				const restored = yield* NF.evaluate(quoted);
+				const context = yield* reader.ask();
+				const [, signature] = context.imports[State.heads.insert];
+				assert(signature.type === "Abs" && signature.binder.type === "Pi" && signature.binder.icit === "Explicit");
+				const stateParameter = yield* NF.apply(signature.binder, signature.closure, carrier);
+				assert(stateParameter.type === "Abs");
+				const identityParameter = yield* NF.apply(stateParameter.binder, stateParameter.closure, current);
+				assert(identityParameter.type === "Abs");
+				return {
+					carrier: identityParameter.binder.annotation,
+					result: yield* NF.apply(identityParameter.binder, identityParameter.closure, ask),
+					quoted: yield* NF.quote(ctx.env.length, inserted),
+					before: yield* term(nested),
+					after: yield* term(restored),
+					membership: yield* live(restored, ask),
+					current: yield* term(current),
+					ask: yield* term(ask),
+					tell: yield* term(tell),
+				};
+			},
+			{ state: NF.Constructors.Rigid(0) },
+		);
+		assert(!Eff.failed(answer));
+		expect(answer.carrier).toBe(carrier);
+		expect(answer.result).toMatchObject({ type: "Lit", value: { type: "Atom", value: "State" } });
+		expect(answer.quoted).toMatchObject({
+			type: "App",
+			icit: "Explicit",
+			func: { type: "App", icit: "Explicit", func: { type: "App", icit: "Explicit", func: { type: "Var", variable: { name: "$insert" } } } },
+		});
+		const sort = Build.uninterpreted("State");
+		expect(answer.before).toEqual(Build.app("$insert", [Build.app("$insert", [answer.current, answer.ask], sort), answer.tell], sort));
+		expect(answer.after).toEqual(answer.before);
+		expect(answer.membership).toEqual(
+			Build.or(
+				Build.atom("=", answer.tell, answer.ask),
+				Build.atom("=", answer.ask, answer.ask),
+				Build.atom("=", Build.app("$state.live", [answer.current, answer.ask], Build.Bool), Build.bool(true)),
+			),
+		);
 	});
 
 	it("compares state and value requirements at their own application stages", () => {
