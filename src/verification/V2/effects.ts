@@ -164,6 +164,7 @@ export const supply = { fresh, freshNum, freshFrom, handlers: supplyHandlers };
 
 export const names = Eff.reader<ReadonlyMap<number, string>, "VC.Names">("VC.Names");
 export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
+export const definitions = Eff.reader<ReadonlyMap<number, NF.Value>, "VC.Definitions">("VC.Definitions");
 
 // ─── Row ─────────────────────────────────────────────────────────────────────
 
@@ -172,6 +173,7 @@ export type Verification<A> = Eff.Eff<
 	| Eff.Actions<typeof names>
 	| Eff.Only<typeof Metas.registry, "Registry.get" | "Registry.modify">
 	| Eff.Actions<typeof state>
+	| Eff.Actions<typeof definitions>
 	| Eff.Actions<typeof except>
 	| LoggerActions
 	| RecordAction
@@ -209,6 +211,7 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 		supply.handlers(),
 		names.handlers(new Map()),
 		state.handlers(options.state ?? initial),
+		definitions.handlers(new Map()),
 	]);
 
 	return { answer, obligations: collected, registry: registrySnapshot } as const;

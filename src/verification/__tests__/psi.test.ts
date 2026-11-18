@@ -135,8 +135,7 @@ describe("Psi verification", () => {
 		expect(Validity.check(reverse.answer).tag).toBe("valid");
 	});
 
-	// Retained predicate conjunctions require their existential assumptions during translation.
-	it.fails("verifies a positive identity with a retained parameter predicate", () => {
+	it("verifies a positive identity with a retained parameter predicate", () => {
 		expect(Validity.check(written("x")).tag).toBe("valid");
 	});
 
