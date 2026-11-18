@@ -260,8 +260,6 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			}
 
 			const lvl = ctx.env.length;
-			const appliedAt = yield* NF.apply(pAt.binder, pAt.closure, NF.Constructors.Rigid(lvl));
-			const appliedBt = yield* NF.apply(pBt.binder, pBt.closure, NF.Constructors.Rigid(lvl));
 
 			const sort = yield* mkSort(at.value);
 			const name = yield* supply.freshFrom(pAt.binder.variable);
@@ -270,6 +268,8 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 				{ type: "Pi", variable: name },
 				at.value,
 				(function* (): Verification<[IVL.Formula, IVL.Formula]> {
+					const appliedAt = yield* NF.apply(pAt.binder, pAt.closure, NF.Constructors.Rigid(lvl));
+					const appliedBt = yield* NF.apply(pBt.binder, pBt.closure, NF.Constructors.Rigid(lvl));
 					return [yield* formula(appliedAt), yield* formula(appliedBt)];
 				})(),
 			);
