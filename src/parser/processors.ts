@@ -245,6 +245,23 @@ export const Param = (p: [Variable, ...Annotation]): Param => {
 	};
 };
 
+type StateParam = { state: Variable; variable: Variable; annotation: Term };
+
+export const StateParam: PostProcessor<[Variable, Whitespace, Token, Whitespace, Variable, Whitespace, Token, Whitespace, Term], StateParam> = args => {
+	const [state, , , , variable, , , , annotation] = args;
+	return { state, variable, annotation };
+};
+
+export const StatePi: PostProcessor<[StateParam, Whitespace, Token, Whitespace, Term], Term> = ([{ state, variable, annotation }, , , , body]) => ({
+	type: "pi",
+	icit: "Explicit",
+	state: state.value,
+	variable: variable.value,
+	annotation,
+	body,
+	location: locSpan(state.location, body.location),
+});
+
 /***********************************************************
  * Row related processors
  ***********************************************************/
