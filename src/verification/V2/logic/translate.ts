@@ -27,7 +27,7 @@ import {
 
 import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
-import { reader, obligations, names, supply, type Verification } from "../effects";
+import { reader, obligations, names, state, supply, type Verification } from "../effects";
 
 const BooleanExternal = { ...NF.Patterns.External, name: P.union(OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LTE, OP_GTE, OP_AND, OP_OR, OP_NOT) } as const;
 
@@ -215,6 +215,11 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 		.with(NF.Patterns.NuLabel, function* ({ variable }) {
 			return Build.const_(`$${variable.lvl}.${variable.name}`, yield* mkSort(variable.annotation));
 		})
+		.with(NF.Patterns.Foreign, function* ({ variable }) {
+			const [, annotation] = ctx.imports[variable.name];
+			const sort = yield* mkSort(annotation);
+			return Build.const_(variable.name, sort);
+		})
 		.with(NF.Patterns.Var, function* (v) {
 			if (v.variable.type === "Bound") {
 				const entry = ctx.env[EB.lvl2idx(ctx, v.variable.lvl)];
@@ -335,7 +340,12 @@ export const scope = function* <A>(name: string, binder: EB.Binder, annotation: 
 	const lvl = (yield* reader.ask()).env.length;
 	return yield* reader.local(
 		c => EB.bind(c, binder, annotation),
-		names.local(bound => new Map([...bound, [lvl, name]]), program),
+		names.local(
+			bound => new Map([...bound, [lvl, name]]),
+			match(binder)
+				.with({ type: "Psi" }, () => state.local(() => NF.Constructors.Rigid(lvl), program))
+				.otherwise(() => program),
+		),
 	);
 };
 
@@ -351,7 +361,7 @@ export const quantify = function* (name: string, annotation: NF.Value, vc: IVL.F
 			);
 			return yield* reader.local(() => ex.body.ctx, quantify(existential, ex.annotation, inner));
 		})
-		.with(NF.View.Sealed(NF.Patterns.Pi), function* () {
+		.with(NF.View.Sealed(NF.Patterns.Pi), NF.View.Sealed(NF.Patterns.Psi), function* () {
 			return vc;
 		})
 		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: { modalities } }) {

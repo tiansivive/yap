@@ -14,24 +14,21 @@ import { subtype } from "./subtype";
 type Outcome<A> = {
 	answer: A | Eff.Aborted<Err>;
 	obligations: Obligation[];
+	registry: Metas.Registry;
 };
 
 export const VerificationServiceV2 = (options: VerificationOptions = {}) => ({
 	check: (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry): Outcome<VerificationArtefacts> => {
-		const { answer, obligations } = run(ctx, registry, () => check(tm, ty), options);
-		return { answer, obligations };
+		return run(ctx, registry, () => check(tm, ty), options);
 	},
 	/* Let bodies retain the self-binder introduced during elaboration. */
 	letdec: (variable: string, tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry): Outcome<VerificationArtefacts> => {
-		const { answer, obligations } = run(EB.bind(ctx, { type: "Let", variable }, ty), registry, () => check(tm, ty), options);
-		return { answer, obligations };
+		return run(EB.bind(ctx, { type: "Let", variable }, ty), registry, () => check(tm, ty), options);
 	},
 	synth: (tm: EB.Term, ctx: EB.Context, registry: Metas.Registry): Outcome<SynthResult> => {
-		const { answer, obligations } = run(ctx, registry, () => synth(tm), options);
-		return { answer, obligations };
+		return run(ctx, registry, () => synth(tm), options);
 	},
 	subtype: (left: NF.Value, right: NF.Value, ctx: EB.Context, registry: Metas.Registry): Outcome<IVL.Formula> => {
-		const { answer, obligations } = run(ctx, registry, () => subtype(left, right), options);
-		return { answer, obligations };
+		return run(ctx, registry, () => subtype(left, right), options);
 	},
 });
