@@ -14,7 +14,7 @@ import { Build } from "../solver/ivl/build";
 import type { VerificationArtefacts } from "./types";
 import { reader, fail, logger, obligations, supply, type Verification } from "./effects";
 import { collectSigmaBindings, noCapture } from "./utils/context";
-import { domain, extractModalities, meet } from "./utils/refinements";
+import { extractModalities, meet } from "./utils/refinements";
 import { synth } from "./synth";
 import { subtype } from "./subtype";
 import { mkSort, formula, quantify, scope } from "./logic/translate";
@@ -54,7 +54,9 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					},
 				)
 				.with([EB.CtorPatterns.Psi, NF.Patterns.Psi], [{ type: "Abs" }, NF.Patterns.Pi], function* ([term, type]) {
-					const annotation = domain(type.binder);
+					const annotation = match(type.binder)
+						.with({ type: "Psi" }, ({ annotation, requirement }) => NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement }))
+						.otherwise(({ annotation }) => annotation);
 					const name = yield* supply.freshFrom(term.binding.variable);
 					return yield* scope(
 						name,

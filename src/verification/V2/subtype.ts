@@ -9,7 +9,7 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import { Liquid } from "../modalities";
-import { domain, extractModalities, isFirstOrder } from "./utils/refinements";
+import { extractModalities, isFirstOrder } from "./utils/refinements";
 import { noCapture, withRowLabels } from "./utils/context";
 import { reader, fail, logger, obligations, supply, type Verification } from "./effects";
 import { mkSort, formula, quantify, scope } from "./logic/translate";
@@ -204,6 +204,10 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			return Build.and(vc1, vc2);
 		})
 		.with([NF.Patterns.Psi, NF.Patterns.Psi], [NF.Patterns.Pi, NF.Patterns.Pi], [NF.Patterns.Lambda, NF.Patterns.Lambda], function* ([at, bt]) {
+			const domain = (binder: NF.Binder): NF.Value =>
+				match(binder)
+					.with({ type: "Psi" }, ({ annotation, requirement }) => NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement }))
+					.otherwise(({ annotation }) => annotation);
 			const annotationA = domain(at.binder);
 			const annotationB = domain(bt.binder);
 			const vcArg = yield* subtype(annotationB, annotationA);

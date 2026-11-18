@@ -138,11 +138,6 @@ export const isFirstOrder = function* (ty: NF.Value): Verification<boolean> {
 		});
 };
 
-export const domain = (binder: NF.Binder): NF.Value =>
-	match(binder)
-		.with({ type: "Psi" }, ({ annotation, requirement }) => NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement }))
-		.otherwise(({ annotation }) => annotation);
-
 const body = function* (liquid: NF.Value): Verification<EB.Term> {
 	assert(liquid.type === "Abs" && liquid.binder.type === "Lambda", "Liquid refinement must be a lambda");
 	const lvl = (yield* reader.ask()).env.length;
