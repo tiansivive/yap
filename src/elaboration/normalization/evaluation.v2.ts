@@ -1303,6 +1303,11 @@ const operand = (value: NF.Value, name: string): NF.Value =>
 		.with([P.union(OP_EQ, OP_NEQ), NF.Patterns.Sealed], ([, { value }]) => operand(value, name))
 		.otherwise(() => value);
 
+/*
+ * A foreign operand's value may be unavailable during normalization, so equality waits for
+ * literal operands and leaves the comparison blocked.
+ * :TODO: Use the same blocked-call path for arithmetic and ordering when a foreign operand's value is unavailable.
+ */
 const blocksExternal = (value: NF.Value, name: string): boolean =>
 	match([name, operand(value, name)])
 		.with([P.union(OP_EQ, OP_NEQ), NF.Patterns.Lit], () => false)
