@@ -21,6 +21,7 @@ export type Bare =
 	| {
 			type: "pi";
 			icit: Implicitness;
+			state?: string;
 			variable: string;
 			annotation: Term;
 			body: Term;

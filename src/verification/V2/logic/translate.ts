@@ -16,6 +16,7 @@ import {
 	OP_GTE,
 	OP_LT,
 	OP_LTE,
+	OP_LIVE,
 	OP_MUL,
 	OP_NEQ,
 	OP_NOT,
@@ -29,7 +30,7 @@ import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
 import { reader, obligations, names, state, State, definitions, supply, type Verification } from "../effects";
 
-const BooleanExternal = { ...NF.Patterns.External, name: P.union(OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LTE, OP_GTE, OP_AND, OP_OR, OP_NOT) } as const;
+const BooleanExternal = { ...NF.Patterns.External, name: P.union(OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LTE, OP_GTE, OP_AND, OP_OR, OP_NOT, OP_LIVE) } as const;
 const ForeignConstant = { ...NF.Patterns.External, arity: 0, args: [] } as const;
 
 export const live = function* (current: NF.Value, identity: NF.Value): Verification<IVL.Formula> {
@@ -398,6 +399,10 @@ export const formula = function* (nf: NF.Value): Verification<IVL.Formula> {
 		})
 		.with({ type: "External" }, function* ({ name, args }) {
 			return yield* match(name)
+				.with(OP_LIVE, function* () {
+					const [current, , , identity] = args;
+					return yield* live(current, identity);
+				})
 				.with(OP_AND, function* () {
 					return Build.and(yield* formula(args[0]), yield* formula(args[1]));
 				})

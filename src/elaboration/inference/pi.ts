@@ -13,8 +13,13 @@ export const infer = (pi: Pi): M.Elaboration<EB.AST> =>
 		return yield* match(pi.icit)
 			.with("Implicit", () => arrow(pi))
 			.with("Explicit", function* () {
-				const [term, type, [, ...usages]] = yield* M.reader.local(ctx => EB.bind(ctx, { type: "Psi", variable: "$s" }, NF.State, "inserted"), arrow(pi));
-				return [EB.Constructors.Psi("$s", EB.Unrestricted, term), type, usages] satisfies EB.AST;
+				const state = pi.type === "pi" ? pi.state : undefined;
+				const variable = state ?? "$s";
+				const [term, type, [, ...usages]] = yield* M.reader.local(
+					ctx => EB.bind(ctx, { type: "Psi", variable }, NF.State, state ? "source" : "inserted"),
+					arrow(pi),
+				);
+				return [EB.Constructors.Psi(variable, EB.Unrestricted, term), type, usages] satisfies EB.AST;
 			})
 			.exhaustive();
 	});

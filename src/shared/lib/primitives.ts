@@ -29,7 +29,9 @@ export const Terms = () => ({
     Bool: EB.Constructors.Lit(Lit.Atom("Bool")),
     String: EB.Constructors.Lit(Lit.Atom("String")),
     Unit: EB.Constructors.Lit(Lit.Atom("Unit")),
+    State: EB.State,
     Effect: EB.Constructors.Lit(Lit.Atom("Effect")),
+    live: EB.Constructors.Var({ type: "Foreign", name: "$live" }),
     "+": EB.Constructors.Var({ type: "Foreign", name: "$add" }),
     "-": EB.Constructors.Var({ type: "Foreign", name: "$sub" }),
     "*": EB.Constructors.Var({ type: "Foreign", name: "$mul" }),
@@ -69,6 +71,7 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         Bool: [Terms().Bool, NF.Type, []],
         String: [Terms().String, NF.Type, []],
         Unit: [Terms().Unit, NF.Type, []],
+        State: [Terms().State, NF.Type, []],
         Type: [Terms().Type, NF.Type, []],
     }
 
@@ -123,9 +126,20 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         term: EB.Constructors.Pi("y", "Explicit", Terms().Type, Terms().Type)
     })
 
+    const Live = NF.Constructors.Pi("st", "Explicit", NF.State, {
+        type: "Closure",
+        ctx: dummyContext,
+        term: EB.Constructors.Pi("p", "Implicit", Terms().Type,
+            EB.Constructors.Pi("r", "Implicit", Terms().Type,
+                EB.Constructors.Pi("e", "Explicit",
+                    EB.DSL.app(EB.DSL.app(Terms().Effect, EB.DSL.bound(1)), EB.DSL.bound(0)),
+                    Terms().Bool)))
+    })
+
     return {
         ...PrimTypes,
         Effect: [Terms().Effect, Type_Type_Type, []],
+        live: [Terms().live, Live, []],
         //"->": [Terms()["->"], Type_Type_Type, []],
         "+": [Terms()["+"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.add)]), []],
         "-": [Terms()["-"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.sub)]), []],
@@ -194,7 +208,11 @@ const concatenate = (x: NF.Value, y: NF.Value): NF.Value => {
 }
 
 
+// Verification interprets membership after the ordinary External has collected its arguments.
+const live = (...args: NF.Value[]): NF.Value => NF.Constructors.Neutral("Sealed", NF.Constructors.External(OP_LIVE, 4, live, args));
+
 export const PrimOps: EB.Context['ffi'] = {
+    $live: { arity: 4, compute: live },
     $add: { arity: 2, compute: (x: NF.Value, y: NF.Value) => arithmetic(x, y, (a, b) => a + b) },
     $sub: { arity: 2, compute: (x: NF.Value, y: NF.Value) => arithmetic(x, y, (a, b) => a - b) },
     $mul: { arity: 2, compute: (x: NF.Value, y: NF.Value) => arithmetic(x, y, (a, b) => a * b) },
@@ -235,6 +253,7 @@ export const OP_MUL = "$mul";
 export const OP_DIV = "$div";
 
 export const OP_CONCAT = "$concat";
+export const OP_LIVE = "$live";
 
 
 

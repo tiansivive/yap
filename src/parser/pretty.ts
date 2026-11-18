@@ -20,7 +20,9 @@ const doc = (term: Src.Term): PP.Doc =>
 			const ann = annotation ? [": ", doc(annotation)] : "";
 			return PP.binder(["λ(", variable, ann, ")"], arr(icit), doc(body));
 		})
-		.with({ type: "pi" }, ({ icit, variable, annotation, body }) => PP.binder(["Π(", variable, ": ", doc(annotation), ")"], arr(icit), doc(body)))
+		.with({ type: "pi" }, ({ icit, state, variable, annotation, body }) =>
+			PP.binder(["Π(", state ? [state, " |- "] : "", variable, ": ", doc(annotation), ")"], arr(icit), doc(body)),
+		)
 		.with({ type: "application" }, ({ icit, fn, arg }) => {
 			const needsFnParens = fn.type !== "var" && fn.type !== "lit" && fn.type !== "application";
 			const needsArgParens = isMatching({ type: P.union("lambda", "pi", "arrow", "annotation", "application", "match", "suspend", "reset", "with") }, arg);

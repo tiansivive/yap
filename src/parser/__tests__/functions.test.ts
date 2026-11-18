@@ -34,6 +34,12 @@ describe("parser: functions (lambdas, pis, applications)", () => {
 		expect(data.results[0]).toMatchSnapshot();
 	});
 
+	it("names the call state before the parameter annotation", () => {
+		const { results } = parser.feed(String.raw`(st |- u: Unit [| \value -> live st Ask |]) -> Num`);
+		expect(results).toHaveLength(1);
+		expect(results[0]).toMatchObject({ type: "pi", state: "st", variable: "u", icit: "Explicit", annotation: { type: "modal" } });
+	});
+
 	it("lambda: \\x -> 2", () => {
 		const data = parser.feed("\\x -> 2");
 		expect(data.results.length).toBe(1);

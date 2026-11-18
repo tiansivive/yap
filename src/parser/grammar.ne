@@ -29,6 +29,7 @@
 	  	arrow: /->/,
 		backarrow: /<-/,
 		fatArrow: /\=>/,
+		turnstile: /\|-/,
 		star: /\*/,
 		concat: /<>/,
 		concat2: /\+\+/,
@@ -169,6 +170,10 @@ TypedParam -> Identifier %space:? %colon %space:? TypeExpr 						{% P.Param %}
 
 Pi -> ModalType %space:? %arrow %space:? PiTail 		{% P.Pi("Explicit") %}
 	| ModalType %space:? %fatArrow %space:? PiTail 		{% P.Pi("Implicit") %}
+	| NamedStateParam %space:? %arrow %space:? PiTail {% P.StatePi %}
+
+NamedStateParam -> Parens[StateParam] {% P.extract %}
+StateParam -> Identifier %space:? %turnstile %space:? Identifier %space:? %colon %space:? TypeExpr {% P.StateParam %}
 
 PiTail -> Pi {% id %}
 		| ModalType {% id %}
