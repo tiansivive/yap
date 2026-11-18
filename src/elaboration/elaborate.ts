@@ -26,7 +26,9 @@ export const infer = (ast: Src.Term): M.Elaboration<AST> => {
 
 				return ast;
 			})
-			.with({ type: "var" }, ({ variable }) => EB.lookup(variable, ctx))
+			.with({ type: "var" }, function* ({ variable }) {
+				return yield* EB.Icit.predicates(yield* EB.lookup(variable, ctx));
+			})
 
 			.with({ type: "lit" }, EB.Lit.infer)
 			.with({ type: "hole" }, EB.Hole.infer)

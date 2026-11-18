@@ -123,6 +123,12 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 				.with({ type: "Sigma" }, { type: "SigmaV2" }, function* ({ variable, annotation }) {
 					return ["Σ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
+				.with({ type: "Psi" }, function* ({ variable, requirement }) {
+					return ["ψ", variable, " [| ", yield* go(requirement), " |]"] satisfies PP.Doc;
+				})
+				.with({ type: "Phi" }, function* ({ variable, annotation }) {
+					return ["ϕ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
+				})
 				.with({ type: "Pi" }, function* ({ variable, annotation }) {
 					return ["Π(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
@@ -134,7 +140,7 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 				});
 
 			const arrow = match(binding)
-				.with({ type: "Sigma" }, { type: "SigmaV2" }, { type: "Nu" }, () => ".")
+				.with({ type: "Sigma" }, { type: "SigmaV2" }, { type: "Nu" }, { type: "Psi" }, { type: "Phi" }, () => ".")
 				.with({ icit: "Implicit" }, () => "=>")
 				.otherwise(() => "->");
 

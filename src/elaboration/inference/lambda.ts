@@ -1,3 +1,4 @@
+import { match } from "ts-pattern";
 import * as O from "fp-ts/lib/Option";
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
@@ -9,6 +10,18 @@ import * as Src from "@yap/src/index";
 type Lambda = Extract<Src.Term, { type: "lambda" }>;
 
 export const infer = (lam: Lambda): M.Elaboration<EB.AST> =>
+	M.tracer.track({ tag: "src", type: "term", term: lam, metadata: { action: "infer", description: "Call state" } }, function* () {
+		return yield* match(lam.icit)
+			.with("Implicit", () => lambda(lam))
+			.with("Explicit", function* () {
+				const [term, type, [, ...usages]] = yield* M.reader.local(ctx => EB.bind(ctx, { type: "Psi", variable: "$s" }, NF.State, "inserted"), lambda(lam));
+				const requirement = yield* NF.normalize(EB.Unrestricted);
+				return [EB.Constructors.Psi("$s", EB.Unrestricted, term), NF.Constructors.Psi("$s", requirement, yield* NF.closeVal(type)), usages] satisfies EB.AST;
+			})
+			.exhaustive();
+	});
+
+const lambda = (lam: Lambda): M.Elaboration<EB.AST> =>
 	M.tracer.track({ tag: "src", type: "term", term: lam, metadata: { action: "infer", description: "Lambda" } }, function* () {
 		const ctx = yield* M.reader.ask();
 

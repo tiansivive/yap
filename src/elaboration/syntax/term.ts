@@ -3,7 +3,7 @@ import { Types } from "@yap/utils";
 import * as NF from "../normalization";
 import * as R from "@yap/shared/rows";
 import * as Lit from "@yap/shared/literals";
-import { Implicitness } from "@yap/shared/implicitness";
+import { Elimination, Implicitness } from "@yap/shared/implicitness";
 import { Literal } from "@yap/shared/literals";
 
 import { Simplify } from "type-fest";
@@ -18,7 +18,7 @@ type Constructor =
 	| { type: "Lit"; value: Literal }
 	| { type: "Var"; variable: Variable }
 	| { type: "Abs"; binding: Binding; body: Term }
-	| { type: "App"; icit: Implicitness; func: Term; arg: Term }
+	| { type: "App"; icit: Elimination; func: Term; arg: Term }
 	| { type: "Row"; row: Row }
 	| { type: "Proj"; label: string; term: Term }
 	| { type: "Inj"; label: string; value: Term; term: Term }
@@ -27,7 +27,7 @@ type Constructor =
 	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> }
 	| { type: "Reset"; term: Term; handling?: { identity: Term; handler: Term } }
 	| { type: "Shift"; body: Term }
-	| { type: "Bubble"; meta: number; values: NF.Value[], ann: Term; identity: Term; payload: Term; shift?: never }
+	| { type: "Bubble"; meta: number; values: NF.Value[]; ann: Term; identity: Term; payload: Term; shift?: never }
 	| { type: "Ann"; term: Term; ann: Term };
 
 export type Variable =
@@ -53,6 +53,8 @@ export type Binding = (
 	| { type: "Lambda"; variable: string; icit: Implicitness }
 	| { type: "Mu"; variable: string; source: string }
 	| { type: "Pi"; variable: string; icit: Implicitness }
+	| { type: "Psi"; variable: string; requirement: Term }
+	| { type: "Phi"; variable: string }
 	| { type: "Nu"; variable: string; mode: "strict" | "lazy"; labels: readonly string[]; scoped: Row }
 	| { type: "Sigma"; variable: string }
 	| { type: "SigmaV2"; variable: string }
@@ -112,6 +114,8 @@ export const Constructors = {
 			binding: { type: "Pi" as const, variable, icit, annotation },
 			body,
 		}),
+	Psi: (variable: string, requirement: Term, body: Term): Term => mk({ type: "Abs", binding: { type: "Psi", variable, requirement, annotation: State }, body }),
+	Phi: (variable: string, annotation: Term, body: Term): Term => mk({ type: "Abs", binding: { type: "Phi", variable, annotation }, body }),
 	Sigma: (variable: string, annotation: Term, body: Term): Term =>
 		mk({
 			type: "Abs",
@@ -156,7 +160,7 @@ export const Constructors = {
 		}),
 		Meta: (val: number, lvl: number): Extract<Variable, { type: "Meta" }> => ({ type: "Meta", val, lvl }),
 	},
-	App: (icit: Implicitness, func: Term, arg: Term): Term =>
+	App: (icit: Elimination, func: Term, arg: Term): Term =>
 		mk({
 			type: "App",
 			icit,
@@ -226,6 +230,8 @@ export const BindingPatterns = {
 	Let: { type: "Let" },
 	Lambda: { type: "Lambda" },
 	Pi: { type: "Pi" },
+	Psi: { type: "Psi" },
+	Phi: { type: "Phi" },
 	Mu: { type: "Mu" },
 	Nu: { type: "Nu" },
 	Sigma: { type: "Sigma" },
@@ -244,6 +250,8 @@ export const CtorPatterns = {
 	Lit: { type: "Lit" },
 	Lambda: { type: "Abs", binding: { type: "Lambda" } },
 	Pi: { type: "Abs", binding: { type: "Pi" } },
+	Psi: { type: "Abs", binding: { type: "Psi" } },
+	Phi: { type: "Abs", binding: { type: "Phi" } },
 	Mu: { type: "Abs", binding: { type: "Mu" } },
 	Nu: { type: "Abs", binding: { type: "Nu" } },
 	Sigma: { type: "Abs", binding: { type: "Sigma" } },
@@ -273,3 +281,6 @@ export const Type: Term = Constructors.Lit(Lit.Atom("Type"));
 export const Row: Term = Constructors.Lit(Lit.Atom("Row"));
 export const Any: Term = Constructors.Lit(Lit.Atom("Any"));
 export const Anonymous: Term = Constructors.Lit(Lit.Atom("$anonymous"));
+
+export const State: Term = Constructors.Lit(Lit.Atom("State"));
+export const Unrestricted: Term = Constructors.Lambda("s", "Explicit", Constructors.Lit(Lit.Bool(true)), State);

@@ -1,3 +1,5 @@
+import { match } from "ts-pattern";
+
 const IMPLICITNESS = {
 	Implicit: "Implicit",
 	Explicit: "Explicit",
@@ -5,6 +7,12 @@ const IMPLICITNESS = {
 export const { Implicit, Explicit } = IMPLICITNESS;
 export type Implicitness = (typeof IMPLICITNESS)[keyof typeof IMPLICITNESS];
 
-export const display = (icit: Implicitness): string => {
-	return icit === "Implicit" ? "@" : "";
-};
+export type Elimination = Implicitness | "Psi" | "Phi";
+
+export const display = (icit: Elimination): string =>
+	match(icit)
+		.with("Explicit", () => "")
+		.with("Implicit", () => "@")
+		.with("Psi", () => "ψ")
+		.with("Phi", () => "ϕ")
+		.exhaustive();
