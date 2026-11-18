@@ -27,7 +27,7 @@ import {
 
 import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
-import { reader, obligations, names, supply, type Verification } from "../effects";
+import { reader, obligations, names, state, definitions, supply, type Verification } from "../effects";
 
 const BooleanExternal = { ...NF.Patterns.External, name: P.union(OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LTE, OP_GTE, OP_AND, OP_OR, OP_NOT) } as const;
 
@@ -108,66 +108,85 @@ export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
 		});
 };
 
-const getFnSorts = function* (value: NF.Value): Verification<{ head: IVL.Term; ret: IVL.Sort }> {
+const getFnSorts = function* (nf: NF.Value): Verification<{ head: IVL.Term; ret: IVL.Sort }> {
 	const ctx = yield* reader.ask();
-	const bound = yield* names.ask();
-
-	const head = (val: NF.Value, sort: IVL.Sort): IVL.Term =>
-		match(NF.unwrapNeutral(val))
-			.with(NF.Patterns.Rigid, ({ variable }) => Build.var_(nameAt(bound, variable.lvl), sort))
-			.with(NF.Patterns.Free, NF.Patterns.Foreign, ({ variable }) => Build.const_(variable.name, sort))
-			.with(NF.Patterns.External, e => Build.const_(e.name, sort))
-			.with(NF.Patterns.App, a => head(a.func, sort))
-			.otherwise(() => {
-				throw new Error("Not a function");
-			});
-
-	const getType = (val: NF.Value): NF.Value =>
-		match(NF.unwrapNeutral(val))
-			.with(NF.Patterns.Var, ({ variable }) => {
-				if (variable.type === "Bound") {
-					return ctx.env[EB.lvl2idx(ctx, variable.lvl)].type[2];
-				}
-				if (variable.type === "Free") {
-					const [, type] = ctx.imports[variable.name];
-					return type;
-				}
-				if (variable.type === "Foreign") {
-					if (!(variable.name in PrimOps)) {
+	const { value } = yield* NF.view(nf);
+	return yield* match(value)
+		.with(
+			NF.Patterns.Existential,
+			ex => ex.assumptions.size > 0,
+			function* ({ assumptions, body }) {
+				return yield* definitions.local(
+					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
+					getFnSorts(body.value),
+				);
+			},
+		)
+		.with(NF.Patterns.App, ({ func }) => getFnSorts(func))
+		.with(NF.Patterns.Rigid, function* ({ variable }) {
+			const env = yield* definitions.ask();
+			const definition = env.get(variable.lvl);
+			if (!definition) {
+				const sort = yield* mkSort(ctx.env[EB.lvl2idx(ctx, variable.lvl)].type[2]);
+				const ret = match(sort)
+					.with({ tag: "Fn" }, ({ ret }) => ret)
+					.otherwise(sort => sort);
+				return { head: Build.var_(nameAt(yield* names.ask(), variable.lvl), sort), ret };
+			}
+			return yield* getFnSorts(definition);
+		})
+		.with(NF.Patterns.Free, NF.Patterns.Foreign, function* ({ variable }) {
+			const symbol = match(variable)
+				.with({ type: "Free" }, ({ name }) => name)
+				.with({ type: "Foreign" }, ({ name }) => {
+					if (!(name in PrimOps)) {
 						throw new Error("Foreign variable not supported in logical formulas");
 					}
-					const [, type] = ctx.imports[primopMapping[variable.name]];
-					return type;
-				}
-				throw new Error("Unsupported variable type in getFnSorts");
-			})
-			.with({ type: "External" }, e => {
-				// External nodes are fully applied — they carry their own args and are
-				// dispatched directly in `term` and `formula`, never via getFnSorts.
-				throw new Error(`getType reached External "${e.name}" — this node should be handled before getFnSorts`);
-			})
-			.with(NF.Patterns.App, a => getType(a.func))
-			.otherwise(() => {
-				throw new Error("Not a function");
-			});
-
-	const sort = yield* mkSort(getType(value));
-
-	const collectFnSorts = (s: IVL.Sort): { args: IVL.Sort[]; ret: IVL.Sort } =>
-		match(s)
-			.with({ tag: "Fn" }, ({ args, ret }) => ({ args, ret }))
-			.otherwise(s => ({ args: [], ret: s }));
-
-	const { ret } = collectFnSorts(sort);
-	return { head: head(value, sort), ret };
+					return primopMapping[name];
+				})
+				.exhaustive();
+			const sort = yield* mkSort(ctx.imports[symbol][1]);
+			const ret = match(sort)
+				.with({ tag: "Fn" }, ({ ret }) => ret)
+				.otherwise(sort => sort);
+			return { head: Build.const_(variable.name, sort), ret };
+		})
+		.with(NF.Patterns.Var, function* () {
+			throw new Error("Unsupported variable type in getFnSorts");
+		})
+		.with(NF.Patterns.External, function* (e) {
+			throw new Error(`getType reached External "${e.name}" — this node should be handled before getFnSorts`);
+		})
+		.otherwise(function* () {
+			throw new Error("Not a function");
+		});
 };
 
-const collectArgs = function* (value: NF.Value): Verification<IVL.Term[]> {
+const collectArgs = function* (nf: NF.Value): Verification<IVL.Term[]> {
+	const { value } = yield* NF.view(nf);
 	return yield* match(value)
+		.with(
+			NF.Patterns.Existential,
+			ex => ex.assumptions.size > 0,
+			function* ({ assumptions, body }) {
+				return yield* definitions.local(
+					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
+					collectArgs(body.value),
+				);
+			},
+		)
 		.with(NF.Patterns.App, function* ({ func, arg }) {
 			const head = yield* collectArgs(func);
 			const translated = yield* term(arg);
 			return [...head, translated];
+		})
+		.with(NF.Patterns.Rigid, function* ({ variable }) {
+			const env = yield* definitions.ask();
+			const definition = env.get(variable.lvl);
+			if (!definition) {
+				return [];
+			}
+			return yield* collectArgs(definition);
 		})
 		.otherwise(function* (): Verification<IVL.Term[]> {
 			return [];
@@ -179,6 +198,16 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 	/* The kind is set aside on purpose: it says why a value is stuck, and a term encodes only its structure. */
 	const { value: structure } = yield* NF.view(nf);
 	return yield* match(structure)
+		.with(
+			NF.Patterns.Existential,
+			ex => ex.assumptions.size > 0,
+			function* ({ assumptions, body }) {
+				return yield* definitions.local(
+					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
+					term(body.value),
+				);
+			},
+		)
 		.with({ type: "Neutral" }, function* ({ value }) {
 			return yield* term(value);
 		})
@@ -215,12 +244,22 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 		.with(NF.Patterns.NuLabel, function* ({ variable }) {
 			return Build.const_(`$${variable.lvl}.${variable.name}`, yield* mkSort(variable.annotation));
 		})
-		.with(NF.Patterns.Var, function* (v) {
-			if (v.variable.type === "Bound") {
-				const entry = ctx.env[EB.lvl2idx(ctx, v.variable.lvl)];
+		.with(NF.Patterns.Foreign, function* ({ variable }) {
+			const [, annotation] = ctx.imports[variable.name];
+			const sort = yield* mkSort(annotation);
+			return Build.const_(variable.name, sort);
+		})
+		.with(NF.Patterns.Rigid, function* ({ variable }) {
+			const env = yield* definitions.ask();
+			const definition = env.get(variable.lvl);
+			if (!definition) {
+				const entry = ctx.env[EB.lvl2idx(ctx, variable.lvl)];
 				const sort = yield* mkSort(entry.type[2]);
-				return Build.var_(nameAt(yield* names.ask(), v.variable.lvl), sort);
+				return Build.var_(nameAt(yield* names.ask(), variable.lvl), sort);
 			}
+			return yield* term(definition);
+		})
+		.with(NF.Patterns.Var, function* (v) {
 			if (v.variable.type === "Free") {
 				const [t] = ctx.imports[v.variable.name];
 				const evaluated = yield* NF.evaluate(t);
@@ -274,6 +313,24 @@ export const formula = function* (nf: NF.Value): Verification<IVL.Formula> {
 	/* As in `term`, the kind is set aside: a formula encodes only the structure. */
 	const { value: structure } = yield* NF.view(nf);
 	return yield* match(structure)
+		.with(
+			NF.Patterns.Existential,
+			ex => ex.assumptions.size > 0,
+			function* ({ assumptions, body }) {
+				return yield* definitions.local(
+					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
+					formula(body.value),
+				);
+			},
+		)
+		.with(NF.Patterns.Rigid, function* ({ variable }) {
+			const env = yield* definitions.ask();
+			const definition = env.get(variable.lvl);
+			if (!definition) {
+				return Build.atom("=", yield* term(nf), Build.bool(true));
+			}
+			return yield* formula(definition);
+		})
 		.with({ type: "Neutral" }, function* ({ value }) {
 			return yield* formula(value);
 		})
@@ -335,7 +392,12 @@ export const scope = function* <A>(name: string, binder: EB.Binder, annotation: 
 	const lvl = (yield* reader.ask()).env.length;
 	return yield* reader.local(
 		c => EB.bind(c, binder, annotation),
-		names.local(bound => new Map([...bound, [lvl, name]]), program),
+		names.local(
+			bound => new Map([...bound, [lvl, name]]),
+			match(binder)
+				.with({ type: "Psi" }, () => state.local(() => NF.Constructors.Rigid(lvl), program))
+				.otherwise(() => program),
+		),
 	);
 };
 
@@ -351,7 +413,7 @@ export const quantify = function* (name: string, annotation: NF.Value, vc: IVL.F
 			);
 			return yield* reader.local(() => ex.body.ctx, quantify(existential, ex.annotation, inner));
 		})
-		.with(NF.View.Sealed(NF.Patterns.Pi), function* () {
+		.with(NF.View.Sealed(NF.Patterns.Pi), NF.View.Sealed(NF.Patterns.Psi), function* () {
 			return vc;
 		})
 		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: { modalities } }) {

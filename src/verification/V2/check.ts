@@ -53,26 +53,29 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 						return yield* check(term, unfolded);
 					},
 				)
-				.with([{ type: "Abs" }, { type: "Abs", binder: { type: "Pi" } }], function* ([term, type]) {
+				.with([EB.CtorPatterns.Psi, NF.Patterns.Psi], [{ type: "Abs" }, NF.Patterns.Pi], function* ([term, type]) {
+					const annotation = match(type.binder)
+						.with({ type: "Psi" }, ({ annotation, requirement }) => NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement }))
+						.otherwise(({ annotation }) => annotation);
 					const name = yield* supply.freshFrom(term.binding.variable);
 					return yield* scope(
 						name,
-						{ type: "Lambda", variable: term.binding.variable },
-						type.binder.annotation,
+						term.binding,
+						annotation,
 						(function* () {
 							const extended = yield* reader.ask();
 							const tyBody = yield* NF.apply(type.binder, type.closure, NF.Constructors.Rigid(ctx.env.length));
 							const artefacts = yield* check(term.body, tyBody);
 
-							const modalities = yield* extractModalities(type.binder.annotation, extended);
-							if (isMatching(NF.View.Sealed({ type: "Abs" }), yield* NF.view(type.binder.annotation))) {
+							const modalities = yield* extractModalities(annotation, extended);
+							if (isMatching(NF.View.Sealed({ type: "Abs" }), yield* NF.view(annotation))) {
 								return artefacts;
 							}
 
 							const liq = modalities.liquid;
 							assert(liq.type === "Abs", "Liquid refinement must be unary");
 
-							const sort = yield* mkSort(type.binder.annotation);
+							const sort = yield* mkSort(annotation);
 
 							const lvl = ctx.env.length;
 							const applied = yield* NF.apply(liq.binder, liq.closure, NF.Constructors.Rigid(lvl));

@@ -11,7 +11,7 @@ import { primopMapping } from "@yap/shared/lib/primitives";
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import type { SynthResult } from "./types";
-import { reader, logger, supply, type Verification } from "./effects";
+import { reader, logger, state, supply, type Verification } from "./effects";
 import { noCapture } from "./utils/context";
 import { extractModalities, selfify } from "./utils/refinements";
 import { check } from "./check";
@@ -81,6 +81,15 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
 			return [ty, { vc: yield* formula(predicate) }] satisfies SynthResult;
 		})
+		.with(
+			{ type: "Var", variable: { type: "Meta" } },
+			({ variable }) => Metas.entry(registry, variable.val).kind === "State",
+			function* (tm) {
+				const entry = Metas.entry(registry, tm.variable.val);
+				const type = yield* selfify(tm, entry.annotation);
+				return [type, { vc: Build.true_() }] satisfies SynthResult;
+			},
+		)
 		.with({ type: "Var" }, function* () {
 			yield* logger.log("synth: unsupported variable kind");
 			return [NF.Any, { vc: Build.true_() }] satisfies SynthResult;
@@ -121,6 +130,19 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			// TODO: lazy records, once some syntax can build one
 			assert(tm.binding.mode === "strict", "Verification supports strict records only");
 			return yield* reader.local(c => EB.open(tm.binding, c), synth(tm.body));
+		})
+		.with(EB.CtorPatterns.Psi, function* ({ binding, body }) {
+			const requirement = yield* NF.evaluate(binding.requirement);
+			const binder = { type: "Psi", variable: binding.variable, annotation: NF.State, requirement } as const;
+			const annotation = NF.Constructors.Modal(binder.annotation, { quantity: Q.Many, liquid: requirement });
+			const name = yield* supply.freshFrom(binding.variable);
+			const [bodyType, artefacts] = yield* scope(name, binder, annotation, synth(body));
+			const quoted = yield* NF.quote(ctx.env.length + 1, bodyType);
+			const type = match(yield* NF.view(bodyType))
+				.with(NF.View.Sealed(NF.Patterns.Type), () => NF.Type)
+				.otherwise(() => NF.Constructors.Psi(binding.variable, requirement, NF.Constructors.Closure(ctx, quoted)));
+			const vc = yield* quantify(name, annotation, artefacts.vc);
+			return [type, { vc }] satisfies SynthResult;
 		})
 		.with(EB.CtorPatterns.Lambda, function* (tm) {
 			const annotation = yield* NF.evaluate(tm.binding.annotation);
@@ -174,6 +196,25 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 						const name = yield* supply.freshFrom(ex.variable);
 						const [out, artefacts] = yield* scope(name, { type: "Pi", variable: ex.variable }, ex.annotation, incorporate(arg, ex.body.value));
 						return [NF.Constructors.Exists(ex.variable, ex.annotation, { ctx, value: out }), artefacts] satisfies SynthResult;
+					})
+					.with(NF.View.Sealed(NF.Patterns.Psi), function* ({ value: psi }) {
+						assert(tm.icit === "Psi", "State binders consume state applications");
+						yield* match(arg)
+							.with({ type: "Var", variable: { type: "Meta" } }, function* ({ variable }) {
+								const metas = yield* Metas.registry.get();
+								const entry = Metas.entry(metas, variable.val);
+								assert(entry.kind === "State", "State applications solve state metas");
+								if (entry.solution === undefined) {
+									const current = yield* state.ask();
+									yield* Metas.registry.modify(metas => Metas.solve(metas, variable.val, current));
+								}
+							})
+							.otherwise(function* () {});
+						const annotation = NF.Constructors.Modal(psi.binder.annotation, { quantity: Q.Many, liquid: psi.binder.requirement });
+						const artefacts = yield* reader.local(_ => ctx, check(arg, annotation));
+						const value = yield* reader.local(_ => ctx, NF.evaluate(arg));
+						const out = yield* NF.apply(psi.binder, psi.closure, value);
+						return [out, artefacts] satisfies SynthResult;
 					})
 					.with(NF.View.Sealed(NF.Patterns.Pi), function* ({ value: pi }) {
 						const { vc, nf } = yield* reader.local(_ => ctx, check(arg, pi.binder.annotation));

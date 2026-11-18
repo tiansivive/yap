@@ -3,12 +3,13 @@ import * as Eff from "@yap/utils/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as M from "@yap/elaboration/shared/effects";
 
-import type * as EB from "@yap/elaboration";
+import * as EB from "@yap/elaboration";
+import * as NF from "@yap/elaboration/normalization";
 import type { IVL } from "../solver/ivl/types";
 import type { Obligation } from "./types";
 
 /*
- * The verification row. Read-only metacontext (no register/modify), reader
+ * The verification row. Metacontext state solutions, reader
  * for scope, abort for impossible/missing-label, plus three
  * verification-internal effects: a debug logger, an obligation collector,
  * and a fresh-name supply.
@@ -162,13 +163,17 @@ const supplyHandlers = (): Eff.Handler<SupplyActions, undefined> => {
 export const supply = { fresh, freshNum, freshFrom, handlers: supplyHandlers };
 
 export const names = Eff.reader<ReadonlyMap<number, string>, "VC.Names">("VC.Names");
+export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
+export const definitions = Eff.reader<ReadonlyMap<number, NF.Value>, "VC.Definitions">("VC.Definitions");
 
 // ─── Row ─────────────────────────────────────────────────────────────────────
 
 export type Verification<A> = Eff.Eff<
 	| Eff.Actions<typeof reader>
 	| Eff.Actions<typeof names>
-	| Eff.Only<typeof Metas.registry, "Registry.get">
+	| Eff.Only<typeof Metas.registry, "Registry.get" | "Registry.modify">
+	| Eff.Actions<typeof state>
+	| Eff.Actions<typeof definitions>
 	| Eff.Actions<typeof except>
 	| LoggerActions
 	| RecordAction
@@ -187,21 +192,26 @@ export const fail = function* (cause: import("@yap/elaboration/shared/errors").C
 
 // ─── Runner ──────────────────────────────────────────────────────────────────
 
-export type VerificationOptions = { logging?: boolean };
+export type VerificationOptions = { logging?: boolean; state?: NF.Value };
 
 export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () => Verification<A>, options: VerificationOptions = {}) => {
+	const empty = "$state.empty";
+	const initial = NF.Constructors.Var({ type: "Foreign", name: empty });
+	const context = { ...ctx, imports: { ...ctx.imports, [empty]: [EB.Constructors.Var({ type: "Foreign", name: empty }), NF.State, []] satisfies EB.AST } };
 	const initialized = function* () {
 		const outer = yield* Eff.traverse([...ctx.env].reverse(), entry => supply.freshFrom(entry.name.variable));
 		return yield* names.local(() => new Map(outer.map((name, lvl) => [lvl, name])), program());
 	};
 	const [answer, , registrySnapshot, , , collected] = Eff.run(initialized, [
-		reader.handlers(ctx),
+		reader.handlers(context),
 		Metas.registry.handlers(registry),
 		except.handlers(),
 		logger.handlers(options.logging ?? false),
 		obligations.handlers(),
 		supply.handlers(),
 		names.handlers(new Map()),
+		state.handlers(options.state ?? initial),
+		definitions.handlers(new Map()),
 	]);
 
 	return { answer, obligations: collected, registry: registrySnapshot } as const;

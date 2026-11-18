@@ -203,15 +203,21 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			const vc2 = yield* subtype(left.arg, right.arg);
 			return Build.and(vc1, vc2);
 		})
-		.with([NF.Patterns.Pi, NF.Patterns.Pi], [NF.Patterns.Lambda, NF.Patterns.Lambda], function* ([at, bt]) {
-			const vcArg = yield* subtype(bt.binder.annotation, at.binder.annotation);
+		.with([NF.Patterns.Psi, NF.Patterns.Psi], [NF.Patterns.Pi, NF.Patterns.Pi], [NF.Patterns.Lambda, NF.Patterns.Lambda], function* ([at, bt]) {
+			const domain = (binder: NF.Binder): NF.Value =>
+				match(binder)
+					.with({ type: "Psi" }, ({ annotation, requirement }) => NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement }))
+					.otherwise(({ annotation }) => annotation);
+			const annotationA = domain(at.binder);
+			const annotationB = domain(bt.binder);
+			const vcArg = yield* subtype(annotationB, annotationA);
 			const lvl = ctx.env.length;
 			const anf = yield* NF.apply(at.binder, at.closure, NF.Constructors.Rigid(lvl));
 			const bnf = yield* NF.apply(bt.binder, bt.closure, NF.Constructors.Rigid(lvl));
 			const name = yield* supply.freshFrom(bt.binder.variable);
-			const vcBody = yield* scope(name, bt.binder, bt.binder.annotation, subtype(anf, bnf));
+			const vcBody = yield* scope(name, bt.binder, annotationB, subtype(anf, bnf));
 
-			if (!(yield* isFirstOrder(bt.binder.annotation))) {
+			if (!(yield* isFirstOrder(annotationB))) {
 				yield* obligations.record("subtype.pi.nonrefinable", vcBody, {
 					type: `${display(() => NF.display(at))} <: ${display(() => NF.display(bt))}`,
 					description: `Function result must be subtype (non-refinable parameter ${bt.binder.variable})`,
@@ -219,21 +225,21 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 				return Build.and(vcArg, vcBody);
 			}
 
-			const sort = yield* mkSort(bt.binder.annotation);
+			const sort = yield* mkSort(annotationB);
 
-			const modalities = yield* extractModalities(bt.binder.annotation, ctx);
+			const modalities = yield* extractModalities(annotationB, ctx);
 			if (modalities.liquid.type !== "Abs") {
 				throw new Error("Liquid refinement must be a unary function");
 			}
 			const applied = yield* NF.apply(modalities.liquid.binder, modalities.liquid.closure, NF.Constructors.Rigid(lvl));
-			const phiX = yield* scope(name, bt.binder, bt.binder.annotation, formula(applied));
+			const phiX = yield* scope(name, bt.binder, annotationB, formula(applied));
 
 			const guarded = yield* obligations.record("subtype.pi.body", Build.forall([{ name, sort }], Build.implies(phiX, vcBody)), {
 				type: `${display(() => NF.display(at))} <: ${display(() => NF.display(bt))}`,
 				description: `Function result must be subtype under parameter ${bt.binder.variable} assumption`,
 			});
 			yield* obligations.record("subtype.pi.param", vcArg, {
-				type: `${display(() => NF.display(bt.binder.annotation))} <: ${display(() => NF.display(at.binder.annotation))}`,
+				type: `${display(() => NF.display(annotationB))} <: ${display(() => NF.display(annotationA))}`,
 				description: "Function parameter types (contravariant)",
 			});
 			return Build.and(vcArg, guarded);
@@ -258,8 +264,6 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			}
 
 			const lvl = ctx.env.length;
-			const appliedAt = yield* NF.apply(pAt.binder, pAt.closure, NF.Constructors.Rigid(lvl));
-			const appliedBt = yield* NF.apply(pBt.binder, pBt.closure, NF.Constructors.Rigid(lvl));
 
 			const sort = yield* mkSort(at.value);
 			const name = yield* supply.freshFrom(pAt.binder.variable);
@@ -268,6 +272,8 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 				{ type: "Pi", variable: name },
 				at.value,
 				(function* (): Verification<[IVL.Formula, IVL.Formula]> {
+					const appliedAt = yield* NF.apply(pAt.binder, pAt.closure, NF.Constructors.Rigid(lvl));
+					const appliedBt = yield* NF.apply(pBt.binder, pBt.closure, NF.Constructors.Rigid(lvl));
 					return [yield* formula(appliedAt), yield* formula(appliedBt)];
 				})(),
 			);
