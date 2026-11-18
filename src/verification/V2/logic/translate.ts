@@ -27,9 +27,37 @@ import {
 
 import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
-import { reader, obligations, names, state, definitions, supply, type Verification } from "../effects";
+import { reader, obligations, names, state, State, definitions, supply, type Verification } from "../effects";
 
 const BooleanExternal = { ...NF.Patterns.External, name: P.union(OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LTE, OP_GTE, OP_AND, OP_OR, OP_NOT) } as const;
+const ForeignConstant = { ...NF.Patterns.External, arity: 0, args: [] } as const;
+
+const States = {
+	empty: { ...NF.Patterns.Foreign, variable: { type: "Foreign", name: State.heads.empty } },
+	insert: {
+		type: "App",
+		func: { type: "App", func: { type: "App", func: { type: "Var", variable: { type: "Foreign", name: State.heads.insert } } } },
+	},
+} as const;
+
+export const live = function* (current: NF.Value, identity: NF.Value): Verification<IVL.Formula> {
+	const { value } = yield* NF.view(current);
+	return yield* match(value)
+		.with(States.empty, function* () {
+			return Build.false_();
+		})
+		.with(States.insert, function* ({ func, arg }) {
+			const installed = yield* term(arg);
+			const requested = yield* term(identity);
+			const outer = yield* live(func.arg, identity);
+			return Build.or(Build.atom("=", installed, requested), outer);
+		})
+		.otherwise(function* () {
+			const ambient = yield* term(current);
+			const requested = yield* term(identity);
+			return Build.atom("=", Build.app("$state.live", [ambient, requested], Build.Bool), Build.bool(true));
+		});
+};
 
 export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
 	const ctx = yield* reader.ask();
@@ -229,6 +257,12 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 					throw new Error("Unsupported literal in logical formulas");
 				});
 		})
+		.with(States.insert, function* ({ func, arg }) {
+			const current = yield* term(func.arg);
+			const identity = yield* term(arg);
+			const sort = yield* mkSort(NF.State);
+			return Build.app(State.heads.insert, [current, identity], sort);
+		})
 		.with(NF.Patterns.App, function* (fn) {
 			const { head, ret } = yield* getFnSorts(fn);
 			const args = yield* collectArgs(fn);
@@ -292,6 +326,12 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 				return Build.prop(yield* formula(nf));
 			},
 		)
+		.with(ForeignConstant, function* ({ name }) {
+			// TODO: Revisit this translation when atom introduction gains another form alongside foreign declarations.
+			const [, annotation] = ctx.imports[name];
+			const sort = yield* mkSort(annotation);
+			return Build.const_(name, sort);
+		})
 		.with({ type: "External" }, function* (e) {
 			if (e.args.length !== e.arity) {
 				throw new Error("External with wrong arity in logical formulas");

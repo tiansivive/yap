@@ -166,6 +166,24 @@ export const names = Eff.reader<ReadonlyMap<number, string>, "VC.Names">("VC.Nam
 export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
 export const definitions = Eff.reader<ReadonlyMap<number, NF.Value>, "VC.Definitions">("VC.Definitions");
 
+export const State = {
+	heads: { empty: "$state.empty", insert: "$state.insert" },
+	empty: () => NF.Constructors.Var({ type: "Foreign", name: State.heads.empty }),
+	insert: (current: NF.Value, identity: NF.Value, annotation: NF.Value): NF.Value =>
+		NF.Constructors.Neutral(
+			"Sealed",
+			NF.Constructors.App(
+				NF.Constructors.App(
+					NF.Constructors.App(NF.Constructors.Var({ type: "Foreign", name: State.heads.insert }), annotation, "Implicit"),
+					current,
+					"Explicit",
+				),
+				identity,
+				"Explicit",
+			),
+		),
+};
+
 // ─── Row ─────────────────────────────────────────────────────────────────────
 
 export type Verification<A> = Eff.Eff<
@@ -195,9 +213,20 @@ export const fail = function* (cause: import("@yap/elaboration/shared/errors").C
 export type VerificationOptions = { logging?: boolean; state?: NF.Value };
 
 export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () => Verification<A>, options: VerificationOptions = {}) => {
-	const empty = "$state.empty";
-	const initial = NF.Constructors.Var({ type: "Foreign", name: empty });
-	const context = { ...ctx, imports: { ...ctx.imports, [empty]: [EB.Constructors.Var({ type: "Foreign", name: empty }), NF.State, []] satisfies EB.AST } };
+	const insert = NF.Constructors.Pi(
+		"E",
+		"Implicit",
+		NF.Type,
+		NF.Constructors.Closure(ctx, EB.Constructors.Pi("s", "Explicit", EB.State, EB.Constructors.Pi("e", "Explicit", EB.DSL.bound(1), EB.State))),
+	);
+	const context = {
+		...ctx,
+		imports: {
+			...ctx.imports,
+			[State.heads.empty]: [EB.Constructors.Var({ type: "Foreign", name: State.heads.empty }), NF.State, []] satisfies EB.AST,
+			[State.heads.insert]: [EB.Constructors.Var({ type: "Foreign", name: State.heads.insert }), insert, []] satisfies EB.AST,
+		},
+	};
 	const initialized = function* () {
 		const outer = yield* Eff.traverse([...ctx.env].reverse(), entry => supply.freshFrom(entry.name.variable));
 		return yield* names.local(() => new Map(outer.map((name, lvl) => [lvl, name])), program());
@@ -210,7 +239,7 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 		obligations.handlers(),
 		supply.handlers(),
 		names.handlers(new Map()),
-		state.handlers(options.state ?? initial),
+		state.handlers(options.state ?? State.empty()),
 		definitions.handlers(new Map()),
 	]);
 

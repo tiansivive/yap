@@ -10,12 +10,12 @@ import { primopMapping } from "@yap/shared/lib/primitives";
 
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
-import type { SynthResult } from "./types";
-import { reader, logger, state, supply, type Verification } from "./effects";
+import type { SynthResult, VerificationArtefacts } from "./types";
+import { reader, logger, state, State, obligations, supply, type Verification } from "./effects";
 import { noCapture } from "./utils/context";
 import { extractModalities, selfify } from "./utils/refinements";
 import { check } from "./check";
-import { formula, quantify, scope } from "./logic/translate";
+import { formula, live, quantify, scope } from "./logic/translate";
 
 export const synth = function* (term: EB.Term): Verification<SynthResult> {
 	yield* logger.enter();
@@ -76,10 +76,11 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 				return [NF.Any, { vc: Build.true_() }] satisfies SynthResult;
 			}
 			const [, ty] = entry;
-			const modalities = yield* extractModalities(ty, ctx);
+			const selfified = yield* selfify(tm, ty);
+			const modalities = yield* extractModalities(selfified, ctx);
 			const evaluated = yield* NF.evaluate(tm);
 			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
-			return [ty, { vc: yield* formula(predicate) }] satisfies SynthResult;
+			return [selfified, { vc: yield* formula(predicate) }] satisfies SynthResult;
 		})
 		.with(
 			{ type: "Var", variable: { type: "Meta" } },
@@ -415,8 +416,13 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const artefacts = yield* check(tm.term, ann);
 			return [ann, artefacts] satisfies SynthResult;
 		})
-		.with({ type: "Reset", handling: P.nonNullable }, function* () {
-			throw new Error("Handler-bearing reset verification is pending");
+		.with({ type: "Reset", handling: P.nonNullable }, function* ({ term, handling }) {
+			const [annotation, identityArtefacts] = yield* synth(handling.identity);
+			const [, handlerArtefacts] = yield* synth(handling.handler);
+			const identity = yield* NF.evaluate(handling.identity);
+			const current = yield* state.ask();
+			const [type, bodyArtefacts] = yield* state.local(() => State.insert(current, identity, annotation), synth(term));
+			return [type, { vc: Build.and(identityArtefacts.vc, handlerArtefacts.vc, bodyArtefacts.vc) }] satisfies SynthResult;
 		})
 		.with({ type: "Reset" }, function* (tm) {
 			return yield* synth(tm.term);
@@ -426,8 +432,22 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			return [NF.Any, { vc: Build.true_() }] satisfies SynthResult;
 		})
 		.with({ type: "Bubble" }, function* (tm) {
-			yield* logger.log("synth: bubble treated as opaque (neutral true)");
-			return [tm.ann, { vc: Build.true_() }] satisfies SynthResult;
+			const payload = function* (type: NF.Value): Verification<VerificationArtefacts> {
+				return yield* match(yield* NF.view(type))
+					.with(NF.View.Sealed(NF.Patterns.Modal), ({ value }) => payload(value.value))
+					.with(NF.View.Sealed(NF.Patterns.Effect), ({ value: { func } }) => check(tm.payload, func.arg))
+					.otherwise(function* () {
+						throw new Error("Suspension requires an Effect carrier");
+					});
+			};
+			const [type, identityArtefacts] = yield* synth(tm.identity);
+			const payloadArtefacts = yield* payload(type);
+			const annotation = yield* NF.evaluate(tm.ann);
+			const identity = yield* NF.evaluate(tm.identity);
+			const current = yield* state.ask();
+			const available = yield* live(current, identity);
+			const vc = yield* obligations.record("suspend.live", available);
+			return [annotation, { vc: Build.and(identityArtefacts.vc, payloadArtefacts.vc, vc) }] satisfies SynthResult;
 		})
 		.otherwise(function* () {
 			throw new Error("synth: case not implemented for term " + run(() => EB.Display.Term(term)));
