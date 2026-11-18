@@ -14,5 +14,5 @@ export const display = (icit: Elimination): string =>
 		.with("Explicit", () => "")
 		.with("Implicit", () => "@")
 		.with("Psi", () => "ψ")
-		.with("Phi", () => "φ")
+		.with("Phi", () => "ϕ")
 		.exhaustive();

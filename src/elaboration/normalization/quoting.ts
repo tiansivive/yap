@@ -129,18 +129,16 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 			);
 		})
 		.with(NF.Patterns.Psi, ({ binder, closure }) =>
-			Do.let("applied", () => NbE.open(binder, closure)).in(({ applied }) =>
-				Do.let("body", () => NbE.Env.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
-					.let("requirement", () => quote(lvl, binder.requirement, unfold))
-					.in(({ body, requirement }) => result(EB.Constructors.Psi(binder.variable, requirement, body))),
-			),
+			Do.let("applied", () => NbE.open(binder, closure))
+				.bind("body", ({ applied }) => NbE.Env.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
+				.let("requirement", () => quote(lvl, binder.requirement, unfold))
+				.in(({ body, requirement }) => result(EB.Constructors.Psi(binder.variable, requirement, body))),
 		)
 		.with(NF.Patterns.Phi, ({ binder, closure }) =>
-			Do.let("applied", () => NbE.open(binder, closure)).in(({ applied }) =>
-				Do.let("body", () => NbE.Env.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
-					.let("annotation", () => quote(lvl, binder.annotation, unfold))
-					.in(({ body, annotation }) => result(EB.Constructors.Phi(binder.variable, annotation, body))),
-			),
+			Do.let("applied", () => NbE.open(binder, closure))
+				.bind("body", ({ applied }) => NbE.Env.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
+				.let("annotation", () => quote(lvl, binder.annotation, unfold))
+				.in(({ body, annotation }) => result(EB.Constructors.Phi(binder.variable, annotation, body))),
 		)
 		.with({ type: "Abs", binder: { type: "Mu" } }, function* ({ binder, closure }) {
 			const { variable, source, annotation } = binder;

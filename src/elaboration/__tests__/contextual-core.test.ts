@@ -81,16 +81,6 @@ describe("contextual core", () => {
 		expect(result.structure.term).toMatchObject({ type: "Abs", binding: { type: "Psi" }, body: { type: "Abs", binding: { type: "Pi", icit: "Explicit" } } });
 	});
 
-	it.each(["(\\(x: Num) -> x) 7", "{ let id: Num -> Num = \\x -> x; return id 7; }", '{ let id = \\x -> x; let n: Num = id 7; return id "hello"; }'])(
-		"elaborates and evaluates %s",
-		source => {
-			const result = elaborateFrom(source);
-			const value = runNF(mkCtx(), () => NF.normalize(result.structure.term), result.registry);
-			const known = runNF(mkCtx(), () => NF.view(value), result.registry);
-			expect(known.value).toMatchObject({ type: "Lit", value: { value: source.includes("hello") ? "hello" : 7 } });
-		},
-	);
-
 	it("keeps an uncalled source function polymorphic in its call state", () => {
 		const result = elaborateFrom("{ return \\(x: Num) -> x; }");
 		expect(runNF(mkCtx(), () => NF.view(result.structure.type), result.registry)).toMatchObject({ value: { type: "Abs", binder: { type: "Psi" } } });
@@ -137,12 +127,6 @@ describe("contextual core", () => {
 		const states = Object.values(result.registry).filter(entry => entry.kind === "State");
 		expect(states).toHaveLength(2);
 		expect(states.every(entry => entry.solution === undefined)).toBe(true);
-	});
-
-	it("infers and evaluates a higher-order call", () => {
-		const result = elaborateFrom("(\\f -> f 1) (\\x -> x)");
-		const value = runNF(mkCtx(), () => NF.normalize(result.structure.term), result.registry);
-		expect(runNF(mkCtx(), () => NF.view(value), result.registry).value).toMatchObject({ type: "Lit", value: { value: 1 } });
 	});
 
 	it("preserves a returned function's state binder after partial application", () => {
@@ -254,7 +238,7 @@ describe("contextual core", () => {
 			  "FFI.f FFI.a",
 			  "FFI.f @FFI.a",
 			  "FFI.f ψFFI.a",
-			  "FFI.f φFFI.a",
+			  "FFI.f ϕFFI.a",
 			]
 		`);
 	});

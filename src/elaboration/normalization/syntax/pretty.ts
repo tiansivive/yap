@@ -96,7 +96,7 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 					return ["ψ", variable, " [| ", yield* go(requirement), " |]"] satisfies PP.Doc;
 				})
 				.with({ type: "Phi" }, function* ({ variable, annotation }) {
-					return ["φ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
+					return ["ϕ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
 				.with({ type: "Pi" }, function* ({ variable, annotation }) {
 					return ["Π(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
