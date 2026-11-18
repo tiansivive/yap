@@ -124,16 +124,16 @@ const getFnSorts = function* (nf: NF.Value): Verification<{ head: IVL.Term; ret:
 		)
 		.with(NF.Patterns.App, ({ func }) => getFnSorts(func))
 		.with(NF.Patterns.Rigid, function* ({ variable }) {
-			const definition = (yield* definitions.ask()).get(variable.lvl);
-			return yield* match(definition)
-				.with(undefined, function* () {
-					const sort = yield* mkSort(ctx.env[EB.lvl2idx(ctx, variable.lvl)].type[2]);
-					const ret = match(sort)
-						.with({ tag: "Fn" }, ({ ret }) => ret)
-						.otherwise(sort => sort);
-					return { head: Build.var_(nameAt(yield* names.ask(), variable.lvl), sort), ret };
-				})
-				.otherwise(getFnSorts);
+			const env = yield* definitions.ask();
+			const definition = env.get(variable.lvl);
+			if (!definition) {
+				const sort = yield* mkSort(ctx.env[EB.lvl2idx(ctx, variable.lvl)].type[2]);
+				const ret = match(sort)
+					.with({ tag: "Fn" }, ({ ret }) => ret)
+					.otherwise(sort => sort);
+				return { head: Build.var_(nameAt(yield* names.ask(), variable.lvl), sort), ret };
+			}
+			return yield* getFnSorts(definition);
 		})
 		.with(NF.Patterns.Free, NF.Patterns.Foreign, function* ({ variable }) {
 			const symbol = match(variable)
@@ -181,12 +181,12 @@ const collectArgs = function* (nf: NF.Value): Verification<IVL.Term[]> {
 			return [...head, translated];
 		})
 		.with(NF.Patterns.Rigid, function* ({ variable }) {
-			const definition = (yield* definitions.ask()).get(variable.lvl);
-			return yield* match(definition)
-				.with(undefined, function* () {
-					return [];
-				})
-				.otherwise(collectArgs);
+			const env = yield* definitions.ask();
+			const definition = env.get(variable.lvl);
+			if (!definition) {
+				return [];
+			}
+			return yield* collectArgs(definition);
 		})
 		.otherwise(function* (): Verification<IVL.Term[]> {
 			return [];
@@ -250,14 +250,14 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 			return Build.const_(variable.name, sort);
 		})
 		.with(NF.Patterns.Rigid, function* ({ variable }) {
-			const definition = (yield* definitions.ask()).get(variable.lvl);
-			return yield* match(definition)
-				.with(undefined, function* () {
-					const entry = ctx.env[EB.lvl2idx(ctx, variable.lvl)];
-					const sort = yield* mkSort(entry.type[2]);
-					return Build.var_(nameAt(yield* names.ask(), variable.lvl), sort);
-				})
-				.otherwise(term);
+			const env = yield* definitions.ask();
+			const definition = env.get(variable.lvl);
+			if (!definition) {
+				const entry = ctx.env[EB.lvl2idx(ctx, variable.lvl)];
+				const sort = yield* mkSort(entry.type[2]);
+				return Build.var_(nameAt(yield* names.ask(), variable.lvl), sort);
+			}
+			return yield* term(definition);
 		})
 		.with(NF.Patterns.Var, function* (v) {
 			if (v.variable.type === "Free") {
@@ -324,12 +324,12 @@ export const formula = function* (nf: NF.Value): Verification<IVL.Formula> {
 			},
 		)
 		.with(NF.Patterns.Rigid, function* ({ variable }) {
-			const definition = (yield* definitions.ask()).get(variable.lvl);
-			return yield* match(definition)
-				.with(undefined, function* () {
-					return Build.atom("=", yield* term(nf), Build.bool(true));
-				})
-				.otherwise(formula);
+			const env = yield* definitions.ask();
+			const definition = env.get(variable.lvl);
+			if (!definition) {
+				return Build.atom("=", yield* term(nf), Build.bool(true));
+			}
+			return yield* formula(definition);
 		})
 		.with({ type: "Neutral" }, function* ({ value }) {
 			return yield* formula(value);
