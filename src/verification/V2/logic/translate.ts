@@ -32,31 +32,44 @@ import { reader, obligations, names, state, State, definitions, supply, type Ver
 const BooleanExternal = { ...NF.Patterns.External, name: P.union(OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LTE, OP_GTE, OP_AND, OP_OR, OP_NOT) } as const;
 const ForeignConstant = { ...NF.Patterns.External, arity: 0, args: [] } as const;
 
-const States = {
-	empty: { ...NF.Patterns.Foreign, variable: { type: "Foreign", name: State.heads.empty } },
-	insert: {
-		type: "App",
-		func: { type: "App", func: { type: "App", func: { type: "Var", variable: { type: "Foreign", name: State.heads.insert } } } },
-	},
-} as const;
-
 export const live = function* (current: NF.Value, identity: NF.Value): Verification<IVL.Formula> {
 	const { value } = yield* NF.view(current);
+	const ambient = function* () {
+		const available = yield* term(current);
+		const requested = yield* term(identity);
+		return Build.atom("=", Build.app("$state.live", [available, requested], Build.Bool), Build.bool(true));
+	};
 	return yield* match(value)
-		.with(States.empty, function* () {
+		.with(
+			NF.Patterns.Existential,
+			ex => ex.assumptions.size > 0,
+			function* ({ assumptions, body }) {
+				return yield* definitions.local(
+					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
+					live(body.value, identity),
+				);
+			},
+		)
+		.with(NF.Patterns.Rigid, function* ({ variable }) {
+			const env = yield* definitions.ask();
+			const definition = env.get(variable.lvl);
+			if (!definition) {
+				return yield* ambient();
+			}
+			return yield* live(definition, identity);
+		})
+		.with(State.Patterns.empty, function* () {
 			return Build.false_();
 		})
-		.with(States.insert, function* ({ func, arg }) {
-			const installed = yield* term(arg);
+		.with(State.Patterns.insert, function* ({ args: [, previous, added] }) {
+			const installed = yield* term(added);
 			const requested = yield* term(identity);
-			const outer = yield* live(func.arg, identity);
-			return Build.or(Build.atom("=", installed, requested), outer);
+			/* Installing an identity preserves every handler available in the previous state.
+			 * Membership holds when the requested identity matches this installation or was available before it. */
+			const availableBeforeInsertion = yield* live(previous, identity);
+			return Build.or(Build.atom("=", installed, requested), availableBeforeInsertion);
 		})
-		.otherwise(function* () {
-			const ambient = yield* term(current);
-			const requested = yield* term(identity);
-			return Build.atom("=", Build.app("$state.live", [ambient, requested], Build.Bool), Build.bool(true));
-		});
+		.otherwise(ambient);
 };
 
 export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
@@ -257,9 +270,9 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 					throw new Error("Unsupported literal in logical formulas");
 				});
 		})
-		.with(States.insert, function* ({ func, arg }) {
-			const current = yield* term(func.arg);
-			const identity = yield* term(arg);
+		.with(State.Patterns.insert, function* ({ args: [, previous, installed] }) {
+			const current = yield* term(previous);
+			const identity = yield* term(installed);
 			const sort = yield* mkSort(NF.State);
 			return Build.app(State.heads.insert, [current, identity], sort);
 		})

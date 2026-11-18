@@ -421,7 +421,8 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const [, handlerArtefacts] = yield* synth(handling.handler);
 			const identity = yield* NF.evaluate(handling.identity);
 			const current = yield* state.ask();
-			const [type, bodyArtefacts] = yield* state.local(() => State.insert(current, identity, annotation), synth(term));
+			const extended = yield* State.insert(current, identity, annotation);
+			const [type, bodyArtefacts] = yield* state.local(() => extended, synth(term));
 			return [type, { vc: Build.and(identityArtefacts.vc, handlerArtefacts.vc, bodyArtefacts.vc) }] satisfies SynthResult;
 		})
 		.with({ type: "Reset" }, function* (tm) {
