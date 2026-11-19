@@ -135,11 +135,13 @@ export const Elaborated: () => EB.Context['imports'] = () => {
                     EB.DSL.app(EB.DSL.app(Terms().Effect, EB.DSL.bound(1)), EB.DSL.bound(0)),
                     Terms().Bool)))
     })
+    const live: EB.AST = [Terms().live, Live, []];
 
     return {
         ...PrimTypes,
         Effect: [Terms().Effect, Type_Type_Type, []],
-        live: [Terms().live, Live, []],
+        live,
+        [OP_LIVE]: live,
         //"->": [Terms()["->"], Type_Type_Type, []],
         "+": [Terms()["+"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.add)]), []],
         "-": [Terms()["-"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.sub)]), []],

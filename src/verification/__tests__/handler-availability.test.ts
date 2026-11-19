@@ -74,8 +74,7 @@ let served = ${body};
 		},
 	);
 
-	// Retained-scope work owns the generated handler's colliding predicate and producer levels.
-	it.fails.each([
+	it.each([
 		[7, "valid"],
 		[0, "invalid"],
 	] as const)("checks a source handler with a refined carrier payload %s", (value, expected) => {
