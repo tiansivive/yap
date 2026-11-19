@@ -18,7 +18,7 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 			return Constructors.Pi(binder.variable, binder.icit, traverse(annotation, onVar, onTerm), update(closure, "term", onTerm));
 		})
 		.with(Patterns.Psi, ({ binder, closure }) =>
-			Constructors.Psi(binder.variable, traverse(binder.requirement, onVar, onTerm), update(closure, "term", onTerm)),
+			Constructors.Psi(binder.variable, binder.requirement && traverse(binder.requirement, onVar, onTerm), update(closure, "term", onTerm)),
 		)
 		.with(Patterns.Phi, ({ binder, closure }) => Constructors.Phi(binder.variable, traverse(binder.annotation, onVar, onTerm), update(closure, "term", onTerm)))
 		.with(Patterns.Mu, ({ binder, closure }) => {
@@ -66,7 +66,7 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 		.with(Patterns.Modal, ({ value, modalities }) =>
 			Constructors.Modal(traverse(value, onVar, onTerm), {
 				quantity: modalities.quantity,
-				liquid: traverse(modalities.liquid, onVar, onTerm),
+				liquid: modalities.liquid && traverse(modalities.liquid, onVar, onTerm),
 			}),
 		)
 		.otherwise(() => {

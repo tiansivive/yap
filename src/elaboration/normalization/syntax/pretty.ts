@@ -93,7 +93,7 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 					return ["λ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
 				.with({ type: "Psi" }, function* ({ variable, requirement }) {
-					return ["ψ", variable, " [| ", yield* go(requirement), " |]"] satisfies PP.Doc;
+					return requirement ? ["ψ", variable, " [| ", yield* go(requirement), " |]"] : ["ψ", variable];
 				})
 				.with({ type: "Phi" }, function* ({ variable, annotation }) {
 					return ["ϕ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
@@ -133,7 +133,7 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 			return R.displayDoc(identityRow)(yield* rowDocs(row, go, (v: NF.Variable) => go(NF.mk({ type: "Var", variable: v }))));
 		})
 		.with({ type: "Modal" }, function* ({ modalities, value: v }) {
-			return ["<", Q.display(modalities.quantity), "> ", yield* go(v), " [| ", yield* go(modalities.liquid), " |]"] satisfies PP.Doc;
+			return ["<", Q.display(modalities.quantity), "> ", yield* go(v), modalities.liquid ? [" [| ", yield* go(modalities.liquid), " |]"] : ""] satisfies PP.Doc;
 		})
 		.with({ type: "External" }, function* (external) {
 			const args = yield* Eff.traverse(external.args, function* (a): Display<PP.Doc> {

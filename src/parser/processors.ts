@@ -604,12 +604,12 @@ export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, ...rest]
 
 type Modal =
 	| [[Q.Multiplicity], Whitespace, Term]
-	| [[Q.Multiplicity], Whitespace, Term, Whitespace, LAngle, Whitespace, Term, RAngle]
+	| [[Q.Multiplicity], Whitespace, Term, Whitespace, [Whitespace, Term]]
 	| [Term, Whitespace, [Whitespace, Term]];
 
 export const Modal: PostProcessor<Modal, Term> = (data: Modal): Term => {
-	if (data.length === 8) {
-		const [[q], , term, , , , liquid] = data;
+	if (data.length === 5) {
+		const [[q], , term, , [, liquid]] = data;
 
 		return { type: "modal", term, modalities: { quantity: q, liquid }, location: term.location };
 	}
@@ -712,8 +712,6 @@ const locSpan = (from: P.Location, to: P.Location): P.Location => ({
 /***********************************************************
  * Token aliases
  ***********************************************************/
-type LAngle = Token;
-type RAngle = Token;
 type Space = Token;
 type Whitespace = Token;
 type Newline = Token;

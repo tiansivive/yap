@@ -90,7 +90,7 @@ describe("Logical binder identities", () => {
 		const right = refined(ctx, EB.DSL.bound(1));
 		const { answer } = run(ctx, {}, function* () {
 			const combined = yield* meet(left, right);
-			assert(combined.type === "Modal");
+			assert(combined.type === "Modal" && combined.modalities.liquid);
 			const predicate = yield* NF.reduce(combined.modalities.liquid, NF.Constructors.Rigid(ctx.env.length), "Explicit");
 			const actual = yield* scope("v", { type: "Pi", variable: "v" }, num, formula(predicate));
 			const earlier = captured ? yield* term(NF.Constructors.Rigid(0)) : Build.num(0, Build.Real);

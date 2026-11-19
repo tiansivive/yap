@@ -14,7 +14,7 @@ import { Build } from "../solver/ivl/build";
 import type { VerificationArtefacts } from "./types";
 import { reader, fail, logger, obligations, supply, type Verification } from "./effects";
 import { collectSigmaBindings, noCapture } from "./utils/context";
-import { extractModalities, meet } from "./utils/refinements";
+import { extractModalities, meet, parameter } from "./utils/refinements";
 import { synth } from "./synth";
 import { subtype } from "./subtype";
 import { mkSort, formula, quantify, scope } from "./logic/translate";
@@ -54,9 +54,14 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					},
 				)
 				.with([EB.CtorPatterns.Psi, NF.Patterns.Psi], [{ type: "Abs" }, NF.Patterns.Pi], function* ([term, type]) {
-					const annotation = match(type.binder)
-						.with({ type: "Psi" }, ({ annotation, requirement }) => NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement }))
-						.otherwise(({ annotation }) => annotation);
+					const annotation = yield* match(type.binder)
+						.with({ type: "Psi", requirement: P.nonNullable }, function* ({ annotation, requirement }) {
+							return NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement });
+						})
+						.with({ type: "Pi", icit: "Explicit" }, ({ annotation }) => parameter(term.binding.annotation, annotation))
+						.otherwise(function* ({ annotation }) {
+							return annotation;
+						});
 					const name = yield* supply.freshFrom(term.binding.variable);
 					return yield* scope(
 						name,
@@ -67,12 +72,22 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 							const tyBody = yield* NF.apply(type.binder, type.closure, NF.Constructors.Rigid(ctx.env.length));
 							const artefacts = yield* check(term.body, tyBody);
 
-							const modalities = yield* extractModalities(annotation, extended);
-							if (isMatching(NF.View.Sealed({ type: "Abs" }), yield* NF.view(annotation))) {
+							const quantifyParameter = yield* match(yield* NF.view(annotation))
+								.with(NF.View.Sealed({ type: "Abs" }), function* () {
+									return false;
+								})
+								.with(NF.View.Sealed({ type: "Modal", modalities: { liquid: P.optional(undefined) } }), function* ({ value }) {
+									const base = yield* NF.view(value.value);
+									return !isMatching(NF.View.Sealed(P.union(NF.Patterns.Psi, NF.Patterns.Pi, NF.Patterns.Phi)), base);
+								})
+								.otherwise(function* () {
+									return true;
+								});
+							if (!quantifyParameter) {
 								return artefacts;
 							}
 
-							const liq = modalities.liquid;
+							const { liquid: liq } = yield* extractModalities(annotation, extended);
 							assert(liq.type === "Abs", "Liquid refinement must be unary");
 
 							const sort = yield* mkSort(annotation);

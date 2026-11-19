@@ -238,7 +238,7 @@ describe("Inference: raw reset", () => {
 	it.fails("keeps inferred repeated-resumption refinements closed", () => {
 		const result = elaborated("let result = reset (suspend (\\k -> (k 10) + (k 20)));");
 		const type = quoted(result);
-		if (!isMatching({ type: "Modal" }, type)) {
+		if (!isMatching({ type: "Modal" }, type) || !type.modalities.liquid) {
 			return;
 		}
 		EB.traverse(type.modalities.liquid, term => {

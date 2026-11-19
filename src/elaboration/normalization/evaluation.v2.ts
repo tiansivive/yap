@@ -252,7 +252,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			);
 		})
 		.with(EB.CtorPatterns.Psi, ({ binding, body }) =>
-			Do.let("requirement", () => schedule.eval(binding.requirement)).in(({ requirement }) =>
+			Do.let("requirement", () => (binding.requirement ? schedule.eval(binding.requirement) : result(undefined))).in(({ requirement }) =>
 				result(NF.Constructors.Psi(binding.variable, requirement, NF.Constructors.Closure(ctx, body))),
 			),
 		)
@@ -373,7 +373,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		.with({ type: "Modal" }, function* ({ term, modalities }) {
 			// Evaluate term and liquid, then wrap in Modal
 			return yield* Do.let("nf", () => schedule.eval(term))
-				.let("liquid", () => schedule.eval(modalities.liquid))
+				.let("liquid", () => (modalities.liquid ? schedule.eval(modalities.liquid) : result(undefined)))
 				.in(function* ({ nf, liquid }) {
 					return yield* match(unglue(nf))
 						.with(NF.Patterns.Modal, function* ({ modalities: innerModalities, value }) {
@@ -1086,6 +1086,10 @@ export const schedule = {
 	 * than to verification — it is only ever reached from the Modal arm, mid-drive.
 	 */
 	*combine(a: Modal.Annotations<NF.Value>, b: Modal.Annotations<NF.Value>): Evaluation<Machine<Modal.Annotations<NF.Value>>> {
+		const quantity = Q.SR.mul(a.quantity, b.quantity);
+		if (!a.liquid || !b.liquid) {
+			return yield* result({ quantity, liquid: a.liquid ?? b.liquid });
+		}
 		const [left, right] = [unglue(a.liquid), unglue(b.liquid)];
 		assert(left.type === "Abs" && left.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
 		assert(right.type === "Abs" && right.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
@@ -1098,7 +1102,7 @@ export const schedule = {
 			.bind("term", ({ anf, bnf }) => schedule.quote(lvl + 1, DSL.Binop.and(anf, bnf)))
 			.in(({ term }) =>
 				result({
-					quantity: Q.SR.mul(a.quantity, b.quantity),
+					quantity,
 					liquid: NF.Constructors.Lambda(name, "Explicit", NF.Constructors.Closure(ctx, term), left.binder.annotation),
 				}),
 			);

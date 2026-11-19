@@ -474,7 +474,10 @@ export const quantify = function* (name: string, annotation: NF.Value, vc: IVL.F
 		.with(NF.View.Sealed(NF.Patterns.Pi), NF.View.Sealed(NF.Patterns.Psi), function* () {
 			return vc;
 		})
-		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: { modalities } }) {
+		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: { value: base, modalities } }) {
+			if (!modalities.liquid) {
+				return yield* quantify(name, base, vc);
+			}
 			const sort = yield* mkSort(annotation);
 			assert(modalities.liquid.type === "Abs", "Liquid refinements must be unary functions");
 			const { binder, closure } = modalities.liquid;

@@ -131,7 +131,7 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		.with(NF.Patterns.Psi, ({ binder, closure }) =>
 			Do.let("applied", () => NbE.open(binder, closure))
 				.bind("body", ({ applied }) => NbE.Env.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
-				.let("requirement", () => quote(lvl, binder.requirement, unfold))
+				.let("requirement", () => (binder.requirement ? quote(lvl, binder.requirement, unfold) : result(undefined)))
 				.in(({ body, requirement }) => result(EB.Constructors.Psi(binder.variable, requirement, body))),
 		)
 		.with(NF.Patterns.Phi, ({ binder, closure }) =>
@@ -200,7 +200,7 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		})
 		.with({ type: "Modal" }, ({ value, modalities }) =>
 			Do.let("quoted", () => quote(lvl, value, unfold))
-				.let("liquid", () => quote(lvl, modalities.liquid, unfold))
+				.let("liquid", () => (modalities.liquid ? quote(lvl, modalities.liquid, unfold) : result(undefined)))
 				.in(({ quoted, liquid }) => result(EB.Constructors.Modal(quoted, { quantity: modalities.quantity, liquid }))),
 		)
 		.otherwise(function* (nf) {

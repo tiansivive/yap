@@ -53,7 +53,7 @@ export type Binding = (
 	| { type: "Lambda"; variable: string; icit: Implicitness }
 	| { type: "Mu"; variable: string; source: string }
 	| { type: "Pi"; variable: string; icit: Implicitness }
-	| { type: "Psi"; variable: string; requirement: Term }
+	| { type: "Psi"; variable: string; requirement?: Term }
 	| { type: "Phi"; variable: string }
 	| { type: "Nu"; variable: string; mode: "strict" | "lazy"; labels: readonly string[]; scoped: Row }
 	| { type: "Sigma"; variable: string }
@@ -114,7 +114,8 @@ export const Constructors = {
 			binding: { type: "Pi" as const, variable, icit, annotation },
 			body,
 		}),
-	Psi: (variable: string, requirement: Term, body: Term): Term => mk({ type: "Abs", binding: { type: "Psi", variable, requirement, annotation: State }, body }),
+	Psi: (variable: string, requirement: Term | undefined, body: Term): Term =>
+		mk({ type: "Abs", binding: { type: "Psi", variable, requirement, annotation: State }, body }),
 	Phi: (variable: string, annotation: Term, body: Term): Term => mk({ type: "Abs", binding: { type: "Phi", variable, annotation }, body }),
 	Sigma: (variable: string, annotation: Term, body: Term): Term =>
 		mk({

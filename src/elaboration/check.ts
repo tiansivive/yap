@@ -23,7 +23,6 @@ import { extract } from "./inference/rows";
 import { entries, set, update } from "@yap/utils";
 
 import * as Err from "./shared/errors";
-import { Liquid } from "@yap/verification/modalities";
 
 import assert from "node:assert";
 
@@ -61,7 +60,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 
 				.with([{ type: "lambda" }, NF.Patterns.Psi], function* ([tm, { binder, closure }]) {
 					const body = yield* NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length));
-					const requirement = yield* NF.quote(ctx.env.length, binder.requirement);
+					const requirement = binder.requirement && (yield* NF.quote(ctx.env.length, binder.requirement));
 					const [checked, [, ...usages]] = yield* M.reader.local(ctx => EB.bind(ctx, binder, NF.State, "inserted"), Check.val(tm, body));
 					return [EB.Constructors.Psi(binder.variable, requirement, checked), usages] satisfies Result;
 				})
@@ -325,9 +324,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				.with({ type: "modal" }, function* (tm) {
 					const [checked, us] = yield* Check.val(tm.term, type);
 
-					const liquid = tm.modalities.liquid
-						? yield* EB.Liquid.typecheck(tm.modalities.liquid, yield* NF.normalize(checked))
-						: Liquid.Predicate.Neutral(checked);
+					const liquid = tm.modalities.liquid ? yield* EB.Liquid.typecheck(tm.modalities.liquid, yield* NF.normalize(checked)) : undefined;
 					const quantity = tm.modalities.quantity ?? Q.Many;
 
 					return [EB.Constructors.Modal(checked, { liquid, quantity }), us] satisfies Result;

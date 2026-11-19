@@ -206,7 +206,9 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 		.with([NF.Patterns.Psi, NF.Patterns.Psi], [NF.Patterns.Pi, NF.Patterns.Pi], [NF.Patterns.Lambda, NF.Patterns.Lambda], function* ([at, bt]) {
 			const domain = (binder: NF.Binder): NF.Value =>
 				match(binder)
-					.with({ type: "Psi" }, ({ annotation, requirement }) => NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement }))
+					.with({ type: "Psi" }, ({ annotation, requirement }) =>
+						requirement ? NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement }) : annotation,
+					)
 					.otherwise(({ annotation }) => annotation);
 			const annotationA = domain(at.binder);
 			const annotationB = domain(bt.binder);
@@ -257,8 +259,8 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 		.with([{ type: "Modal" }, { type: "Modal" }], function* ([at, bt]) {
 			const baseVc = yield* subtype(at.value, bt.value);
 
-			const pAt = at.modalities.liquid;
-			const pBt = bt.modalities.liquid;
+			const pAt = at.modalities.liquid ?? Liquid.Predicate.NeutralNF(at.value, ctx);
+			const pBt = bt.modalities.liquid ?? Liquid.Predicate.NeutralNF(bt.value, ctx);
 			if (pAt.type !== "Abs" || pBt.type !== "Abs") {
 				throw new Error("Liquid refinements must be unary functions");
 			}

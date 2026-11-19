@@ -1,18 +1,90 @@
+/**
+ * The verifier opens callback preconditions under each invocation's state binder.
+ * See z-yap/zettels/refinement-inference.md.
+ */
 import assert from "assert";
 import { match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
+import * as Metas from "@yap/elaboration/shared/metas";
 import * as R from "@yap/shared/rows";
 import * as E from "fp-ts/Either";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import { Liquid } from "../../modalities";
 
-import { reader, supply, type Verification } from "../effects";
+import { reader, state, supply, type Verification } from "../effects";
 import { scope } from "../logic/translate";
 
-export type ExtractModalitiesFn = (nf: NF.Value, ctx: EB.Context) => Verification<NF.Modalities>;
+/** A lambda's inferred domain can resolve to a callback after its core binder was annotated. */
+export const parameter = function* (annotation: EB.Term, expected?: NF.Value): Verification<NF.Value> {
+	const registry = yield* Metas.registry.get();
+	const inferred = Liquid.Predicate.isInputRequest(annotation, registry) ? annotation : undefined;
+	const domain = expected ?? (yield* NF.evaluate(inferred?.term ?? annotation));
+	const invocation = yield* state.ask();
+	if (inferred) {
+		return yield* input(domain, invocation, inferred.modalities.liquid);
+	}
+	return (yield* callback(domain, invocation)) ?? domain;
+};
+
+const callback = function* (type: NF.Value, invocation: NF.Value): Verification<NF.Value | undefined> {
+	const ctx = yield* reader.ask();
+	const lvl = ctx.env.length;
+	return yield* match(yield* NF.view(type))
+		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: modal }) {
+			const contract = yield* callback(modal.value, invocation);
+			return contract && NF.Constructors.Modal(contract, modal.modalities);
+		})
+		.with(NF.View.Sealed(NF.Patterns.Psi), NF.View.Sealed(NF.Patterns.Pi), NF.View.Sealed(NF.Patterns.Phi), function* ({ value: fn }) {
+			const { binder, closure } = fn;
+			const argument = NF.Constructors.Rigid(lvl);
+			const domain = binder.type === "Pi" && binder.icit === "Explicit" ? yield* input(binder.annotation, invocation) : binder.annotation;
+			const body = yield* NF.apply(binder, closure, argument);
+			const scoped = EB.bind(ctx, binder, domain);
+			const result = yield* reader.local(
+				() => scoped,
+				(function* () {
+					const nested = yield* callback(body, binder.type === "Psi" ? argument : invocation);
+					return yield* NF.quote(lvl + 1, nested ?? body);
+				})(),
+			);
+			const closed = NF.Constructors.Closure(ctx, result);
+			return yield* match(binder)
+				.with({ type: "Psi" }, function* (psi) {
+					const requirement = psi.requirement ?? (yield* NF.evaluate(yield* Liquid.Predicate.open(NF.State)));
+					return NF.Constructors.Psi(psi.variable, requirement, closed);
+				})
+				.with({ type: "Phi" }, function* (phi) {
+					return NF.Constructors.Phi(phi.variable, domain, closed);
+				})
+				.with({ type: "Pi" }, function* (pi) {
+					return NF.Constructors.Pi(pi.variable, pi.icit, domain, closed);
+				})
+				.exhaustive();
+		})
+		.otherwise(function* () {
+			return undefined;
+		});
+};
+
+const input = function* (domain: NF.Value, invocation: NF.Value, request?: EB.Term): Verification<NF.Value> {
+	const nested = yield* callback(domain, invocation);
+	if (nested) {
+		return nested;
+	}
+	const annotated = match(yield* NF.view(domain))
+		.with(NF.View.Sealed(NF.Patterns.Modal), ({ value }) => value)
+		.otherwise(() => ({ value: domain, modalities: { quantity: Q.Many, liquid: undefined } }));
+	if (annotated.modalities.liquid) {
+		return domain;
+	}
+	const liquid = yield* NF.evaluate(request ?? (yield* Liquid.Predicate.open(annotated.value, invocation)));
+	return NF.Constructors.Modal(annotated.value, { quantity: annotated.modalities.quantity, liquid });
+};
+
+export type ExtractModalitiesFn = (nf: NF.Value, ctx: EB.Context) => Verification<Required<NF.Modalities>>;
 
 export const selfify = function* (tm: EB.Term, ty: NF.Value): Verification<NF.Value> {
 	if (!(yield* isFirstOrder(ty))) {
@@ -25,7 +97,12 @@ export const selfify = function* (tm: EB.Term, ty: NF.Value): Verification<NF.Va
 
 	return yield* match(yield* NF.view(ty))
 		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: modal }) {
-			const liquid = NF.Constructors.Lambda("v", "Explicit", NF.Constructors.Closure(ctx, EB.DSL.and(yield* body(modal.modalities.liquid), self)), modal.value);
+			const liquid = NF.Constructors.Lambda(
+				"v",
+				"Explicit",
+				NF.Constructors.Closure(ctx, modal.modalities.liquid ? EB.DSL.and(yield* body(modal.modalities.liquid), self) : self),
+				modal.value,
+			);
 			return NF.Constructors.Modal(modal.value, { quantity: modal.modalities.quantity, liquid });
 		})
 		.otherwise(function* () {
@@ -49,12 +126,15 @@ export const meet = function* (scrutineeTy: NF.Value, patternTy: NF.Value): Veri
 			return NF.Constructors.Exists(ex.variable, ex.annotation, { ctx: ex.body.ctx, value: met });
 		})
 		.with([NF.View.Sealed(NF.Patterns.Modal), NF.View.Sealed(NF.Patterns.Modal)], function* ([{ value: sm }, { value: pm }]) {
-			const conjoined = NF.Constructors.Lambda(
-				"v",
-				"Explicit",
-				NF.Constructors.Closure(ctx, EB.DSL.and(yield* body(sm.modalities.liquid), yield* body(pm.modalities.liquid))),
-				sm.value,
-			);
+			const conjoined =
+				sm.modalities.liquid && pm.modalities.liquid
+					? NF.Constructors.Lambda(
+							"v",
+							"Explicit",
+							NF.Constructors.Closure(ctx, EB.DSL.and(yield* body(sm.modalities.liquid), yield* body(pm.modalities.liquid))),
+							sm.value,
+						)
+					: (sm.modalities.liquid ?? pm.modalities.liquid);
 
 			return NF.Constructors.Modal(sm.value, {
 				quantity: sm.modalities.quantity,
@@ -120,7 +200,10 @@ export const meetRow = function* (sRow: NF.Row, pRow: NF.Row): Verification<NF.R
 
 export const extractModalities: ExtractModalitiesFn = function* (nf, ctx) {
 	return match(yield* NF.view(nf))
-		.with(NF.View.Sealed(NF.Patterns.Modal), ({ value }) => value.modalities)
+		.with(NF.View.Sealed(NF.Patterns.Modal), ({ value }) => ({
+			quantity: value.modalities.quantity,
+			liquid: value.modalities.liquid ?? Liquid.Predicate.NeutralNF(value.value, ctx),
+		}))
 		.otherwise(() => ({
 			quantity: Q.Many,
 			liquid: Liquid.Predicate.NeutralNF(NF.Constructors.Lit({ type: "Atom", value: "Unit" }), ctx),

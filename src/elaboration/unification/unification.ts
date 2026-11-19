@@ -431,12 +431,12 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 			.with(NF.Patterns.Match, ({ closure, scrutinee }) => check(scrutinee) || inTerm(closure.term))
 			.with(NF.Patterns.Inj, ({ base, injected }) => check(base) || check(injected))
 			.with(NF.Patterns.Lambda, ({ closure }) => inTerm(closure.term))
-			.with(NF.Patterns.Psi, ({ binder, closure }) => check(binder.requirement) || inTerm(closure.term))
+			.with(NF.Patterns.Psi, ({ binder, closure }) => (binder.requirement !== undefined && check(binder.requirement)) || inTerm(closure.term))
 			.with(NF.Patterns.Phi, ({ binder, closure }) => check(binder.annotation) || inTerm(closure.term))
 			.with(NF.Patterns.Pi, ({ closure }) => inTerm(closure.term))
 			.with(NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, ({ closure }) => inTerm(closure.term))
 			.with(NF.Patterns.App, ({ func, arg }) => check(func) || check(arg))
-			.with(NF.Patterns.Modal, ({ value: inner, modalities }) => check(inner) || check(modalities.liquid))
+			.with(NF.Patterns.Modal, ({ value: inner, modalities }) => check(inner) || Boolean(modalities.liquid && check(modalities.liquid)))
 			.with(NF.Patterns.Bubble, ({ ann, values, identity, payload }) => check(ann) || values.some(check) || check(identity) || check(payload))
 			.with(NF.Patterns.Reset, ({ value, handling }) => check(value) || check(handling.identity) || check(handling.handler))
 			.with(NF.Patterns.Existential, ({ annotation, assumptions, body }) => check(annotation) || [...assumptions.values()].some(check) || check(body.value))
@@ -462,7 +462,7 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 
 				return _.isEqual(variable, v);
 			})
-			.with(EB.CtorPatterns.Psi, ({ binding, body }) => inTerm(binding.requirement) || inTerm(body))
+			.with(EB.CtorPatterns.Psi, ({ binding, body }) => (binding.requirement !== undefined && inTerm(binding.requirement)) || inTerm(body))
 			.with({ type: "Abs" }, ({ binding, body }) => inTerm(binding.annotation) || inTerm(body))
 			.with({ type: "App" }, ({ func, arg }) => inTerm(func) || inTerm(arg))
 			.with({ type: "Ann" }, ({ term }) => inTerm(term))

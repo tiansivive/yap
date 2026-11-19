@@ -313,7 +313,7 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 			return NF.Constructors.Pi(binder.variable, binder.icit, ann, { ...closure, term });
 		})
 		.with(NF.Patterns.Psi, function* ({ binder, closure }) {
-			const requirement = yield* instantiate(binder.requirement);
+			const requirement = binder.requirement && (yield* instantiate(binder.requirement));
 			const extended = EB.bind(closure.ctx, binder, NF.State);
 			const term = yield* M.reader.local(_ => extended, EB.Icit.instantiate(closure.term, {}));
 			return NF.Constructors.Psi(binder.variable, requirement, { ...closure, term });
@@ -401,7 +401,7 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 		.with(NF.Patterns.Modal, function* ({ value, modalities }) {
 			return NF.Constructors.Modal(yield* instantiate(value), {
 				quantity: modalities.quantity,
-				liquid: yield* instantiate(modalities.liquid),
+				liquid: modalities.liquid && (yield* instantiate(modalities.liquid)),
 			});
 		})
 		.otherwise(() => {
@@ -455,7 +455,7 @@ export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
 		.with(NF.Patterns.Modal, ({ value, modalities }) =>
 			NF.Constructors.Modal(trimClosureEnvs(value), {
 				quantity: modalities.quantity,
-				liquid: trimClosureEnvs(modalities.liquid),
+				liquid: modalities.liquid && trimClosureEnvs(modalities.liquid),
 			}),
 		)
 		.with({ type: "External" }, ext => ext) // External values don't have closures to trim
