@@ -1,9 +1,11 @@
+import assert from "node:assert";
 import { describe, it, expect } from "vitest";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as R from "@yap/shared/rows";
 import * as Lit from "@yap/shared/literals";
+import * as Q from "@yap/shared/modalities/multiplicity";
 
 import { elaborateFrom, mkCtx, runNF, shown } from "../../inference/__tests__/util";
 import * as Metas from "@yap/elaboration/shared/metas";
@@ -31,6 +33,28 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 		const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 		expect(nf.type).toBe("Lit");
 		expect(show(nf, ctx)).toBe("1");
+	});
+
+	it("conjoins an open predicate with a written refinement before its solution is known", () => {
+		const ctx = mkCtx();
+		const num = EB.DSL.type("Num");
+		const meta = EB.Meta(0, ctx.env.length);
+		const kind = runNF(ctx, () => NF.evaluate(EB.Constructors.Pi("x", "Explicit", num, EB.DSL.type("Bool"))));
+		const open = Metas.register(Metas.empty, { kind: "Predicate", meta, annotation: kind });
+		const input = EB.Constructors.Modal(num, { quantity: Q.One, liquid: EB.Constructors.Var(meta) });
+		const belowTen = EB.DSL.lambda("x", EB.DSL.gt(EB.DSL.num(10), EB.DSL.bound(0)), num);
+		const combined = runNF(ctx, () => NF.evaluate(EB.Constructors.Modal(input, { quantity: Q.One, liquid: belowTen })), open);
+		assert(combined.type === "Modal" && combined.modalities.liquid);
+		const predicate = combined.modalities.liquid;
+		const positive = EB.DSL.lambda("x", EB.DSL.gt(EB.DSL.bound(0), EB.DSL.num(0)), num);
+		const solved = Metas.solve(
+			open,
+			meta.val,
+			runNF(ctx, () => NF.evaluate(positive)),
+		);
+		const results = [-1, 1, 11].map(x => runNF(ctx, () => NF.reduce(predicate, NF.Constructors.Lit(Lit.Num(x)), "Explicit"), solved));
+
+		expect(results).toMatchObject([false, true, false].map(value => ({ type: "Lit", value: Lit.Bool(value) })));
 	});
 
 	it("evaluates rows + projection", () => {

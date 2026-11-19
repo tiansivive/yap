@@ -8,6 +8,8 @@ import * as Metas from "@yap/elaboration/shared/metas";
 import * as U from "@yap/elaboration/unification";
 import * as Sub from "@yap/elaboration/unification/substitution";
 import * as R from "@yap/shared/rows";
+import * as Lit from "@yap/shared/literals";
+import { Liquid } from "@yap/verification/modalities";
 import * as Eff from "@yap/utils/effects";
 import { mkCtx, runEB } from "../inference/__tests__/util";
 
@@ -107,6 +109,35 @@ describe("meta ownership", () => {
 		const { ordinary, predicate, refined, subst } = result.answer;
 		expect(subst[ordinary.val]).toBe(refined);
 		expect(Metas.solution(result.registry, predicate.val)).toBeUndefined();
+	});
+
+	it("solves a Π domain meta under a call-state-dependent refinement", () => {
+		const result = runEB(mkCtx(), function* () {
+			const ctx = yield* M.reader.ask();
+			const ordinary = yield* EB.freshMeta(ctx.env.length, NF.Type);
+			const scoped = EB.bind(ctx, { type: "Psi", variable: "s" }, NF.State);
+			const num = NF.Constructors.Lit(Lit.Atom("Num"));
+			const unary = yield* Liquid.Predicate.Kind(num);
+			const kind = NF.Constructors.Pi("s", "Explicit", NF.State, yield* NF.closeVal(unary));
+			const predicate = yield* EB.freshMeta(scoped.env.length, kind, "Predicate");
+			const liquid = NF.Constructors.App(NF.Constructors.Flex(predicate), NF.Constructors.Rigid(ctx.env.length), "Explicit");
+			const refined = NF.Constructors.Modal(num, { quantity: "Many", liquid });
+			const codomain = NF.Constructors.Closure(scoped, EB.Constructors.Lit(Lit.Atom("Bool")));
+			const pi = (domain: NF.Value) => NF.Constructors.Pi("x", "Explicit", domain, codomain);
+			const unknown = pi(NF.Constructors.Flex(ordinary));
+			const solved = yield* EB.freshMeta(scoped.env.length, NF.Type);
+			yield* Metas.registry.modify(registry => Metas.solve(registry, solved.val, refined));
+			return {
+				ordinary,
+				num,
+				left: yield* M.reader.local(() => scoped, unify(unknown, pi(refined))),
+				right: yield* M.reader.local(() => scoped, unify(pi(NF.Constructors.Flex(solved)), unknown)),
+			};
+		});
+		assert(!Eff.failed(result.answer));
+		const { ordinary, num, left, right } = result.answer;
+		expect(left[ordinary.val]).toBe(num);
+		expect(right[ordinary.val]).toBe(num);
 	});
 
 	it.each(kinds)("preserves ownership for %s row tails in either orientation", kind => {

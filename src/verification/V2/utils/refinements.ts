@@ -1,88 +1,19 @@
 /**
- * The verifier opens callback preconditions under each invocation's state binder.
+ * Refinement operations share semantic predicate application and first-order quantification.
  * See z-yap/zettels/refinement-inference.md.
  */
-import assert from "assert";
 import { match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
-import * as Metas from "@yap/elaboration/shared/metas";
 import * as R from "@yap/shared/rows";
 import * as E from "fp-ts/Either";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import { Liquid } from "../../modalities";
 
-import { reader, state, supply, type Verification } from "../effects";
+import { reader, supply, type Verification } from "../effects";
 import { scope } from "../logic/translate";
-
-/** A lambda's inferred domain can resolve to a callback after its core binder was annotated. */
-export const parameter = function* (annotation: EB.Term, expected?: NF.Value): Verification<NF.Value> {
-	const registry = yield* Metas.registry.get();
-	const inferred = Liquid.Predicate.isInputRequest(annotation, registry) ? annotation : undefined;
-	const domain = expected ?? (yield* NF.evaluate(inferred?.term ?? annotation));
-	const invocation = yield* state.ask();
-	if (inferred) {
-		return yield* input(domain, invocation, inferred.modalities.liquid);
-	}
-	return (yield* callback(domain, invocation)) ?? domain;
-};
-
-const callback = function* (type: NF.Value, invocation: NF.Value): Verification<NF.Value | undefined> {
-	const ctx = yield* reader.ask();
-	const lvl = ctx.env.length;
-	return yield* match(yield* NF.view(type))
-		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: modal }) {
-			const contract = yield* callback(modal.value, invocation);
-			return contract && NF.Constructors.Modal(contract, modal.modalities);
-		})
-		.with(NF.View.Sealed(NF.Patterns.Psi), NF.View.Sealed(NF.Patterns.Pi), NF.View.Sealed(NF.Patterns.Phi), function* ({ value: fn }) {
-			const { binder, closure } = fn;
-			const argument = NF.Constructors.Rigid(lvl);
-			const domain = binder.type === "Pi" && binder.icit === "Explicit" ? yield* input(binder.annotation, invocation) : binder.annotation;
-			const body = yield* NF.apply(binder, closure, argument);
-			const scoped = EB.bind(ctx, binder, domain);
-			const result = yield* reader.local(
-				() => scoped,
-				(function* () {
-					const nested = yield* callback(body, binder.type === "Psi" ? argument : invocation);
-					return yield* NF.quote(lvl + 1, nested ?? body);
-				})(),
-			);
-			const closed = NF.Constructors.Closure(ctx, result);
-			return yield* match(binder)
-				.with({ type: "Psi" }, function* (psi) {
-					const requirement = psi.requirement ?? (yield* NF.evaluate(yield* Liquid.Predicate.open(NF.State)));
-					return NF.Constructors.Psi(psi.variable, requirement, closed);
-				})
-				.with({ type: "Phi" }, function* (phi) {
-					return NF.Constructors.Phi(phi.variable, domain, closed);
-				})
-				.with({ type: "Pi" }, function* (pi) {
-					return NF.Constructors.Pi(pi.variable, pi.icit, domain, closed);
-				})
-				.exhaustive();
-		})
-		.otherwise(function* () {
-			return undefined;
-		});
-};
-
-const input = function* (domain: NF.Value, invocation: NF.Value, request?: EB.Term): Verification<NF.Value> {
-	const nested = yield* callback(domain, invocation);
-	if (nested) {
-		return nested;
-	}
-	const annotated = match(yield* NF.view(domain))
-		.with(NF.View.Sealed(NF.Patterns.Modal), ({ value }) => value)
-		.otherwise(() => ({ value: domain, modalities: { quantity: Q.Many, liquid: undefined } }));
-	if (annotated.modalities.liquid) {
-		return domain;
-	}
-	const liquid = yield* NF.evaluate(request ?? (yield* Liquid.Predicate.open(annotated.value, invocation)));
-	return NF.Constructors.Modal(annotated.value, { quantity: annotated.modalities.quantity, liquid });
-};
 
 export type ExtractModalitiesFn = (nf: NF.Value, ctx: EB.Context) => Verification<Required<NF.Modalities>>;
 
@@ -213,16 +144,18 @@ export const extractModalities: ExtractModalitiesFn = function* (nf, ctx) {
 export const isFirstOrder = function* (ty: NF.Value): Verification<boolean> {
 	return yield* match(yield* NF.view(ty))
 		.with(NF.View.Sealed(NF.Patterns.Modal), ({ value }) => isFirstOrder(value.value))
-		.with(NF.View.Sealed(P.union(NF.Patterns.Psi, NF.Patterns.Pi, NF.Patterns.Lambda, NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu)), function* () {
-			return false;
-		})
+		.with(
+			NF.View.Sealed(P.union(NF.Patterns.Psi, NF.Patterns.Phi, NF.Patterns.Pi, NF.Patterns.Lambda, NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu)),
+			function* () {
+				return false;
+			},
+		)
 		.otherwise(function* () {
 			return true;
 		});
 };
 
 const body = function* (liquid: NF.Value): Verification<EB.Term> {
-	assert(liquid.type === "Abs" && liquid.binder.type === "Lambda", "Liquid refinement must be a lambda");
 	const lvl = (yield* reader.ask()).env.length;
-	return yield* NF.quote(lvl + 1, yield* NF.apply(liquid.binder, liquid.closure, NF.Constructors.Rigid(lvl)));
+	return yield* NF.quote(lvl + 1, yield* NF.reduce(liquid, NF.Constructors.Rigid(lvl), "Explicit"));
 };

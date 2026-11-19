@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
@@ -10,14 +10,16 @@ import { elaborateModule } from "../../elaboration/__tests__/module";
 import { mkCtx, runNF } from "../../elaboration/inference/__tests__/util";
 import { VerificationServiceV2 } from "../V2/service";
 import { Validity } from "../validity";
+import { Build } from "../solver/ivl/build";
 
 describe("Refinement inference requests", () => {
-	it("keeps the inferred value request on the lambda and checks a written contract as given", () => {
+	it("shares the input predicate between an inferred lambda and its returned Π and checks a written contract as given", () => {
 		const source = String.raw`
 foreign Fetch: Effect String Num;
 let fetch: (st |- key: String [| \k -> live st Fetch |]) -> Num = \key -> suspend @Fetch key;
 let relay = \key -> fetch key;
 let declared: String -> Num = \key -> fetch key;
+let invoke = \get -> (get "config") + 1;
 `;
 		const ds = elaborateModule(source).declarations;
 		const relay = ds.find(d => d.name === "relay")?.elaborated;
@@ -25,12 +27,29 @@ let declared: String -> Num = \key -> fetch key;
 		assert(relay && declared);
 		const predicates = Object.values(relay.registry).filter(entry => entry.kind === "Predicate");
 		expect(predicates).toHaveLength(2);
-		expect(relay.tm).toMatchObject({
-			binding: { type: "Psi", requirement: { body: { func: { variable: { type: "Meta" } } } } },
-			body: {
-				type: "Ann",
-				term: { binding: { annotation: { type: "Modal", modalities: { liquid: { body: { func: { func: { variable: { type: "Meta" } } } } } } } } },
-			},
+		["relay", "invoke"].forEach(name => {
+			const inferred = ds.find(d => d.name === name)?.elaborated;
+			assert(inferred);
+			const { tm, ty, registry } = inferred;
+			assert(tm.type === "Abs" && tm.binding.type === "Psi" && tm.body.type === "Ann");
+			const state = tm.binding.requirement;
+			assert(state?.type === "Var" && state.variable.type === "Meta");
+			const lambda = tm.body.term;
+			assert(lambda.type === "Abs" && lambda.binding.annotation.type === "Modal");
+			const hole = lambda.binding.annotation.modalities.liquid;
+			assert(hole?.type === "App" && hole.func.type === "Var" && hole.func.variable.type === "Meta");
+			expect(Metas.entry(registry, hole.func.variable.val).kind).toBe("Predicate");
+			expect(Metas.entry(registry, state.variable.val).kind).toBe("Predicate");
+			const input = {
+				type: "Modal",
+				modalities: { liquid: { type: "App", func: { variable: hole.func.variable }, arg: { type: "Var", variable: EB.Bound(0) } } },
+			};
+			const pi = { binding: { type: "Pi", annotation: input } };
+			expect(lambda.binding.annotation).toMatchObject(input);
+			expect(tm.body.ann).toMatchObject(pi);
+			const within = EB.bind(inferred.ctx, { type: "Let", variable: name }, ty);
+			const returned = runNF(within, () => NF.quote(within.env.length, ty), registry);
+			expect(returned).toMatchObject({ binding: { type: "Psi", requirement: { variable: state.variable } }, body: pi });
 		});
 		expect(Object.values(declared.registry).filter(entry => entry.kind === "Predicate")).toEqual(predicates);
 		const { tm, ty, ctx, registry } = declared;
@@ -86,7 +105,7 @@ let never: (r: { x: Num } [| \v -> false |]) -> Num = \r -> fetch "config";
 		assert(callback.type === "Abs" && callback.binding.type === "Psi");
 		const meta = { type: "Var", variable: { type: "Meta" } };
 		const value = { type: "Var", variable: { type: "Bound", index: 0 } };
-		expect(callback.binding.requirement).toMatchObject({ body: { type: "App", func: meta, arg: value } });
+		expect(callback.binding.requirement).toMatchObject(meta);
 		expect(callback.body).toMatchObject({
 			binding: {
 				type: "Pi",
@@ -95,11 +114,61 @@ let never: (r: { x: Num } [| \v -> false |]) -> Num = \r -> fetch "config";
 					term: { type: "Lit", value: { type: "Atom", value: "String" } },
 					modalities: {
 						quantity: Q.One,
-						liquid: { body: { type: "App", func: { type: "App", func: meta, arg: { type: "Var", variable: { type: "Bound", index: 1 } } }, arg: value } },
+						liquid: { type: "App", func: meta, arg: value },
 					},
 				},
 			},
 		});
+	});
+
+	it("forwards a quantity-only callback using first-order quantifiers", () => {
+		const ctx = mkCtx();
+		const str = EB.DSL.type("String");
+		const key = EB.Constructors.Modal(str, {
+			quantity: Q.Many,
+			liquid: EB.Constructors.Lambda("v", "Explicit", EB.Constructors.Lit({ type: "Bool", value: true }), str),
+		});
+		const callback = EB.Constructors.Psi("s", EB.Unrestricted, EB.Constructors.Pi("key", "Explicit", key, EB.DSL.type("Num")));
+		const input = EB.Constructors.Modal(callback, { quantity: Q.One });
+		const expected = runNF(ctx, () => NF.evaluate(EB.Constructors.Pi("get", "Explicit", input, input)));
+		const term = EB.Constructors.Lambda("get", "Explicit", EB.DSL.bound(0), input);
+		const forall = vi.spyOn(Build, "forall");
+		try {
+			const checked = VerificationServiceV2().check(term, expected, ctx, Metas.empty);
+			assert(!Eff.failed(checked.answer));
+			expect(Validity.check(checked.answer.vc).tag).toBe("valid");
+			expect(forall.mock.calls.flatMap(([binders]) => binders.map(binder => binder.sort.tag))).not.toContain("Fn");
+		} finally {
+			forall.mockRestore();
+		}
+	});
+
+	it.each([
+		[true, true, "valid"],
+		[false, true, "invalid"],
+		[true, false, "invalid"],
+	] as const)("checks a marked callback's ascribed result %s against expected result %s", (ascribedResult, expectedResult, verdict) => {
+		const ctx = mkCtx();
+		const num = EB.DSL.type("Num");
+		const refine = (type: EB.Term, value: boolean) =>
+			EB.Constructors.Modal(type, {
+				quantity: Q.Many,
+				liquid: EB.Constructors.Lambda("v", "Explicit", EB.Constructors.Lit({ type: "Bool", value }), type),
+			});
+		const callback = EB.Constructors.Psi("cb", EB.Unrestricted, EB.Constructors.Pi("x", "Explicit", refine(num, true), num));
+		const meta = EB.Meta(21, 0);
+		const kind = EB.Constructors.Pi("s", "Explicit", EB.State, EB.Constructors.Pi("get", "Explicit", callback, EB.DSL.type("Bool")));
+		const registry = Metas.register(Metas.empty, { meta, kind: "Predicate", annotation: runNF(ctx, () => NF.evaluate(kind)) });
+		const marker = EB.Constructors.App("Explicit", EB.Constructors.Var(meta), EB.Constructors.Var(EB.Bound(0)));
+		const input = EB.Constructors.Modal(callback, { quantity: Q.Many, liquid: marker });
+		const pi = (result: boolean) => EB.Constructors.Pi("get", "Explicit", input, refine(num, result));
+		const lambda = EB.Constructors.Lambda("get", "Explicit", EB.Constructors.Lit({ type: "Num", value: 1 }), input);
+		const term = EB.Constructors.Psi("s", EB.Unrestricted, EB.Constructors.Ann(lambda, pi(ascribedResult)));
+		const expected = runNF(ctx, () => NF.evaluate(EB.Constructors.Psi("s", EB.Unrestricted, pi(expectedResult))), registry);
+		const checked = VerificationServiceV2().check(term, expected, ctx, registry);
+		assert(!Eff.failed(checked.answer));
+		expect(Validity.check(checked.answer.vc).tag).toBe(verdict);
+		expect(checked.registry).toEqual(registry);
 	});
 
 	it("keeps an explicit ψ predicate and an existing callback input hole", () => {

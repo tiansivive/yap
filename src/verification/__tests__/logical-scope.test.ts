@@ -10,7 +10,7 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import * as Row from "@yap/shared/rows";
 import { elaborateModule } from "../../elaboration/__tests__/module";
 import { run } from "../V2/effects";
-import { formula, scope, term } from "../V2/logic/translate";
+import { formula, quantify, scope, term } from "../V2/logic/translate";
 import { meet } from "../V2/utils/refinements";
 import { subtype } from "../V2/subtype";
 import { VerificationServiceV2 } from "../V2/service";
@@ -101,6 +101,20 @@ describe("Logical binder identities", () => {
 		const value = Build.var_("v", Build.Real);
 
 		expect(answer.actual).toEqual(Build.and(Build.atom(">", value, answer.earlier), Build.atom(">", value, answer.later)));
+	});
+
+	it("applies a predicate from the outer scope to the quantified parameter", () => {
+		const num = NF.Constructors.Atom("Num");
+		const predicateType = NF.Constructors.Pi("x", "Explicit", num, NF.Constructors.Closure(defaultContext, EB.DSL.type("Bool")));
+		const ctx = EB.bind(defaultContext, { type: "Pi", variable: "p" }, predicateType);
+		const predicate = NF.Constructors.Rigid(defaultContext.env.length);
+		const domain = NF.Constructors.Modal(num, { quantity: Q.Many, liquid: predicate });
+		const { answer } = run(ctx, {}, function* () {
+			return { vc: yield* quantify("x", domain, Build.false_()), predicate: yield* term(predicate) };
+		});
+		assert(!Eff.failed(answer));
+		const applied = Build.select(answer.predicate, Build.var_("x", Build.Real), Build.Bool);
+		expect(answer.vc).toEqual(Build.forall([{ name: "x", sort: Build.Real }], Build.implies(Build.atom("=", applied, Build.bool(true)), Build.false_())));
 	});
 
 	it("opens a dependent pattern binder in the scope of its predecessor", () => {

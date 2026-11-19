@@ -16,9 +16,9 @@ export const infer = (lam: Lambda): M.Elaboration<EB.AST> =>
 			.with("Implicit", () => lambda(lam))
 			.with("Explicit", function* () {
 				const [term, type, [, ...usages]] = yield* M.reader.local(ctx => EB.bind(ctx, { type: "Psi", variable: "$s" }, NF.State, "inserted"), lambda(lam));
-				const request = yield* Liquid.Predicate.open(NF.State);
-				const requirement = yield* NF.normalize(request);
-				return [EB.Constructors.Psi("$s", request, term), NF.Constructors.Psi("$s", requirement, yield* NF.closeVal(type)), usages] satisfies EB.AST;
+				const hole = yield* Liquid.Predicate.hole(NF.State);
+				const requirement = yield* NF.normalize(hole);
+				return [EB.Constructors.Psi("$s", hole, term), NF.Constructors.Psi("$s", requirement, yield* NF.closeVal(type)), usages] satisfies EB.AST;
 			})
 			.exhaustive();
 	});
@@ -51,12 +51,11 @@ const lambda = (lam: Lambda): M.Elaboration<EB.AST> =>
 		);
 		//yield* M.constrain({ type: "usage", expected: mty[1], computed: vu });
 
-		const annotation =
-			!lam.annotation && lam.icit === "Explicit"
-				? EB.Constructors.Modal(ann, { quantity: Q.Many, liquid: yield* Liquid.Predicate.open(ty, NF.Constructors.Rigid(ctx.env.length - 1)) })
-				: ann;
+		const hole = !lam.annotation && lam.icit === "Explicit" ? yield* Liquid.Predicate.hole(ty, NF.Constructors.Rigid(ctx.env.length - 1)) : undefined;
+		const annotation = hole ? EB.Constructors.Modal(ann, { quantity: Q.Many, liquid: hole }) : ann;
+		const domain = hole ? NF.Constructors.Modal(ty, { quantity: Q.Many, liquid: yield* NF.normalize(hole) }) : ty;
 		const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm, annotation);
-		const pi = NF.Constructors.Pi(lam.variable, lam.icit, ty, yield* NF.closeVal(bType));
+		const pi = NF.Constructors.Pi(lam.variable, lam.icit, domain, yield* NF.closeVal(bType));
 		const piTerm = yield* NF.quote(ctx.env.length, pi);
 
 		return [EB.Constructors.Ann(tm, piTerm), pi, bus] satisfies EB.AST; // Remove the usage of the bound variable

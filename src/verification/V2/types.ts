@@ -5,6 +5,8 @@ import type { Verification } from "./effects";
 export type VerificationArtefacts = {
 	vc: IVL.Formula;
 	nf?: NF.Value;
+	/** Expected function type with the callback contracts used to check its body. */
+	contract?: NF.Value;
 };
 
 export type SynthResult = [NF.Value, VerificationArtefacts];

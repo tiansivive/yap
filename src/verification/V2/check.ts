@@ -1,5 +1,5 @@
 import assert from "assert";
-import { isMatching, match, P } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import * as Eff from "@yap/utils/effects";
 import * as EB from "@yap/elaboration";
@@ -14,10 +14,11 @@ import { Build } from "../solver/ivl/build";
 import type { VerificationArtefacts } from "./types";
 import { reader, fail, logger, obligations, supply, type Verification } from "./effects";
 import { collectSigmaBindings, noCapture } from "./utils/context";
-import { extractModalities, meet, parameter } from "./utils/refinements";
+import { meet } from "./utils/refinements";
 import { synth } from "./synth";
+import { functionBinder } from "./binders";
 import { subtype } from "./subtype";
-import { mkSort, formula, quantify, scope } from "./logic/translate";
+import { quantify, scope } from "./logic/translate";
 
 export const check = function* (tm: EB.Term, ty: NF.Value): Verification<VerificationArtefacts> {
 	yield* logger.enter();
@@ -35,8 +36,14 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 	);
 
 	const viewed = yield* NF.view(ty);
-	const result = yield* match(viewed)
-		.with(NF.View.Sealed(), function* ({ value: type }) {
+	const result = yield* match([tm, viewed])
+		.with([{ type: "Ann" }, P._], function* ([{ term, ann }]) {
+			const ascribed = yield* NF.evaluate(ann);
+			const body = yield* check(term, ascribed);
+			const declared = yield* subtype(ascribed, ty);
+			return { vc: Build.and(body.vc, declared), nf: body.contract ?? ascribed, contract: body.contract };
+		})
+		.with([P._, NF.View.Sealed()], function* ([, { value: type }]) {
 			return yield* match([tm, type])
 				.with([{ type: "Modal" }, NF.Patterns.Type], function* ([term, type]) {
 					return yield* check(term.term, type);
@@ -54,55 +61,8 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					},
 				)
 				.with([EB.CtorPatterns.Psi, NF.Patterns.Psi], [{ type: "Abs" }, NF.Patterns.Pi], function* ([term, type]) {
-					const annotation = yield* match(type.binder)
-						.with({ type: "Psi", requirement: P.nonNullable }, function* ({ annotation, requirement }) {
-							return NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement });
-						})
-						.with({ type: "Pi", icit: "Explicit" }, ({ annotation }) => parameter(term.binding.annotation, annotation))
-						.otherwise(function* ({ annotation }) {
-							return annotation;
-						});
-					const name = yield* supply.freshFrom(term.binding.variable);
-					return yield* scope(
-						name,
-						term.binding,
-						annotation,
-						(function* () {
-							const extended = yield* reader.ask();
-							const tyBody = yield* NF.apply(type.binder, type.closure, NF.Constructors.Rigid(ctx.env.length));
-							const artefacts = yield* check(term.body, tyBody);
-
-							const quantifyParameter = yield* match(yield* NF.view(annotation))
-								.with(NF.View.Sealed({ type: "Abs" }), function* () {
-									return false;
-								})
-								.with(NF.View.Sealed({ type: "Modal", modalities: { liquid: P.optional(undefined) } }), function* ({ value }) {
-									const base = yield* NF.view(value.value);
-									return !isMatching(NF.View.Sealed(P.union(NF.Patterns.Psi, NF.Patterns.Pi, NF.Patterns.Phi)), base);
-								})
-								.otherwise(function* () {
-									return true;
-								});
-							if (!quantifyParameter) {
-								return artefacts;
-							}
-
-							const { liquid: liq } = yield* extractModalities(annotation, extended);
-							assert(liq.type === "Abs", "Liquid refinement must be unary");
-
-							const sort = yield* mkSort(annotation);
-
-							const lvl = ctx.env.length;
-							const applied = yield* NF.apply(liq.binder, liq.closure, NF.Constructors.Rigid(lvl));
-							const phi = yield* formula(applied);
-							const imp = yield* obligations.record("check.abs.quantification", Build.forall([{ name, sort }], Build.implies(phi, artefacts.vc)), {
-								type: p(() => NF.display(type)),
-								description: `Function term must satisfy body's postcondition under the precondition on ${term.binding.variable}`,
-							});
-
-							return { vc: imp } satisfies VerificationArtefacts;
-						})(),
-					);
+					const [contract, { vc }] = yield* functionBinder({ ...type.binder, variable: term.binding.variable }, { body: term.body, expected: type.closure });
+					return { contract, vc } satisfies VerificationArtefacts;
 				})
 				.with([EB.CtorPatterns.Array, NF.Patterns.Indexed], function* ([_term, type]) {
 					const vc = yield* obligations.record("check.array", Build.true_(), {
@@ -209,7 +169,7 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					return yield* fallback(term, type);
 				});
 		})
-		.otherwise(function* ({ value: type }) {
+		.otherwise(function* ([, { value: type }]) {
 			return yield* match(tm)
 				.with(EB.CtorPatterns.Mu, function* (term) {
 					return yield* scope(yield* supply.freshFrom(term.binding.variable), { type: "Mu", variable: term.binding.variable }, type, check(term.body, type));

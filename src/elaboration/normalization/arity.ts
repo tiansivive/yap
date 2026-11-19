@@ -11,7 +11,7 @@ const { Patterns } = NF;
 /**
  * Walk an App spine to its head.
  */
-function* head(v: NF.Value): Evaluation<NF.Value> {
+export function* head(v: NF.Value): Evaluation<NF.Value> {
 	const { value } = yield* view(v);
 
 	return yield* match(value)

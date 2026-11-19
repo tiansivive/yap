@@ -121,6 +121,35 @@ exports[`parser: refinement types (liquid types) > nested type with refinement: 
 }
 `;
 
+exports[`parser: refinement types (liquid types) > preserves a written predicate alongside a quantity 1`] = `
+{
+  "modalities": {
+    "liquid": {
+      "annotation": undefined,
+      "body": {
+        "type": "lit",
+        "value": {
+          "type": "Bool",
+          "value": false,
+        },
+      },
+      "icit": "Explicit",
+      "type": "lambda",
+      "variable": "key",
+    },
+    "quantity": "One",
+  },
+  "term": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "String",
+    },
+  },
+  "type": "modal",
+}
+`;
+
 exports[`parser: refinement types (liquid types) > refinement in pi type: (x: Num) -> Num [|\\v -> v > x|] 1`] = `
 {
   "annotation": {

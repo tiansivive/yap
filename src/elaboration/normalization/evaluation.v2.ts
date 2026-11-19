@@ -377,7 +377,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				.in(function* ({ nf, liquid }) {
 					return yield* match(unglue(nf))
 						.with(NF.Patterns.Modal, function* ({ modalities: innerModalities, value }) {
-							return yield* Do.let("combined", () => schedule.combine(innerModalities, { quantity: modalities.quantity, liquid })).in(({ combined }) =>
+							return yield* Do.let("combined", () => schedule.combine(value, innerModalities, { quantity: modalities.quantity, liquid })).in(({ combined }) =>
 								result(NF.Constructors.Modal(value, combined)),
 							);
 						})
@@ -1085,25 +1085,24 @@ export const schedule = {
 	 * conjoins them, which needs application and quotation, so it belongs to the machine rather
 	 * than to verification — it is only ever reached from the Modal arm, mid-drive.
 	 */
-	*combine(a: Modal.Annotations<NF.Value>, b: Modal.Annotations<NF.Value>): Evaluation<Machine<Modal.Annotations<NF.Value>>> {
+	*combine(domain: NF.Value, a: Modal.Annotations<NF.Value>, b: Modal.Annotations<NF.Value>): Evaluation<Machine<Modal.Annotations<NF.Value>>> {
 		const quantity = Q.SR.mul(a.quantity, b.quantity);
 		if (!a.liquid || !b.liquid) {
 			return yield* result({ quantity, liquid: a.liquid ?? b.liquid });
 		}
-		const [left, right] = [unglue(a.liquid), unglue(b.liquid)];
-		assert(left.type === "Abs" && left.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
-		assert(right.type === "Abs" && right.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
+		const left = a.liquid;
+		const right = b.liquid;
 		const ctx = yield* NbE.Env.ask();
-		const name = `${left.binder.variable}_and_${right.binder.variable}`;
 		const lvl = ctx.env.length;
+		const value = NF.Constructors.Rigid(lvl);
 
-		return yield* Do.let("anf", () => schedule.apply(left.binder, left.closure, NF.Constructors.Rigid(lvl)))
-			.let("bnf", () => schedule.apply(right.binder, right.closure, NF.Constructors.Rigid(lvl)))
+		return yield* Do.let("anf", () => schedule.reduce(left, value, "Explicit"))
+			.let("bnf", () => schedule.reduce(right, value, "Explicit"))
 			.bind("term", ({ anf, bnf }) => schedule.quote(lvl + 1, DSL.Binop.and(anf, bnf)))
 			.in(({ term }) =>
 				result({
 					quantity,
-					liquid: NF.Constructors.Lambda(name, "Explicit", NF.Constructors.Closure(ctx, term), left.binder.annotation),
+					liquid: NF.Constructors.Lambda("v", "Explicit", NF.Constructors.Closure(ctx, term), domain),
 				}),
 			);
 	},

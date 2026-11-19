@@ -22,6 +22,12 @@ describe("parser: refinement types (liquid types)", () => {
 		expect(data.results[0]).toMatchSnapshot();
 	});
 
+	it("preserves a written predicate alongside a quantity", () => {
+		const data = parser.feed(String.raw`<1>String [| \key -> false |]`);
+		expect(data.results).toHaveLength(1);
+		expect(data.results[0]).toMatchSnapshot();
+	});
+
 	it("refinement with equality: x [|\\v -> v == 42|]", () => {
 		const data = parser.feed("x [|\\v -> v == 42|]");
 		expect(data.results.length).toBe(1);

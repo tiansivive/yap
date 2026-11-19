@@ -103,6 +103,10 @@ export function* reduce(nff: Value, nfa: Value, icit: Elimination) {
 	return yield* fresh(() => Machine.reduce(nff, nfa, icit));
 }
 
+export function* head(value: Value) {
+	return yield* fresh(() => Arity.head(value));
+}
+
 export function* arity(ty: Value) {
 	return yield* fresh(() => Arity.arity(ty));
 }

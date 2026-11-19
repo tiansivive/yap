@@ -143,8 +143,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 				[NF.Patterns.Pi, NF.Patterns.Pi],
 				([pi1, pi2]) => pi1.binder.icit === pi2.binder.icit,
 				function* ([pi1, pi2]) {
-					/* Annotations first: the body unification reads their bindings from the accumulator. */
-					yield* unify(pi1.binder.annotation, pi2.binder.annotation, lvl);
+					/* The domain predicate belongs to the function contract and can mention its call state. Solve its structural type before opening the body. */
+					yield* unify(yield* domain(pi1.binder.annotation), yield* domain(pi2.binder.annotation), lvl);
 					const body1 = yield* NF.apply(pi1.binder, pi1.closure, NF.Constructors.Rigid(lvl));
 					const body2 = yield* NF.apply(pi2.binder, pi2.closure, NF.Constructors.Rigid(lvl));
 					yield* unify(body1, body2, lvl + 1);
@@ -389,6 +389,14 @@ const speculate = function* (left: NF.Value, right: NF.Value, lvl: number): Unif
 	const [outcome, , after] = yield* Eff.with([M.except.handlers(), Sub.subst.handlers(ambient)], () => unify(left, right, lvl));
 
 	return !Eff.failed(outcome) && Object.keys(after).every(key => key in ambient);
+};
+
+/** A domain meta can already have a refined solution in the current substitution. */
+const domain = function* (annotation: NF.Value): Unification<NF.Value> {
+	const forced = yield* zonk(annotation);
+	return yield* match(NF.unwrapNeutral(forced))
+		.with(NF.Patterns.Modal, ({ value }) => domain(value))
+		.otherwise(() => M.of(forced));
 };
 
 type Meta = Extract<EB.Variable, { type: "Meta" }>;

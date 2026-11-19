@@ -13,8 +13,9 @@ import { Build } from "../solver/ivl/build";
 import type { SynthResult, VerificationArtefacts } from "./types";
 import { reader, logger, state, State, obligations, supply, type Verification } from "./effects";
 import { noCapture } from "./utils/context";
-import { extractModalities, selfify, parameter } from "./utils/refinements";
+import { extractModalities, selfify } from "./utils/refinements";
 import { check } from "./check";
+import { functionBinder } from "./binders";
 import { formula, live, quantify, scope } from "./logic/translate";
 
 export const synth = function* (term: EB.Term): Verification<SynthResult> {
@@ -36,7 +37,6 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const [, , ty] = entry.type;
 			const selfified = yield* selfify(tm, ty);
 			const { liquid } = yield* extractModalities(selfified, ctx);
-			assert(liquid.type === "Abs", "Liquid modality must be a Lambda");
 
 			const evaluated = yield* NF.evaluate(tm);
 			const predicate = yield* NF.reduce(liquid, evaluated, "Explicit");
@@ -135,24 +135,12 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 		.with(EB.CtorPatterns.Psi, function* ({ binding, body }) {
 			const requirement = binding.requirement && (yield* NF.evaluate(binding.requirement));
 			const binder = { type: "Psi", variable: binding.variable, annotation: NF.State, requirement } as const;
-			const annotation = requirement ? NF.Constructors.Modal(binder.annotation, { quantity: Q.Many, liquid: requirement }) : binder.annotation;
-			const name = yield* supply.freshFrom(binding.variable);
-			const [bodyType, artefacts] = yield* scope(name, binder, annotation, synth(body));
-			const quoted = yield* NF.quote(ctx.env.length + 1, bodyType);
-			const type = match(yield* NF.view(bodyType))
-				.with(NF.View.Sealed(NF.Patterns.Type), () => NF.Type)
-				.otherwise(() => NF.Constructors.Psi(binding.variable, requirement, NF.Constructors.Closure(ctx, quoted)));
-			const vc = yield* quantify(name, annotation, artefacts.vc);
-			return [type, { vc }] satisfies SynthResult;
+			return yield* functionBinder(binder, { body });
 		})
 		.with(EB.CtorPatterns.Lambda, function* (tm) {
-			const annotation = tm.binding.icit === "Explicit" ? yield* parameter(tm.binding.annotation) : yield* NF.evaluate(tm.binding.annotation);
-			const name = yield* supply.freshFrom(tm.binding.variable);
-			const [bodyType, bodyArtefacts] = yield* scope(name, { type: "Pi", variable: tm.binding.variable }, annotation, synth(tm.body));
-			const icit = tm.binding.type === "Lambda" || tm.binding.type === "Pi" ? tm.binding.icit : "Explicit";
-			const bodyTypeQuoted = yield* NF.quote(ctx.env.length + 1, bodyType);
-			const type = NF.Constructors.Pi(tm.binding.variable, icit, annotation, NF.Constructors.Closure(ctx, bodyTypeQuoted));
-			return [type, { vc: bodyArtefacts.vc }] satisfies SynthResult;
+			const annotation = yield* NF.evaluate(tm.binding.annotation);
+			const binder = { ...tm.binding, type: "Pi", annotation } as const;
+			return yield* functionBinder(binder, { body: tm.body });
 		})
 		.with(EB.CtorPatterns.Variant, function* () {
 			return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
@@ -416,7 +404,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 		.with({ type: "Ann" }, function* (tm) {
 			const ann = yield* NF.evaluate(tm.ann);
 			const artefacts = yield* check(tm.term, ann);
-			return [ann, artefacts] satisfies SynthResult;
+			return [artefacts.contract ?? ann, artefacts] satisfies SynthResult;
 		})
 		.with({ type: "Reset", handling: P.nonNullable }, function* ({ term, handling }) {
 			const [annotation, identityArtefacts] = yield* synth(handling.identity);
