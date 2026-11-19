@@ -477,8 +477,17 @@ export const quantify = function* (name: string, annotation: NF.Value, vc: IVL.F
 		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: { modalities } }) {
 			const sort = yield* mkSort(annotation);
 			assert(modalities.liquid.type === "Abs", "Liquid refinements must be unary functions");
-			const applied = yield* NF.apply(modalities.liquid.binder, modalities.liquid.closure, NF.Constructors.Rigid(ctx.env.length));
-			const phi = yield* scope(name, { type: "Pi", variable: name }, annotation, formula(applied));
+			const { binder, closure } = modalities.liquid;
+			const value = NF.Constructors.Rigid(ctx.env.length);
+			const phi = yield* scope(
+				name,
+				{ type: "Pi", variable: name },
+				annotation,
+				(function* () {
+					const applied = yield* NF.apply(binder, closure, value);
+					return yield* formula(applied);
+				})(),
+			);
 			return yield* obligations.record(`quantify:${name}`, Build.forall([{ name, sort }], Build.implies(phi, vc)), {
 				description: `Quantifying refined ${name}`,
 			});
