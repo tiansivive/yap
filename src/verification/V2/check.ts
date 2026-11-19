@@ -41,6 +41,9 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 				.with([{ type: "Modal" }, NF.Patterns.Type], function* ([term, type]) {
 					return yield* check(term.term, type);
 				})
+				.with([EB.CtorPatterns.Psi, NF.Patterns.Type], function* ([term, type]) {
+					return yield* scope(yield* supply.freshFrom(term.binding.variable), term.binding, NF.State, check(term.body, type));
+				})
 				.with([EB.CtorPatterns.Mu, P._], function* ([term, type]) {
 					return yield* scope(yield* supply.freshFrom(term.binding.variable), { type: "Mu", variable: term.binding.variable }, type, check(term.body, type));
 				})
@@ -55,7 +58,9 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 				)
 				.with([EB.CtorPatterns.Psi, NF.Patterns.Psi], [{ type: "Abs" }, NF.Patterns.Pi], function* ([term, type]) {
 					const annotation = match(type.binder)
-						.with({ type: "Psi" }, ({ annotation, requirement }) => NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement }))
+						.with({ type: "Psi", requirement: P.nonNullable }, ({ annotation, requirement }) =>
+							NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement }),
+						)
 						.otherwise(({ annotation }) => annotation);
 					const name = yield* supply.freshFrom(term.binding.variable);
 					return yield* scope(

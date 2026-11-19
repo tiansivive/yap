@@ -1,0 +1,60 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`bidirectional refinement templates > prepares declared from its elaborated declaration boundary 1`] = `
+{
+  "predicates": [],
+  "type": "ψ$s [| λ(s: State) -> (closure: true -| Γ: s; declared) |] .
+  (closure: Π(key: <ω> String [| λ(v: String) -> true |]) ->
+    Num -| Γ: $s; declared)",
+}
+`;
+
+exports[`bidirectional refinement templates > prepares relay from its elaborated declaration boundary 1`] = `
+{
+  "predicates": [
+    {
+      "level": 1,
+      "type": "Π(s: State) -> (closure: Bool -| Γ: s; relay)",
+    },
+    {
+      "level": 2,
+      "type": "Π(s: State) -> (closure: Π(v: String) -> Bool -| Γ: s; $s; relay)",
+    },
+  ],
+  "type": "ψ$s [| λ(s: State) -> (closure: ?7 s -| Γ: s; relay) |] .
+  (closure: Π(key: <ω> String [| λ(v: String) -> ?8 $s v |]) ->
+    Num -| Γ: $s; relay)",
+}
+`;
+
+exports[`bidirectional refinement templates > prepares withConfig from its elaborated declaration boundary 1`] = `
+{
+  "predicates": [
+    {
+      "level": 2,
+      "type": "Π(s: State) -> (closure: Bool -| Γ: s; $s; withConfig)",
+    },
+    {
+      "level": 3,
+      "type": "Π(s: State) -> (closure: Π(v: String) -> Bool -| Γ: s; $s; $s; withConfig)",
+    },
+  ],
+  "type": "ψ$s [| λ(s: State) -> (closure: true -| Γ: s; withConfig) |] .
+  (closure: Π(get: ψ$s [| λ(s: State) -> ?9 s |] .
+    Π(key: <ω> String [| λ(v: String) -> ?10 $s v |]) -> Num) ->
+    Num -| Γ: $s; withConfig)",
+}
+`;
+
+exports[`bidirectional refinement templates > retains application result facts without adding preconditions 1`] = `
+"ψ$s .
+  (closure: Π(x: <ω> Num [| λ(v: Num) -> FFI.$gt v 0 |]) ->
+    Num -| Γ: $s; t1; $s)"
+`;
+
+exports[`bidirectional refinement templates > reuses all expected holes when a prepared contract is checked again 1`] = `
+"ψ$s [| λ(s: State) -> (closure: true -| Γ: s; withConfig) |] .
+  (closure: Π(get: ψ$s [| λ(s: State) -> ?9 s |] .
+    Π(key: <ω> String [| λ(v: String) -> ?10 $s v |]) -> Num) ->
+    Num -| Γ: $s; withConfig)"
+`;

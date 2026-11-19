@@ -15,8 +15,7 @@ export const infer = (lam: Lambda): M.Elaboration<EB.AST> =>
 			.with("Implicit", () => lambda(lam))
 			.with("Explicit", function* () {
 				const [term, type, [, ...usages]] = yield* M.reader.local(ctx => EB.bind(ctx, { type: "Psi", variable: "$s" }, NF.State, "inserted"), lambda(lam));
-				const requirement = yield* NF.normalize(EB.Unrestricted);
-				return [EB.Constructors.Psi("$s", EB.Unrestricted, term), NF.Constructors.Psi("$s", requirement, yield* NF.closeVal(type)), usages] satisfies EB.AST;
+				return [EB.Constructors.Psi("$s", undefined, term), NF.Constructors.Psi("$s", undefined, yield* NF.closeVal(type)), usages] satisfies EB.AST;
 			})
 			.exhaustive();
 	});
@@ -51,7 +50,6 @@ const lambda = (lam: Lambda): M.Elaboration<EB.AST> =>
 
 		const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm, ann);
 		const pi = NF.Constructors.Pi(lam.variable, lam.icit, ty, yield* NF.closeVal(bType));
-		const piTerm = yield* NF.quote(ctx.env.length, pi);
 
-		return [EB.Constructors.Ann(tm, piTerm), pi, bus] satisfies EB.AST; // Remove the usage of the bound variable
+		return [tm, pi, bus] satisfies EB.AST; // Remove the usage of the bound variable
 	});

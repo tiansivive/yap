@@ -62,7 +62,7 @@ export type Unfolding = "none" | "definitions";
 
 export type Binder =
 	| { type: "Pi"; variable: string; annotation: Value; icit: Implicitness }
-	| { type: "Psi"; variable: string; annotation: Value; requirement: Value }
+	| { type: "Psi"; variable: string; annotation: Value; requirement?: Value }
 	| { type: "Phi"; variable: string; annotation: Value }
 	| { type: "Lambda"; variable: string; annotation: Value; icit: Implicitness }
 	| { type: "Mu"; variable: string; annotation: Value; source: string }
@@ -108,7 +108,7 @@ export const Constructors = {
 			binder: { type: "Pi" as const, variable, icit, annotation },
 			closure,
 		}),
-	Psi: (variable: string, requirement: Value, closure: Closure) =>
+	Psi: (variable: string, requirement: Value | undefined, closure: Closure) =>
 		mk({ type: "Abs" as const, binder: { type: "Psi", variable, annotation: State, requirement }, closure }),
 	Phi: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "Phi", variable, annotation }, closure }),
 	Sigma: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "Sigma", variable, annotation }, closure }),

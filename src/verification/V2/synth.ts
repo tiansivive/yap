@@ -15,6 +15,7 @@ import { reader, logger, state, State, obligations, supply, type Verification } 
 import { noCapture } from "./utils/context";
 import { extractModalities, selfify } from "./utils/refinements";
 import { check } from "./check";
+import * as Templates from "./templates";
 import { formula, live, quantify, scope } from "./logic/translate";
 
 export const synth = function* (term: EB.Term): Verification<SynthResult> {
@@ -133,7 +134,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			return yield* reader.local(c => EB.open(tm.binding, c), synth(tm.body));
 		})
 		.with(EB.CtorPatterns.Psi, function* ({ binding, body }) {
-			const requirement = yield* NF.evaluate(binding.requirement);
+			const requirement = yield* Templates.requirement(binding.requirement ? yield* NF.evaluate(binding.requirement) : undefined);
 			const binder = { type: "Psi", variable: binding.variable, annotation: NF.State, requirement } as const;
 			const annotation = NF.Constructors.Modal(binder.annotation, { quantity: Q.Many, liquid: requirement });
 			const name = yield* supply.freshFrom(binding.variable);
@@ -146,7 +147,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			return [type, { vc }] satisfies SynthResult;
 		})
 		.with(EB.CtorPatterns.Lambda, function* (tm) {
-			const annotation = yield* NF.evaluate(tm.binding.annotation);
+			const annotation = yield* Templates.parameter(yield* NF.evaluate(tm.binding.annotation), "synth");
 			const name = yield* supply.freshFrom(tm.binding.variable);
 			const [bodyType, bodyArtefacts] = yield* scope(name, { type: "Pi", variable: tm.binding.variable }, annotation, synth(tm.body));
 			const icit = tm.binding.type === "Lambda" || tm.binding.type === "Pi" ? tm.binding.icit : "Explicit";
@@ -211,7 +212,9 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 								}
 							})
 							.otherwise(function* () {});
-						const annotation = NF.Constructors.Modal(psi.binder.annotation, { quantity: Q.Many, liquid: psi.binder.requirement });
+						const annotation = psi.binder.requirement
+							? NF.Constructors.Modal(psi.binder.annotation, { quantity: Q.Many, liquid: psi.binder.requirement })
+							: psi.binder.annotation;
 						const artefacts = yield* reader.local(_ => ctx, check(arg, annotation));
 						const value = yield* reader.local(_ => ctx, NF.evaluate(arg));
 						const out = yield* NF.apply(psi.binder, psi.closure, value);
@@ -265,7 +268,15 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 				const outer = yield* reader.ask();
 				const name = yield* supply.freshFrom(current.variable);
 				const binder = { type: "Let", variable: current.variable } as const;
-				const artefacts = yield* scope(name, binder, current.annotation, check(current.value, current.annotation));
+				const artefacts = yield* scope(
+					name,
+					binder,
+					current.annotation,
+					(function* () {
+						const prepared = yield* Templates.synth(current.value, current.annotation);
+						return { ...(yield* check(prepared.term, prepared.type)), nf: prepared.type };
+					})(),
+				);
 				const retained = artefacts.nf ?? current.annotation;
 				const [ty, restArtefacts] = yield* scope(name, binder, retained, recurse(rest));
 				const quantified = yield* quantify(name, retained, restArtefacts.vc);
@@ -412,7 +423,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 		})
 
 		.with({ type: "Ann" }, function* (tm) {
-			const ann = yield* NF.evaluate(tm.ann);
+			const ann = yield* Templates.check(yield* NF.evaluate(tm.ann));
 			const artefacts = yield* check(tm.term, ann);
 			return [ann, artefacts] satisfies SynthResult;
 		})
