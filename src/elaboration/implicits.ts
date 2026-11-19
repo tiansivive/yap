@@ -5,7 +5,7 @@ import * as NF from "@yap/elaboration/normalization";
 
 import * as Eff from "@yap/utils/effects";
 
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import * as R from "@yap/shared/rows";
 import assert from "assert";
@@ -54,15 +54,19 @@ export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
 export const wrapLambda = function* (term: EB.Term, ty: NF.Value): NF.Abstraction<EB.Term> {
 	const ctx = yield* M.reader.ask();
 
-	return yield* match(yield* NF.view(ty))
+	return yield* match([term, yield* NF.view(ty)])
+		.with([EB.CtorPatterns.Ann, P._], function* ([annotation]) {
+			const wrapped = yield* wrapLambda(annotation.term, ty);
+			return EB.Constructors.Ann(wrapped, yield* NF.quote(ctx.env.length, ty));
+		})
 		.with(
-			NF.View.Sealed(NF.Patterns.ImplicitPi),
+			[P._, NF.View.Sealed(NF.Patterns.ImplicitPi)],
 			_ => term.type === "Abs" && (term.binding.type === "Lambda" || term.binding.type === "Pi") && term.binding.icit === "Implicit",
 			function* () {
 				return term;
 			},
 		)
-		.with(NF.View.Sealed(NF.Patterns.ImplicitPi), function* ({ value: pi }) {
+		.with([P._, NF.View.Sealed(NF.Patterns.ImplicitPi)], function* ([, { value: pi }]) {
 			const lvl = ctx.env.length;
 			const ann = yield* NF.quote(lvl, pi.binder.annotation);
 			const binding: EB.Binding = { type: "Lambda", variable: pi.binder.variable, icit: pi.binder.icit, annotation: ann };
@@ -135,7 +139,7 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 			return EB.Constructors.Nu({ ...binding, scoped, annotation }, yield* M.reader.local(_ => within, instantiate(body, resolutions)));
 		})
 		.with(EB.CtorPatterns.Psi, function* ({ binding, body }) {
-			const requirement = yield* instantiate(binding.requirement, resolutions);
+			const requirement = binding.requirement ? yield* instantiate(binding.requirement, resolutions) : undefined;
 			const extended = EB.bind(ctx, binding, NF.State);
 			return EB.Constructors.Psi(binding.variable, requirement, yield* M.reader.local(_ => extended, instantiate(body, resolutions)));
 		})

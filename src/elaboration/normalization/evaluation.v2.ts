@@ -252,7 +252,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			);
 		})
 		.with(EB.CtorPatterns.Psi, ({ binding, body }) =>
-			Do.let("requirement", () => schedule.eval(binding.requirement)).in(({ requirement }) =>
+			Do.let("requirement", () => (binding.requirement ? schedule.eval(binding.requirement) : result(undefined))).in(({ requirement }) =>
 				result(NF.Constructors.Psi(binding.variable, requirement, NF.Constructors.Closure(ctx, body))),
 			),
 		)

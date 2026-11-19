@@ -7,6 +7,7 @@ import * as NF from "@yap/elaboration/normalization";
 
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
+import { Liquid } from "@yap/verification/modalities";
 import * as Q from "@yap/shared/modalities/multiplicity";
 import * as R from "fp-ts/lib/Record";
 
@@ -27,7 +28,8 @@ export const infer = (stmt: Src.Statement): M.Elaboration<ElaboratedStmt> =>
 				const ann = dec.annotation
 					? yield* EB.check(dec.annotation, NF.Type)
 					: ([EB.Constructors.Var(yield* freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
-				const va = yield* NF.normalize(ann[0]);
+				const normalized = yield* NF.normalize(ann[0]);
+				const va = dec.annotation ? yield* Liquid.expected(normalized) : normalized;
 
 				/* Check the value inside a recursion window at the let binder's level: lookup
 				 * flags it when the definition references itself from a type-level position. */
@@ -49,7 +51,11 @@ export const infer = (stmt: Src.Statement): M.Elaboration<ElaboratedStmt> =>
 				 * of unfolding them — expansion is unification's, on demand.
 				 */
 				const tm = recursive ? EB.Constructors.Mu("x", dec.variable, ann[0], inferred[0]) : inferred[0];
-				const def = EB.Constructors.Stmt.Let(dec.variable, tm, va);
+				const annotation = dec.annotation
+					? yield* M.reader.local(c => EB.bind(c, { type: "Let", variable: dec.variable }, va), NF.quote(ctx.env.length + 1, va))
+					: undefined;
+				const value = annotation ? EB.Constructors.Ann(tm, annotation) : tm;
+				const def = EB.Constructors.Stmt.Let(dec.variable, value, va);
 				return [def, inferred[1], inferred[2]] satisfies ElaboratedStmt;
 			})
 			.with({ type: "expression" }, function* ({ value }) {

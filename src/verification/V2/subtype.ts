@@ -206,7 +206,9 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 		.with([NF.Patterns.Psi, NF.Patterns.Psi], [NF.Patterns.Pi, NF.Patterns.Pi], [NF.Patterns.Lambda, NF.Patterns.Lambda], function* ([at, bt]) {
 			const domain = (binder: NF.Binder): NF.Value =>
 				match(binder)
-					.with({ type: "Psi" }, ({ annotation, requirement }) => NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement }))
+					.with({ type: "Psi", requirement: P.nonNullable }, ({ annotation, requirement }) =>
+						NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement }),
+					)
 					.otherwise(({ annotation }) => annotation);
 			const annotationA = domain(at.binder);
 			const annotationB = domain(bt.binder);

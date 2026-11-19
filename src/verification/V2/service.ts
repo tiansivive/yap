@@ -10,6 +10,7 @@ import { run, type VerificationOptions } from "./effects";
 import { check } from "./check";
 import { synth } from "./synth";
 import { subtype } from "./subtype";
+import * as Templates from "./templates";
 
 type Outcome<A> = {
 	answer: A | Eff.Aborted<Err>;
@@ -19,12 +20,30 @@ type Outcome<A> = {
 
 export const VerificationServiceV2 = (options: VerificationOptions = {}) => ({
 	check: (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry): Outcome<VerificationArtefacts> => {
-		return run(ctx, registry, () => check(tm, ty), options);
+		return run(
+			ctx,
+			registry,
+			function* () {
+				const expected = yield* Templates.check(ty);
+				return yield* check(tm, expected);
+			},
+			options,
+		);
 	},
 	/* Let bodies retain the self-binder introduced during elaboration. */
 	letdec: (variable: string, tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry): Outcome<VerificationArtefacts> => {
-		return run(EB.bind(ctx, { type: "Let", variable }, ty), registry, () => check(tm, ty), options);
+		return run(
+			EB.bind(ctx, { type: "Let", variable }, ty),
+			registry,
+			function* () {
+				const prepared = yield* Templates.synth(tm, ty);
+				return { ...(yield* check(prepared.term, prepared.type)), nf: prepared.type };
+			},
+			options,
+		);
 	},
+	template: (variable: string, tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry) =>
+		run(EB.bind(ctx, { type: "Let", variable }, ty), registry, () => Templates.synth(tm, ty), options),
 	synth: (tm: EB.Term, ctx: EB.Context, registry: Metas.Registry): Outcome<SynthResult> => {
 		return run(ctx, registry, () => synth(tm), options);
 	},

@@ -127,16 +127,7 @@ export const extractModalities: ExtractModalitiesFn = function* (nf, ctx) {
 		}));
 };
 
-export const isFirstOrder = function* (ty: NF.Value): Verification<boolean> {
-	return yield* match(yield* NF.view(ty))
-		.with(NF.View.Sealed(NF.Patterns.Modal), ({ value }) => isFirstOrder(value.value))
-		.with(NF.View.Sealed(P.union(NF.Patterns.Psi, NF.Patterns.Pi, NF.Patterns.Lambda, NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu)), function* () {
-			return false;
-		})
-		.otherwise(function* () {
-			return true;
-		});
-};
+export const isFirstOrder = Liquid.firstOrder;
 
 const body = function* (liquid: NF.Value): Verification<EB.Term> {
 	assert(liquid.type === "Abs" && liquid.binder.type === "Lambda", "Liquid refinement must be a lambda");
