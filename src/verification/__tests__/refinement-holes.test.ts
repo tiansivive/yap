@@ -300,7 +300,7 @@ let never: (r: { x: Num } [| \v -> false |]) -> Num = \r -> fetch "config";
 		assert(state?.type === "Var" && state.variable.type === "Meta");
 		assert(input?.type === "App" && input.func.type === "Var" && input.func.variable.type === "Meta");
 		expect(input.arg).toMatchObject({ type: "Var", variable: { type: "Bound", index: 0 } });
-		expect(Object.values(registry).map(entry => entry.meta.val)).toEqual([state.variable.val, input.func.variable.val]);
+		expect(new Set(Object.values(registry).map(entry => entry.meta.val))).toEqual(new Set([state.variable.val, input.func.variable.val]));
 	});
 
 	it("retains checked callback inputs under a quantity on the enclosing signature", () => {

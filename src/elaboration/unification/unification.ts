@@ -33,20 +33,15 @@ export type Unification<A> = Eff.Eff<
 	A
 >;
 
-/**
- * v2's zonked force: forces under a scoped registry overlay composed with the
- * in-flight accumulator, so the machine chains through subst ∘ registry
- * lazily, on demand. The overlay never commits — a failing unification leaves
- * the registry untouched; sound to discard since force's row is Registry.get.
- */
-const zonk = function* (value: NF.Value, observe = NF.force): Unification<NF.Value> {
+/** The current unification sees its pending solutions before the enclosing solver commits them. */
+const withSubstitution = function* <A>(operation: Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Only<typeof Metas.registry, "Registry.get">, A>): Unification<A> {
 	const subst = yield* Sub.subst.get();
 	const registry = yield* Metas.registry.get();
-
-	const [forced] = yield* Eff.with([Metas.registry.handlers(Metas.withSolutions(registry, subst))], () => observe(value));
-
-	return forced;
+	const [value] = yield* Eff.with([Metas.registry.handlers(Metas.withSolutions(registry, subst))], () => operation);
+	return value;
 };
+
+const zonk = (value: NF.Value) => withSubstitution(NF.force(value));
 
 /*
  * Bindings accumulate in the ambient subst state: sequential unifications
@@ -145,7 +140,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 				([pi1, pi2]) => pi1.binder.icit === pi2.binder.icit,
 				function* ([pi1, pi2]) {
 					/* The domain predicate belongs to the function contract and can mention its call state. Solve its structural type before opening the body. */
-					yield* unify(yield* zonk(pi1.binder.annotation, NF.bare), yield* zonk(pi2.binder.annotation, NF.bare), lvl);
+					yield* unify(yield* withSubstitution(NF.bare(pi1.binder.annotation)), yield* withSubstitution(NF.bare(pi2.binder.annotation)), lvl);
 					const body1 = yield* NF.apply(pi1.binder, pi1.closure, NF.Constructors.Rigid(lvl));
 					const body2 = yield* NF.apply(pi2.binder, pi2.closure, NF.Constructors.Rigid(lvl));
 					yield* unify(body1, body2, lvl + 1);

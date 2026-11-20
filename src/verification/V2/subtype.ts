@@ -1,4 +1,4 @@
-import { match, P } from "ts-pattern";
+import { isMatching, match, P } from "ts-pattern";
 import { isEqual } from "lodash";
 import * as NF from "@yap/elaboration/normalization";
 import * as EB from "@yap/elaboration";
@@ -9,9 +9,8 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import { Liquid } from "../modalities";
-import { extractModalities, isFirstOrder } from "./utils/refinements";
 import { noCapture, withRowLabels } from "./utils/context";
-import { reader, fail, logger, obligations, supply, type Verification } from "./effects";
+import { reader, fail, logger, supply, type Verification } from "./effects";
 import * as Binder from "./binders";
 import { mkSort, formula, quantify, scope } from "./logic/translate";
 
@@ -99,6 +98,136 @@ function* subtypeOperand(type: NF.Value): Verification<NF.View> {
 		.otherwise(function* () {
 			return viewed;
 		});
+}
+
+type Comparison = { left: NF.Value; right: NF.Value; vc: IVL.Formula };
+type FunctionValue = NF.Value & { type: "Abs" };
+
+/** The right side of subsumption is the type exposed by an ascription. */
+export function* subsume(left: NF.Value, right: NF.Value): Verification<Comparison> {
+	const a = yield* subtypeOperand(left);
+	const b = yield* subtypeOperand(right);
+	const result = yield* match([a, b])
+		.with([NF.View.Sealed(NF.Patterns.Pi), NF.View.Sealed(NF.Patterns.Pi)], function* ([{ value: a }, { value: b }]) {
+			if (a.binder.icit !== b.binder.icit) {
+				return { left, right, vc: Build.false_() };
+			}
+			const domain =
+				a.binder.icit === "Explicit" ? yield* callback(b.binder.annotation, a.binder.annotation) : yield* compare(b.binder.annotation, a.binder.annotation);
+			return yield* compareDomains(a, b, domain, subsume);
+		})
+		.with([NF.View.Sealed(NF.Patterns.Psi), NF.View.Sealed(NF.Patterns.Psi)], function* ([{ value: a }, { value: b }]) {
+			const required = stateDomain(b.binder.requirement);
+			const accepted = stateDomain(a.binder.requirement);
+			const body = yield* compareBodies(a, b, required, subsume);
+			return { ...body, vc: Build.and(yield* subtype(required, accepted), body.vc) };
+		})
+		.with(
+			[NF.View.Sealed(NF.Patterns.Phi), NF.View.Sealed(NF.Patterns.Phi)],
+			[NF.View.Sealed(NF.Patterns.Lambda), NF.View.Sealed(NF.Patterns.Lambda)],
+			function* ([{ value: a }, { value: b }]) {
+				return yield* compareDomains(a, b, yield* compare(b.binder.annotation, a.binder.annotation), subsume);
+			},
+		)
+		.otherwise(() => compare(left, right));
+	return yield* restoreModalities(left, right, result);
+}
+
+/** A callback's silent preconditions inherit the established predicates at corresponding binders. */
+function* callback(left: NF.Value, right: NF.Value): Verification<Comparison> {
+	const a = yield* subtypeOperand(left);
+	const b = yield* subtypeOperand(right);
+	const result = yield* match([a, b])
+		.with([NF.View.Sealed(NF.Patterns.Psi), NF.View.Sealed(NF.Patterns.Psi)], function* ([{ value: a }, { value: b }]) {
+			const provided = a.binder.requirement ?? b.binder.requirement;
+			const required = b.binder.requirement ?? a.binder.requirement;
+			const domain = stateDomain(required);
+			const vc = provided === required ? Build.true_() : yield* subtype(domain, stateDomain(provided));
+			const body = yield* compareBodies(
+				{ ...a, binder: { ...a.binder, requirement: provided } },
+				{ ...b, binder: { ...b.binder, requirement: required } },
+				domain,
+				callback,
+			);
+			return { ...body, vc: Build.and(vc, body.vc) };
+		})
+		.with([NF.View.Sealed(NF.Patterns.Pi), NF.View.Sealed(NF.Patterns.Pi)], function* ([{ value: a }, { value: b }]) {
+			if (a.binder.icit !== b.binder.icit) {
+				return { left, right, vc: Build.false_() };
+			}
+			const domain =
+				a.binder.icit === "Explicit" ? yield* compareInput(b.binder.annotation, a.binder.annotation) : yield* compare(b.binder.annotation, a.binder.annotation);
+			return yield* compareDomains(a, b, domain, callback);
+		})
+		.with([NF.View.Sealed(NF.Patterns.Phi), NF.View.Sealed(NF.Patterns.Phi)], function* ([{ value: a }, { value: b }]) {
+			return yield* compareDomains(a, b, yield* compare(b.binder.annotation, a.binder.annotation), callback);
+		})
+		.otherwise(() => compare(left, right));
+	return yield* restoreModalities(left, right, result);
+}
+
+function* compareInput(left: NF.Value, right: NF.Value): Verification<Comparison> {
+	if (isMatching(NF.View.Sealed(NF.Patterns.FunctionType), yield* subtypeOperand(left))) {
+		return yield* callback(left, right);
+	}
+	const a = yield* NF.view(left);
+	const b = yield* NF.view(right);
+	const la = isMatching(NF.View.Sealed(NF.Patterns.Modal), a) ? a.value.modalities : undefined;
+	const lb = isMatching(NF.View.Sealed(NF.Patterns.Modal), b) ? b.value.modalities : undefined;
+
+	if (Boolean(la?.liquid) === Boolean(lb?.liquid)) {
+		return yield* compare(left, right);
+	}
+	const lbase = yield* NF.bare(left);
+	const rbase = yield* NF.bare(right);
+	return {
+		left: la?.liquid ? left : NF.Constructors.Modal(lbase, { quantity: la?.quantity ?? Q.Many, liquid: lb?.liquid }),
+		right: lb?.liquid ? right : NF.Constructors.Modal(rbase, { quantity: lb?.quantity ?? Q.Many, liquid: la?.liquid }),
+		vc: yield* subtype(lbase, rbase),
+	};
+}
+
+function* compare(left: NF.Value, right: NF.Value): Verification<Comparison> {
+	return { left, right, vc: yield* subtype(left, right) };
+}
+
+function* compareDomains(a: FunctionValue, b: FunctionValue, domain: Comparison, compare: typeof subsume): Verification<Comparison> {
+	const left = { ...a, binder: { ...a.binder, annotation: domain.right } };
+	const right = { ...b, binder: { ...b.binder, annotation: domain.left } };
+	const body = yield* compareBodies(left, right, domain.left, compare);
+	return { ...body, vc: Build.and(domain.vc, body.vc) };
+}
+
+function* compareBodies(a: FunctionValue, b: FunctionValue, domain: NF.Value, compare: typeof subsume): Verification<Comparison> {
+	const variable = NF.Constructors.Rigid((yield* reader.ask()).env.length);
+	const left = yield* NF.apply(a.binder, a.closure, variable);
+	const right = yield* NF.apply(b.binder, b.closure, variable);
+	const name = yield* supply.freshFrom(b.binder.variable);
+	const body = yield* scope(name, b.binder, domain, compare(left, right));
+	return {
+		left: NF.mk({ type: "Abs", binder: a.binder, closure: yield* NF.closeVal(body.left) }),
+		right: NF.mk({ type: "Abs", binder: b.binder, closure: yield* NF.closeVal(body.right) }),
+		vc: body.vc.tag === "True" ? body.vc : yield* quantify(name, domain, body.vc),
+	};
+}
+
+const stateDomain = (requirement?: NF.Value) => (requirement ? NF.Constructors.Modal(NF.State, { quantity: Q.Many, liquid: requirement }) : NF.State);
+
+function* restoreModalities(left: NF.Value, right: NF.Value, compared: Comparison): Verification<Comparison> {
+	function* wrap(original: NF.Value, value: NF.Value) {
+		if (value === original) {
+			return value;
+		}
+		const viewed = yield* NF.view(original);
+
+		if (!isMatching(NF.View.Sealed(NF.Patterns.Modal), viewed)) {
+			return value;
+		}
+		const { quantity, liquid } = viewed.value.modalities;
+		const predicate = (yield* Binder.hole(liquid)) ? undefined : liquid;
+		return quantity === Q.Many && !predicate ? value : NF.Constructors.Modal(value, { quantity, liquid: predicate });
+	}
+	return { left: yield* wrap(left, compared.left), right: yield* wrap(right, compared.right), vc: compared.vc };
 }
 
 const unsupported = function* (a: NF.Value, b: NF.Value): Verification<never> {
@@ -223,41 +352,15 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			const vc2 = yield* subtype(left.arg, right.arg);
 			return Build.and(vc1, vc2);
 		})
-		.with([NF.Patterns.Psi, NF.Patterns.Psi], [NF.Patterns.Pi, NF.Patterns.Pi], [NF.Patterns.Lambda, NF.Patterns.Lambda], function* ([at, bt]) {
-			const annotationA = Binder.annotation(at.binder);
-			const annotationB = Binder.annotation(bt.binder);
-			const vcArg = yield* subtype(annotationB, annotationA);
-			const lvl = ctx.env.length;
-			const anf = yield* NF.apply(at.binder, at.closure, NF.Constructors.Rigid(lvl));
-			const bnf = yield* NF.apply(bt.binder, bt.closure, NF.Constructors.Rigid(lvl));
-			const name = yield* supply.freshFrom(bt.binder.variable);
-			const vcBody = yield* scope(name, bt.binder, annotationB, subtype(anf, bnf));
-
-			if (!(yield* isFirstOrder(annotationB))) {
-				yield* obligations.record("subtype.pi.nonrefinable", vcBody, {
-					type: `${display(() => NF.display(at))} <: ${display(() => NF.display(bt))}`,
-					description: `Function result must be subtype (non-refinable parameter ${bt.binder.variable})`,
-				});
-				return Build.and(vcArg, vcBody);
-			}
-
-			const sort = yield* mkSort(annotationB);
-
-			const modalities = yield* extractModalities(annotationB, ctx);
-			const applied = yield* NF.reduce(modalities.liquid, NF.Constructors.Rigid(lvl), "Explicit");
-			const phiX = yield* scope(name, bt.binder, annotationB, formula(applied));
-
-			const guarded = yield* obligations.record("subtype.pi.body", Build.forall([{ name, sort }], Build.implies(phiX, vcBody)), {
-				type: `${display(() => NF.display(at))} <: ${display(() => NF.display(bt))}`,
-				description: `Function result must be subtype under parameter ${bt.binder.variable} assumption`,
-			});
-			yield* obligations.record("subtype.pi.param", vcArg, {
-				type: `${display(() => NF.display(annotationB))} <: ${display(() => NF.display(annotationA))}`,
-				description: "Function parameter types (contravariant)",
-			});
-			return Build.and(vcArg, guarded);
-		})
-
+		.with(
+			[NF.Patterns.Psi, NF.Patterns.Psi],
+			[NF.Patterns.Pi, NF.Patterns.Pi],
+			[NF.Patterns.Phi, NF.Patterns.Phi],
+			[NF.Patterns.Lambda, NF.Patterns.Lambda],
+			function* ([a, b]) {
+				return (yield* subsume(a, b)).vc;
+			},
+		)
 		.with([{ type: "Existential" }, P._], function* ([sig, ty]) {
 			const name = yield* supply.freshFrom(sig.variable);
 			const vc = yield* scope(name, { type: "Pi", variable: sig.variable }, sig.annotation, subtype(sig.body.value, ty));

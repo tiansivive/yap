@@ -1,5 +1,5 @@
 import assert from "assert";
-import { match, P } from "ts-pattern";
+import { isMatching, match, P } from "ts-pattern";
 
 import * as Eff from "@yap/utils/effects";
 import * as EB from "@yap/elaboration";
@@ -10,21 +10,17 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import * as E from "fp-ts/Either";
 
 import type { IVL } from "../solver/ivl/types";
-import { Liquid } from "../modalities";
 import { Build } from "../solver/ivl/build";
 import { type Checked, type VerificationArtefacts } from "./types";
-import { reader, state, fail, logger, obligations, supply, type Verification } from "./effects";
+import { reader, fail, logger, obligations, supply, type Verification } from "./effects";
 import { collectSigmaBindings, noCapture } from "./utils/context";
 import { meet } from "./utils/refinements";
 import { synth } from "./synth";
 import * as Binder from "./binders";
-import { subtype } from "./subtype";
+import { subsume, subtype } from "./subtype";
 import { quantify, scope } from "./logic/translate";
 
-type Formation = { openInputs: boolean; actual?: NF.Value };
-type Formed = VerificationArtefacts & { value: NF.Value };
-
-export function* check(tm: EB.Term, ty: NF.Value, formation?: Formation): Verification<Checked> {
+export function* check(tm: EB.Term, ty: NF.Value): Verification<Checked> {
 	yield* logger.enter();
 	const ctx = yield* reader.ask();
 	const registry = yield* Metas.registry.get();
@@ -43,24 +39,31 @@ export function* check(tm: EB.Term, ty: NF.Value, formation?: Formation): Verifi
 	const result = yield* match([tm, viewed])
 		.with([{ type: "Ann" }, P._], function* ([{ term, ann }]) {
 			const declared = yield* NF.evaluate(ann);
-			const body = yield* check(term, declared);
+			const checked = yield* ascribe(term, declared);
 			const vc = yield* subtype(declared, ty);
-			const annotation = yield* ascribed(declared, body);
-			return { vc: Build.and(annotation.vc, vc), type: { source: "synthesis", value: annotation.value } } satisfies Checked;
+			return { type: checked.type, vc: Build.and(checked.vc, vc) };
 		})
 		.with([P._, NF.View.Sealed()], function* ([, { value: type }]) {
 			return yield* match([tm, type])
-				.with([EB.CtorPatterns.Pi, NF.Patterns.Type], [EB.CtorPatterns.Phi, NF.Patterns.Type], [EB.CtorPatterns.Psi, NF.Patterns.Type], function* ([term]) {
-					return yield* form(term, formation);
+				.with([EB.CtorPatterns.Pi, NF.Patterns.Type], function* ([{ binding, body }]) {
+					const domain = yield* check(binding.annotation, NF.Type);
+					const result = yield* checkBodyType(binding, yield* NF.evaluate(binding.annotation), body);
+					return { vc: Build.and(domain.vc, result) };
 				})
-				.with([{ type: "Lit", value: { type: "Atom" } }, NF.Patterns.Type], function* ([term]) {
-					return { vc: Build.true_(), value: yield* NF.evaluate(term) };
+				.with([EB.CtorPatterns.Phi, NF.Patterns.Type], function* ([{ binding, body }]) {
+					const kind = yield* check(binding.annotation, NF.Type);
+					const result = yield* checkBodyType(binding, yield* NF.evaluate(binding.annotation), body);
+					return { vc: Build.and(kind.vc, result) };
 				})
-				.with([{ type: "Modal" }, NF.Patterns.Type], function* ([term]) {
-					const base = yield* typeTerm(term.term, formation);
-					const wrapped = EB.Constructors.Modal(yield* NF.quote(ctx.env.length, base.value), term.modalities);
-					return { vc: base.vc, value: yield* NF.evaluate(wrapped) };
+				.with([EB.CtorPatterns.Psi, NF.Patterns.Type], function* ([{ binding, body }]) {
+					const requirement = binding.requirement && (yield* NF.evaluate(binding.requirement));
+					const state = requirement ? NF.Constructors.Modal(NF.State, { quantity: Q.Many, liquid: requirement }) : NF.State;
+					return { vc: yield* checkBodyType(binding, state, body) };
 				})
+				.with([{ type: "Lit", value: { type: "Atom" } }, NF.Patterns.Type], function* () {
+					return { vc: Build.true_() };
+				})
+				.with([{ type: "Modal" }, NF.Patterns.Type], ([term]) => check(term.term, NF.Type))
 				.with([EB.CtorPatterns.Mu, P._], function* ([term, type]) {
 					return {
 						vc: (yield* scope(yield* supply.freshFrom(term.binding.variable), { type: "Mu", variable: term.binding.variable }, type, check(term.body, type)))
@@ -76,130 +79,47 @@ export function* check(tm: EB.Term, ty: NF.Value, formation?: Formation): Verifi
 						return { vc: (yield* check(term, unfolded)).vc };
 					},
 				)
-				.with([EB.CtorPatterns.Psi, NF.Patterns.Psi], [{ type: "Abs" }, NF.Patterns.Pi], function* ([term, type]) {
-					const domain = yield* match(type.binder)
-						.with({ type: "Pi", icit: "Explicit" }, function* (pi) {
-							return yield* parameter(yield* NF.quote(ctx.env.length, pi.annotation));
-						})
-						.otherwise(function* (binder) {
-							return { value: binder.annotation, vc: Build.true_() };
-						});
-					const binder = { ...type.binder, variable: term.binding.variable, annotation: domain.value };
-					const annotation = Binder.annotation(binder);
-					const name = yield* supply.freshFrom(binder.variable);
-					const expected = yield* NF.apply(type.binder, type.closure, NF.Constructors.Rigid(ctx.env.length));
-					const body = yield* scope(
-						name,
-						binder,
-						annotation,
-						(function* () {
-							const checked = yield* check(term.body, expected);
-							return yield* ascribed(expected, checked);
-						})(),
-					);
-					const closure = yield* NF.closeVal(body.value);
-					const vc = yield* quantify(name, annotation, body.vc);
-					return { vc: Build.and(domain.vc, vc), type: { source: "checking", value: NF.mk({ type: "Abs", binder, closure }) } } satisfies Checked;
+				.with([EB.CtorPatterns.Psi, NF.Patterns.Psi], function* ([{ binding, body }, { binder, closure }]) {
+					const state = binder.requirement ? NF.Constructors.Modal(NF.State, { quantity: Q.Many, liquid: binder.requirement }) : NF.State;
+					const name = yield* supply.freshFrom(binding.variable);
+					const expected = yield* NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length));
+					const checked = yield* scope(name, binding, state, ascribe(body, expected));
+					const type = NF.Constructors.Psi(binding.variable, binder.requirement, yield* NF.closeVal(checked.type));
+					return { type, vc: yield* quantify(name, state, checked.vc) };
 				})
-				.with([EB.CtorPatterns.Array, NF.Patterns.Indexed], function* ([_term, type]) {
-					const vc = yield* obligations.record("check.array", Build.true_(), {
-						type: p(() => NF.display(type)),
-						description: `Array term checked against indexed type`,
-					});
-					return { vc } satisfies VerificationArtefacts;
+				.with(
+					[EB.CtorPatterns.Lambda, { type: "Abs", binder: { type: "Pi", icit: "Explicit", annotation: NF.Patterns.Modal } }],
+					function* ([{ binding, body }, pi]) {
+						const parameter = yield* check(binding.annotation, NF.Type);
+						const domain = yield* Binder.modalInput(pi.binder.annotation);
+						const expected = yield* NF.apply(pi.binder, pi.closure, NF.Constructors.Rigid(ctx.env.length));
+						const name = yield* supply.freshFrom(binding.variable);
+						const checked = yield* scope(name, binding, domain, ascribe(body, expected));
+						const type = NF.Constructors.Pi(binding.variable, pi.binder.icit, domain, yield* NF.closeVal(checked.type));
+						return { type, vc: Build.and(parameter.vc, yield* quantify(name, domain, checked.vc)) };
+					},
+				)
+				.with([EB.CtorPatterns.Lambda, { type: "Abs", binder: { type: "Pi", icit: "Explicit" } }], function* ([{ binding, body }, pi]) {
+					const parameter = yield* check(binding.annotation, NF.Type);
+					const domain = yield* Binder.input(pi.binder.annotation);
+					const expected = yield* NF.apply(pi.binder, pi.closure, NF.Constructors.Rigid(ctx.env.length));
+					const name = yield* supply.freshFrom(binding.variable);
+					const checked = yield* scope(name, binding, domain, ascribe(body, expected));
+					const type = NF.Constructors.Pi(binding.variable, pi.binder.icit, domain, yield* NF.closeVal(checked.type));
+					return { type, vc: Build.and(parameter.vc, yield* quantify(name, domain, checked.vc)) };
 				})
-				.with([EB.CtorPatterns.Nu, NF.Patterns.Schema], function* ([term, type]) {
-					// TODO: lazy records, once some syntax can build one
-					assert(term.binding.mode === "strict", "Verification supports strict records only");
-					return { vc: (yield* reader.local(c => EB.open(term.binding, c), check(term.body, type))).vc };
+				.with([EB.CtorPatterns.Lambda, { type: "Abs", binder: { type: "Pi", icit: "Implicit" } }], function* ([{ binding, body }, pi]) {
+					const parameter = yield* check(binding.annotation, NF.Type);
+					const domain = pi.binder.annotation;
+					const expected = yield* NF.apply(pi.binder, pi.closure, NF.Constructors.Rigid(ctx.env.length));
+					const name = yield* supply.freshFrom(binding.variable);
+					const checked = yield* scope(name, binding, domain, ascribe(body, expected));
+					const type = NF.Constructors.Pi(binding.variable, pi.binder.icit, domain, yield* NF.closeVal(checked.type));
+					return { type, vc: Build.and(parameter.vc, yield* quantify(name, domain, checked.vc)) };
 				})
-				.with([EB.CtorPatterns.Struct, NF.Patterns.Sigma], function* ([term, type]) {
-					const evaluated = yield* NF.evaluate(term);
-					const innerViewed = yield* NF.view(evaluated);
-					const schema = yield* match(innerViewed)
-						.with(NF.View.Sealed(NF.Patterns.Struct), function* ({ value }) {
-							return yield* NF.apply(type.binder, type.closure, NF.Constructors.Row(value.arg.row));
-						})
-						.otherwise(function* () {
-							throw new Error("Expected struct to evaluate to a sealed struct");
-						});
-					return { vc: (yield* check(term, schema)).vc };
-				})
-				.with([P.union(EB.CtorPatterns.Struct, EB.CtorPatterns.Nu), NF.Patterns.SigmaV2], function* ([term, type]) {
-					const evaluated = yield* NF.evaluate(term);
-					const innerViewed = yield* NF.view(evaluated);
-					return yield* match(innerViewed)
-						.with(NF.View.Sealed(NF.Patterns.Struct), function* ({ value }) {
-							const schema = yield* NF.apply(type.binder, type.closure, NF.Constructors.Row(value.arg.row));
-							return yield* match(yield* NF.rowOf(schema))
-								.with(P.nonNullable, function* () {
-									return { vc: (yield* check(term, schema)).vc };
-								})
-								.otherwise(function* () {
-									throw new Error("SigmaV2 closure expected a Schema body");
-								});
-						})
-						.otherwise(function* () {
-							throw new Error("Expected struct to evaluate to a sealed struct");
-						});
-				})
-				.with([EB.CtorPatterns.Tagged, NF.Patterns.Variant], function* ([term, type]) {
-					const value = EB.TaggedTerm.extract(term.arg.row);
-					assert(value, "Tagged pattern expected __tag atom and payload fields");
-
-					const label = value.label;
-					const arm = Row.lookup(type.arg.row, label);
-
-					if (!arm) {
-						return yield* fail({ type: "MissingLabel", label, row: type.arg.row });
-					}
-
-					return { vc: (yield* check(value.payload, arm)).vc };
-				})
-				.with([EB.CtorPatterns.Struct, NF.Patterns.Schema], function* ([term, type]) {
-					const traverse = function* (r1: EB.Row, r2: NF.Row): Verification<VerificationArtefacts> {
-						return yield* match<readonly [EB.Row, NF.Row], Verification<VerificationArtefacts>>([r1, r2])
-							.with([Row.Patterns.Empty, Row.Patterns.Empty], [Row.Patterns.Empty, Row.Patterns.Tail], function* () {
-								return { vc: Build.true_() } satisfies VerificationArtefacts;
-							})
-							.with(
-								[Row.Patterns.NonEmpty, Row.Patterns.NonEmpty],
-								function* ([
-									{
-										entries: [{ label, value }, ...remaining],
-									},
-								]) {
-									const rewritten = Row.rewrite(r2, label);
-									if (E.isLeft(rewritten)) {
-										return yield* fail({ type: "MissingLabel", label, row: r2 });
-									}
-									const artefacts = yield* check(value, rewritten.right.value);
-									const rest = yield* traverse(Row.Constructors.Row(remaining, r1.tail), rewritten.right.rest);
-									return { vc: Build.and(artefacts.vc, rest.vc) } satisfies VerificationArtefacts;
-								},
-							)
-							.otherwise(function* () {
-								return yield* fail({ type: "Impossible", message: "Schema verification: incompatible rows" });
-							});
-					};
-
-					const evaluated = yield* NF.evaluate(term);
-					const innerViewed = yield* NF.view(evaluated);
-					return yield* match(innerViewed)
-						.with(NF.View.Sealed(NF.Patterns.Struct), function* ({ value: struct }) {
-							const bindings = yield* collectSigmaBindings(struct.arg.row, type.arg.row);
-							return yield* reader.local(
-								c => ({
-									...c,
-									labels: { ...c.labels, ...bindings.labels },
-									sigma: { ...c.sigma, ...bindings.sigma },
-								}),
-								traverse(term.arg.row, type.arg.row),
-							);
-						})
-						.otherwise(function* () {
-							throw new Error("Schema verification: expected struct term");
-						});
+				.with([P.union(EB.CtorPatterns.Array, EB.CtorPatterns.Nu, EB.CtorPatterns.Struct, EB.CtorPatterns.Tagged), P._], function* ([term, type]) {
+					const { vc } = yield* checkData(term, type);
+					return { vc };
 				})
 				.with([EB.CtorPatterns.Match, P._], function* ([term, _type]) {
 					return yield* matches(term, type);
@@ -225,12 +145,121 @@ export function* check(tm: EB.Term, ty: NF.Value, formation?: Formation): Verifi
 		});
 
 	yield* logger.exit();
-	return result;
+	return { type: ty, ...result };
+
+	function* checkBodyType(binding: EB.Binding, domain: NF.Value, body: EB.Term): Verification<IVL.Formula> {
+		const name = yield* supply.freshFrom(binding.variable);
+		const checked = yield* scope(name, binding, domain, check(body, NF.Type));
+		return checked.vc.tag === "True" ? checked.vc : yield* quantify(name, domain, checked.vc);
+	}
 
 	function* fallback(term: EB.Term, type: NF.Value): Verification<Checked> {
 		const [synthed, artefacts] = yield* synth(term);
 		const checked = yield* subtype(synthed, type);
-		return { vc: Build.and(artefacts.vc, checked), type: { source: "synthesis", value: synthed } };
+		return { vc: Build.and(artefacts.vc, checked), type: synthed };
+	}
+
+	function* checkData(term: EB.Term, type: NF.Value): Verification<VerificationArtefacts> {
+		return yield* match([term, type])
+			.with([EB.CtorPatterns.Array, NF.Patterns.Indexed], function* ([_term, type]) {
+				const vc = yield* obligations.record("check.array", Build.true_(), {
+					type: p(() => NF.display(type)),
+					description: `Array term checked against indexed type`,
+				});
+				return { vc } satisfies VerificationArtefacts;
+			})
+			.with([EB.CtorPatterns.Nu, NF.Patterns.Schema], function* ([term, type]) {
+				// TODO: lazy records, once some syntax can build one
+				assert(term.binding.mode === "strict", "Verification supports strict records only");
+				return yield* reader.local(c => EB.open(term.binding, c), check(term.body, type));
+			})
+			.with([EB.CtorPatterns.Struct, NF.Patterns.Sigma], function* ([term, type]) {
+				const evaluated = yield* NF.evaluate(term);
+				const innerViewed = yield* NF.view(evaluated);
+				const schema = yield* match(innerViewed)
+					.with(NF.View.Sealed(NF.Patterns.Struct), function* ({ value }) {
+						return yield* NF.apply(type.binder, type.closure, NF.Constructors.Row(value.arg.row));
+					})
+					.otherwise(function* () {
+						throw new Error("Expected struct to evaluate to a sealed struct");
+					});
+				return yield* check(term, schema);
+			})
+			.with([P.union(EB.CtorPatterns.Struct, EB.CtorPatterns.Nu), NF.Patterns.SigmaV2], function* ([term, type]) {
+				const evaluated = yield* NF.evaluate(term);
+				const innerViewed = yield* NF.view(evaluated);
+				return yield* match(innerViewed)
+					.with(NF.View.Sealed(NF.Patterns.Struct), function* ({ value }) {
+						const schema = yield* NF.apply(type.binder, type.closure, NF.Constructors.Row(value.arg.row));
+						return yield* match(yield* NF.rowOf(schema))
+							.with(P.nonNullable, () => check(term, schema))
+							.otherwise(function* () {
+								throw new Error("SigmaV2 closure expected a Schema body");
+							});
+					})
+					.otherwise(function* () {
+						throw new Error("Expected struct to evaluate to a sealed struct");
+					});
+			})
+			.with([EB.CtorPatterns.Tagged, NF.Patterns.Variant], function* ([term, type]) {
+				const value = EB.TaggedTerm.extract(term.arg.row);
+				assert(value, "Tagged pattern expected __tag atom and payload fields");
+
+				const label = value.label;
+				const arm = Row.lookup(type.arg.row, label);
+
+				if (!arm) {
+					return yield* fail({ type: "MissingLabel", label, row: type.arg.row });
+				}
+
+				return yield* check(value.payload, arm);
+			})
+			.with([EB.CtorPatterns.Struct, NF.Patterns.Schema], function* ([term, type]) {
+				const traverse = function* (r1: EB.Row, r2: NF.Row): Verification<VerificationArtefacts> {
+					return yield* match<readonly [EB.Row, NF.Row], Verification<VerificationArtefacts>>([r1, r2])
+						.with([Row.Patterns.Empty, Row.Patterns.Empty], [Row.Patterns.Empty, Row.Patterns.Tail], function* () {
+							return { vc: Build.true_() } satisfies VerificationArtefacts;
+						})
+						.with(
+							[Row.Patterns.NonEmpty, Row.Patterns.NonEmpty],
+							function* ([
+								{
+									entries: [{ label, value }, ...remaining],
+								},
+							]) {
+								const rewritten = Row.rewrite(r2, label);
+								if (E.isLeft(rewritten)) {
+									return yield* fail({ type: "MissingLabel", label, row: r2 });
+								}
+								const artefacts = yield* check(value, rewritten.right.value);
+								const rest = yield* traverse(Row.Constructors.Row(remaining, r1.tail), rewritten.right.rest);
+								return { vc: Build.and(artefacts.vc, rest.vc) } satisfies VerificationArtefacts;
+							},
+						)
+						.otherwise(function* () {
+							return yield* fail({ type: "Impossible", message: "Schema verification: incompatible rows" });
+						});
+				};
+
+				const evaluated = yield* NF.evaluate(term);
+				const innerViewed = yield* NF.view(evaluated);
+				return yield* match(innerViewed)
+					.with(NF.View.Sealed(NF.Patterns.Struct), function* ({ value: struct }) {
+						const bindings = yield* collectSigmaBindings(struct.arg.row, type.arg.row);
+						return yield* reader.local(
+							c => ({
+								...c,
+								labels: { ...c.labels, ...bindings.labels },
+								sigma: { ...c.sigma, ...bindings.sigma },
+							}),
+							traverse(term.arg.row, type.arg.row),
+						);
+					})
+					.otherwise(function* () {
+						throw new Error("Schema verification: expected struct term");
+					});
+			})
+			.otherwise(([term, type]) => fallback(term, type));
 	}
 
 	function* matches(term: EB.Term & { type: "Match" }, type: NF.Value): Verification<VerificationArtefacts> {
@@ -295,137 +324,27 @@ export function* check(tm: EB.Term, ty: NF.Value, formation?: Formation): Verifi
 	}
 }
 
-/** A written ascription keeps its specified result and inherits refinements at its open callback inputs. */
-export function* ascribed(declared: NF.Value, checked: Checked): Verification<Formed> {
-	if (!checked.type) {
-		return { value: declared, vc: checked.vc };
+/** The annotation fixes a value's result. A function already in scope can supply its omitted callback preconditions. */
+export function* ascribe(term: EB.Term, declared: NF.Value): Verification<Checked> {
+	const head = yield* NF.view(yield* NF.bare(declared));
+	if (!isMatching(NF.View.Sealed(NF.Patterns.FunctionType), head)) {
+		const { vc } = yield* check(term, declared);
+		return { type: declared, vc };
 	}
-
-	if (checked.type.source === "checking") {
-		return { value: checked.type.value, vc: checked.vc };
-	}
-	const formed = yield* signature(declared, { openInputs: false, actual: checked.type.value });
-	return { value: formed.value, vc: Build.and(checked.vc, formed.vc) };
-}
-
-/** An explicit function parameter opens the omitted input predicates of its own signature. */
-export function* parameter(term: EB.Term, formation?: Formation): Verification<Formed> {
-	const type = yield* NF.evaluate(term);
-	const base = yield* NF.bare(type);
-	const modal = match(yield* NF.view(type))
-		.with(NF.View.Sealed(NF.Patterns.Modal), ({ value }) => value)
-		.otherwise(() => undefined);
-	const liquid = modal?.modalities.liquid;
-	const quantity = modal?.modalities.quantity ?? Q.Many;
-	const actual = formation?.actual;
-	const marker = yield* Binder.hole(liquid);
-	return yield* match(yield* NF.view(base))
-		.with(NF.View.Sealed(NF.Patterns.FunctionType), function* () {
-			const formed = yield* typeTerm(term, { openInputs: true, actual });
-			const callback = yield* NF.bare(formed.value);
-			const predicate = marker ? undefined : liquid;
-			const value = quantity === Q.Many && !predicate ? callback : NF.Constructors.Modal(callback, { quantity, liquid: predicate });
-			return { vc: formed.vc, value };
-		})
-		.otherwise(function* () {
-			const { vc } = yield* check(term, NF.Type);
-			if (formation?.openInputs && !liquid) {
-				const inherited =
-					actual &&
-					match(yield* NF.view(actual))
-						.with(NF.View.Sealed(NF.Patterns.Modal), ({ value }) => value.modalities.liquid)
-						.otherwise(() => undefined);
-				const predicate = inherited ?? (yield* Binder.contextual(base, yield* state.ask()));
-				return { vc, value: NF.Constructors.Modal(base, { quantity, liquid: predicate }) };
-			}
-
-			if (!marker || formation) {
-				return { vc, value: type };
-			}
-			const current = yield* state.ask();
-			return yield* match(yield* NF.view(current))
-				.with(
-					NF.View.Rigid,
-					psi => psi.value.variable.lvl < marker.lvl,
-					function* () {
-						const predicate = yield* Binder.contextual(base, current);
-						yield* Metas.registry.modify(registry => Metas.solve(registry, marker.val, predicate));
-						return { vc, value: NF.Constructors.Modal(base, { quantity, liquid: predicate }) };
-					},
-				)
-				.otherwise(function* () {
-					return { vc, value: type };
-				});
-		});
-}
-
-/** A resolved type alias and a syntactic function type use the same formation rule. */
-function* signature(type: NF.Value, formation: Formation): Verification<Formed> {
-	return yield* match(yield* NF.view(yield* NF.bare(type)))
-		.with(NF.View.Sealed(NF.Patterns.FunctionType), function* () {
-			const ctx = yield* reader.ask();
-			const term = yield* NF.quote(ctx.env.length, type);
-			const checked = yield* check(term, NF.Type, formation);
-			assert(checked.value);
-			return { vc: checked.vc, value: checked.value };
-		})
-		.otherwise(function* () {
-			return { value: type, vc: Build.true_() };
-		});
-}
-
-function* typeTerm(term: EB.Term, formation?: Formation): Verification<Formed> {
-	const checked = yield* check(term, NF.Type, formation);
-
-	if (checked.value) {
-		return { value: checked.value, vc: checked.vc };
-	}
-	const value = yield* NF.evaluate(term);
-
-	if (!formation) {
-		return { value, vc: checked.vc };
-	}
-	const formed = yield* signature(value, formation);
-	return { value: formed.value, vc: Build.and(checked.vc, formed.vc) };
-}
-
-type FunctionTerm = EB.Term & { type: "Abs"; binding: Extract<EB.Binding, { type: "Pi" | "Phi" | "Psi" }> };
-
-function* form(term: FunctionTerm, formation?: Formation): Verification<Formed> {
-	const ctx = yield* reader.ask();
-	const previous = formation?.actual && (yield* NF.view(yield* NF.bare(formation.actual)));
-	const fn = match(previous)
+	return yield* match([term, yield* NF.view(declared)])
 		.with(
-			NF.View.Sealed(NF.Patterns.FunctionType),
-			({ value }) =>
-				value.binder.type === term.binding.type && (term.binding.type !== "Pi" || (value.binder.type === "Pi" && value.binder.icit === term.binding.icit)),
-			({ value }) => value,
+			[P.union(EB.CtorPatterns.Lambda, EB.CtorPatterns.Psi), NF.View.Sealed({ type: "Modal", modalities: { liquid: P.nullish } })],
+			function* ([term, { value }]) {
+				const checked = yield* ascribe(term, value.value);
+				return { type: NF.Constructors.Modal(checked.type, value.modalities), vc: checked.vc };
+			},
 		)
-		.otherwise(() => undefined);
-	const domain = yield* match(term.binding)
-		.with({ type: "Psi" }, function* (psi) {
-			const written = psi.requirement && (yield* NF.evaluate(psi.requirement));
-			const inherited = fn?.binder.type === "Psi" ? fn.binder.requirement : undefined;
-			const requirement = formation?.openInputs ? (written ?? inherited ?? (yield* NF.evaluate(yield* Liquid.Predicate.hole(NF.State)))) : written;
-			return { binder: { ...psi, annotation: NF.State, requirement }, vc: Build.true_() };
-		})
-		.with({ type: "Pi", icit: "Explicit" }, function* (pi) {
-			const domain = formation
-				? yield* parameter(pi.annotation, { openInputs: formation.openInputs, actual: fn?.binder.annotation })
-				: yield* typeTerm(pi.annotation);
-			return { binder: { ...pi, annotation: domain.value }, vc: domain.vc };
-		})
-		.otherwise(function* (binder) {
-			const domain = yield* typeTerm(binder.annotation);
-			return { binder: { ...binder, annotation: domain.value }, vc: domain.vc };
+		.with([P.union(EB.CtorPatterns.Lambda, EB.CtorPatterns.Psi, EB.CtorPatterns.Mu, EB.CtorPatterns.Match), P._], () => check(term, declared))
+		.otherwise(function* ([term]) {
+			const [inferred, proof] = yield* synth(term);
+			const checked = yield* subsume(inferred, declared);
+			return { type: checked.right, vc: Build.and(proof.vc, checked.vc) };
 		});
-	const { binder } = domain;
-	const annotation = Binder.annotation(binder);
-	const name = yield* supply.freshFrom(binder.variable);
-	const hint = fn && (yield* NF.apply(fn.binder, fn.closure, NF.Constructors.Rigid(ctx.env.length)));
-	const body = yield* scope(name, binder, annotation, typeTerm(term.body, formation && { openInputs: formation.openInputs, actual: hint }));
-	const premise = body.vc.tag === "True" ? body.vc : yield* quantify(name, annotation, body.vc);
-	return { value: NF.mk({ type: "Abs", binder, closure: yield* NF.closeVal(body.value) }), vc: Build.and(domain.vc, premise) };
 }
 
 const synthPattern = function* (pattern: EB.Pattern, scrutineeTy: NF.Value): Verification<[NF.Value, VerificationArtefacts]> {
