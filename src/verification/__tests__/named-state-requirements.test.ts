@@ -45,11 +45,7 @@ let ask: (st |- u: Unit [| \value -> live st Ask |]) -> Num [| \value -> live st
 			binding: {
 				type: "Psi",
 				variable: "st",
-				requirement: {
-					type: "Abs",
-					binding: { type: "Lambda", annotation: { type: "Lit", value: { type: "Atom", value: "State" } } },
-					body: { type: "Lit", value: { type: "Bool", value: true } },
-				},
+				requirement: undefined,
 			},
 			body: { type: "Abs", binding: { type: "Pi", annotation: { type: "Modal" } }, body: { type: "Modal" } },
 		});

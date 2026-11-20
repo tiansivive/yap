@@ -74,7 +74,7 @@ const callee = function* ([term, type, usages]: EB.AST, icit: Implicitness): M.E
 			const annotation = NF.Constructors.Flex(yield* EB.freshMeta(scoped.env.length, NF.Type));
 			const closure = NF.Constructors.Closure(scoped, EB.Constructors.Var(yield* EB.freshMeta(scoped.env.length + 1, NF.Type)));
 			const pi = NF.Constructors.Pi("x", icit, annotation, closure);
-			const expected = icit === "Explicit" ? NF.Constructors.Psi("$s", yield* NF.normalize(EB.Unrestricted), yield* NF.closeVal(pi)) : pi;
+			const expected = icit === "Explicit" ? NF.Constructors.Psi("$s", undefined, yield* NF.closeVal(pi)) : pi;
 			yield* M.constrain({ type: "assign", left: type, right: expected, lvl: ctx.env.length });
 			return yield* callee([term, expected, usages], icit);
 		});

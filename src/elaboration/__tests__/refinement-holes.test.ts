@@ -18,7 +18,7 @@ describe("predicate holes in elaborated lambdas", () => {
 		assert(tm.type === "Abs" && tm.binding.type === "Psi" && tm.body.type === "Ann");
 		const state = tm.binding.requirement;
 		const lambda = tm.body.term;
-		assert(state.type === "Var" && state.variable.type === "Meta");
+		assert(state?.type === "Var" && state.variable.type === "Meta");
 		assert(lambda.type === "Abs" && lambda.binding.type === "Lambda" && lambda.binding.annotation.type === "Modal");
 		const input = lambda.binding.annotation.modalities.liquid;
 		assert(input.type === "Var" && input.variable.type === "Meta");

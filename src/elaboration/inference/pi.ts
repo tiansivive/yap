@@ -19,7 +19,7 @@ export const infer = (pi: Pi): M.Elaboration<EB.AST> =>
 					ctx => EB.bind(ctx, { type: "Psi", variable }, NF.State, state ? "source" : "inserted"),
 					arrow(pi),
 				);
-				return [EB.Constructors.Psi(variable, EB.Unrestricted, term), type, usages] satisfies EB.AST;
+				return [EB.Constructors.Psi(variable, undefined, term), type, usages] satisfies EB.AST;
 			})
 			.exhaustive();
 	});

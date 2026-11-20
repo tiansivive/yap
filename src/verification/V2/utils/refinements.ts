@@ -2,6 +2,7 @@ import { match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
+import * as Metas from "@yap/elaboration/shared/metas";
 import * as R from "@yap/shared/rows";
 import * as E from "fp-ts/Either";
 import * as Q from "@yap/shared/modalities/multiplicity";
@@ -12,6 +13,48 @@ import { reader, supply, type Verification } from "../effects";
 import { scope } from "../logic/translate";
 
 export type ExtractModalitiesFn = (nf: NF.Value, ctx: EB.Context) => Verification<NF.Modalities>;
+
+export const binderDomain = (binder: NF.Binder): NF.Value =>
+	binder.type === "Psi" && binder.requirement ? NF.Constructors.Modal(binder.annotation, { quantity: Q.Many, liquid: binder.requirement }) : binder.annotation;
+
+/** Only a bare value in an explicit callback input position acquires a value predicate. */
+export function* propagate(type: NF.Value, position: "type" | "input" = "type"): Verification<NF.Value> {
+	return yield* match(yield* NF.view(type))
+		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: modal }) {
+			const inner = yield* propagate(modal.value);
+			// Propagation returns a first-order type by reference and rebuilds each callback.
+			if (inner === modal.value) {
+				return type;
+			}
+			const registry = yield* Metas.registry.get();
+			return match(yield* NF.view(modal.modalities.liquid))
+				.with(
+					NF.View.Flex,
+					({ value }) => Metas.lookup(registry, value.variable.val)?.kind === "Predicate",
+					() => inner,
+				)
+				.otherwise(() => NF.Constructors.Modal(inner, modal.modalities));
+		})
+		.with(NF.View.Sealed(P.union(NF.Patterns.Psi, NF.Patterns.Pi)), function* ({ value: { binder, closure } }) {
+			const opened = yield* match(binder)
+				.with({ type: "Psi" }, function* (psi) {
+					return { ...psi, requirement: psi.requirement ?? NF.Constructors.Flex(yield* EB.Liquid.hole(psi.annotation)) };
+				})
+				.with({ type: "Pi", icit: "Explicit" }, function* (pi) {
+					return { ...pi, annotation: yield* propagate(pi.annotation, "input") };
+				})
+				.otherwise(function* (implicit) {
+					return implicit;
+				});
+			const ctx = EB.bind(yield* reader.ask(), opened, opened.annotation);
+			const body = yield* NF.apply(binder, closure, ctx.env[0].nf);
+			const result = yield* reader.local(() => ctx, propagate(body));
+			return NF.mk({ type: "Abs", binder: opened, closure: yield* NF.closeVal(result) });
+		})
+		.otherwise(function* () {
+			return position === "input" ? NF.Constructors.Modal(type, { quantity: Q.Many, liquid: NF.Constructors.Flex(yield* EB.Liquid.hole(type)) }) : type;
+		});
+}
 
 export const selfify = function* (tm: EB.Term, ty: NF.Value): Verification<NF.Value> {
 	if (!(yield* isFirstOrder(ty))) {

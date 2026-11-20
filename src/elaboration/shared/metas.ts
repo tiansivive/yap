@@ -199,7 +199,7 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 			.with(NF.Patterns.Existential, ({ annotation, assumptions, body }) => [...nf(annotation), ...[...assumptions.values()].flatMap(nf), ...nf(body.value)])
 			/* Both faces: quotation emits the folded one, so a meta only it mentions still has to be found. */
 			.with(NF.Patterns.Glued, ({ folded, unfolded }) => [...nf(folded), ...nf(unfolded)])
-			.with(NF.Patterns.Psi, ({ binder, closure }) => [...nf(binder.requirement), ...eb(closure.term)])
+			.with(NF.Patterns.Psi, ({ binder, closure }) => [...(binder.requirement ? nf(binder.requirement) : []), ...eb(closure.term)])
 			.with(NF.Patterns.Lambda, ({ closure }) => eb(closure.term))
 			.with(NF.Patterns.Phi, NF.Patterns.Pi, NF.Patterns.Mu, NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, ({ closure, binder }) => [
 				...nf(binder.annotation),
@@ -232,7 +232,7 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 				return nf(solved);
 			})
 			.with({ type: "Lit" }, () => [])
-			.with(EB.CtorPatterns.Psi, ({ binding, body }) => [...eb(binding.requirement), ...eb(body)])
+			.with(EB.CtorPatterns.Psi, ({ binding, body }) => [...(binding.requirement ? eb(binding.requirement) : []), ...eb(body)])
 			.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body }) => eb(body))
 			.with(
 				EB.CtorPatterns.Phi,

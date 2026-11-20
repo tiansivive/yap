@@ -17,7 +17,9 @@ export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) =>
 				traverse(body, onVar),
 			),
 		)
-		.with(CtorPatterns.Psi, ({ binding, body }) => Constructors.Psi(binding.variable, traverse(binding.requirement, onVar), traverse(body, onVar)))
+		.with(CtorPatterns.Psi, ({ binding, body }) =>
+			Constructors.Psi(binding.variable, binding.requirement && traverse(binding.requirement, onVar), traverse(body, onVar)),
+		)
 		.with(CtorPatterns.Phi, ({ binding, body }) => Constructors.Phi(binding.variable, traverse(binding.annotation, onVar), traverse(body, onVar)))
 		.with(CtorPatterns.Mu, ({ binding, body }) =>
 			Constructors.Abs(
