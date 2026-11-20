@@ -12,6 +12,7 @@ import type * as Encoding from "./encoding";
 import { CNF } from "./encoding";
 import type * as EUF from "./euf";
 import * as Formulas from "./formulas";
+import { OpenPredicate } from "./formulas/normalize";
 import * as Quantifier from "./quantifier";
 import * as Trace from "./trace";
 import * as Theory from "./theory";
@@ -56,11 +57,18 @@ const run = (formula: IVL.Formula): Check => {
 
 const trace = (formula: IVL.Formula): Core.Solver<Result> =>
 	Core.Do(function* () {
-		const prepared = Formulas.run(formula);
-		const encoding = CNF.encode(prepared.propositional);
-		const quantifiers = prepared.quantifiers.flatMap(Quantifier.extract);
-		yield* Core.State.modify(s => ({ ...s, encoding, quantifiers: Quantifier.State.from(quantifiers) }));
-		return yield* loop(encoding.clauses);
+		try {
+			const prepared = Formulas.run(formula);
+			const encoding = CNF.encode(prepared.propositional);
+			const quantifiers = prepared.quantifiers.flatMap(Quantifier.extract);
+			yield* Core.State.modify(s => ({ ...s, encoding, quantifiers: Quantifier.State.from(quantifiers) }));
+			return yield* loop(encoding.clauses);
+		} catch (error) {
+			if (error instanceof OpenPredicate) {
+				return { tag: "unknown", reason: error.message };
+			}
+			throw error;
+		}
 	});
 
 const loop = function* (clauses: Clause.T[]): Core.G<Result> {

@@ -1,4 +1,5 @@
 import { match } from "ts-pattern";
+import * as NF from "@yap/elaboration/normalization";
 import * as PP from "@yap/shared/pretty";
 import type { IVL } from "./types";
 import { Patterns } from "./patterns";
@@ -25,6 +26,13 @@ export namespace Print {
 
 	export const term = (t: IVL.Term): string =>
 		match(t)
+			.with(Patterns.Term.Hole, ({ term, scope: { ctx, names } }) => {
+				const env = ctx.env.map((entry, index) => ({
+					...entry,
+					name: { ...entry.name, variable: names.get(ctx.env.length - 1 - index) ?? entry.name.variable },
+				}));
+				return `(hole ${NF.probe({ ...ctx, env }, {})(() => NF.display(term))})`;
+			})
 			.with({ tag: "Var" }, ({ name }) => name)
 			.with({ tag: "Const" }, ({ name }) => name)
 			.with({ tag: "Num" }, ({ value }) => value)

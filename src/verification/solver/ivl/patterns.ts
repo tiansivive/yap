@@ -13,6 +13,7 @@ export const Patterns = {
 		Exists: { tag: "Exists" } as const,
 	},
 	Term: {
+		Hole: { tag: "Hole" } as const,
 		Var: { tag: "Var" } as const,
 		Const: { tag: "Const" } as const,
 		Num: { tag: "Num" } as const,

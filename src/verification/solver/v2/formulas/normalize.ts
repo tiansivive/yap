@@ -7,6 +7,12 @@ import { Build } from "../../ivl/build";
 import { Patterns } from "../../ivl/patterns";
 import type { IVL } from "../../ivl/types";
 
+export class OpenPredicate extends Error {
+	static reject(this: void, hole: IVL.Hole): never {
+		throw new OpenPredicate(`Unsolved predicate ${hole.head.map(meta => "?" + meta.val).join(", ")}`);
+	}
+}
+
 export const normalize = (formula: IVL.Formula): IVL.Formula =>
 	match(formula)
 		.with(Patterns.Formula.True, Patterns.Formula.False, f => f)
@@ -23,6 +29,7 @@ export const normalize = (formula: IVL.Formula): IVL.Formula =>
 const Lift = {
 	term: (term: IVL.Term, body: (term: IVL.Term) => IVL.Formula, origin?: string): IVL.Formula =>
 		match(term)
+			.with(Patterns.Term.Hole, OpenPredicate.reject)
 			.with(Patterns.Term.Prop, ({ value }) => {
 				const condition = normalize(value);
 				return Build.orWithOrigin([Build.and(condition, body(Build.bool(true))), Build.and(Build.not(condition), body(Build.bool(false)))], origin);
@@ -63,6 +70,7 @@ const triggers = (hints: IVL.Trigger[] | undefined): IVL.Trigger[] | undefined =
 const Prop = {
 	contains: (term: IVL.Term): boolean =>
 		match(term)
+			.with(Patterns.Term.Hole, OpenPredicate.reject)
 			.with(Patterns.Term.Prop, () => true)
 			.with(Patterns.Term.App, Patterns.Term.Arith, ({ args }) => args.some(Prop.contains))
 			.with(Patterns.Term.Select, ({ array, index }) => Prop.contains(array) || Prop.contains(index))

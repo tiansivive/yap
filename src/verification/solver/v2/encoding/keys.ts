@@ -19,8 +19,8 @@ export const term = (value: IVL.Term): string =>
 		.with({ tag: "Arith" }, ({ op, args }) => `(${op} ${term(args[0])} ${term(args[1])})`)
 		.with({ tag: "Select" }, ({ array, index }) => `(select ${term(array)} ${term(index)})`)
 		.with({ tag: "Row" }, ({ row }) => `(row ${rows(row)})`)
-		.with(Patterns.Term.Prop, () => {
-			throw new Error("Formula normalization must eliminate Prop before term encoding");
+		.with(Patterns.Term.Prop, Patterns.Term.Hole, term => {
+			throw new Error(`Formula normalization must eliminate ${term.tag} before term encoding`);
 		})
 		.exhaustive();
 
