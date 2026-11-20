@@ -150,19 +150,6 @@ export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
 		});
 };
 
-const hole = function* (term: NF.Value, head: EB.Meta[]): Verification<IVL.Hole> {
-	return { tag: "Hole", term, head, scope: { ctx: yield* reader.ask(), names: yield* names.ask(), definitions: yield* definitions.ask() } };
-};
-
-export const force = ({ term: value, scope }: IVL.Hole): Verification<IVL.Term> =>
-	reader.local(
-		() => scope.ctx,
-		names.local(
-			() => scope.names,
-			definitions.local(() => scope.definitions, term(value)),
-		),
-	);
-
 const application = function* (nf: NF.Value): Verification<IVL.Term> {
 	const { value } = yield* NF.view(nf);
 	return yield* match(value)
@@ -178,17 +165,12 @@ const application = function* (nf: NF.Value): Verification<IVL.Term> {
 		)
 		.with(NF.Patterns.App, function* ({ func, arg }) {
 			const fn = yield* application(func);
-			return yield* match(fn)
-				.with(Patterns.Term.Hole, f => hole(nf, f.head))
-				.with({ sort: P.select() }, function* (sort) {
-					const input = yield* term(arg);
-					return yield* match(input)
-						.with(Patterns.Term.Hole, x => hole(nf, x.head))
-						.otherwise(function* (x) {
-							return Build.select(fn, x, sort.tag === "Fn" ? sort.ret : sort);
-						});
-				})
-				.otherwise(function* () {
+			const input = yield* term(arg);
+			return match(fn)
+				.with(Patterns.Term.Hole, ({ kappa, spine }) => Build.hole(kappa, [...spine, input]))
+				.with({ sort: Patterns.Sort.Fn }, ({ sort }) => Build.select(fn, input, sort.ret))
+				.with({ sort: P.select() }, sort => Build.select(fn, input, sort))
+				.otherwise(() => {
 					throw new Error("Expected a logical function");
 				});
 		})
@@ -301,7 +283,7 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 			if (v.variable.type === "Meta") {
 				const entry = Metas.lookup(yield* Metas.registry.get(), v.variable.val);
 				if (entry?.kind === "Predicate") {
-					return yield* hole(nf, [entry.meta]);
+					return Build.hole(entry.meta.val);
 				}
 				return Build.const_(`?${v.variable.val}`, Build.uninterpreted("Any"));
 			}
