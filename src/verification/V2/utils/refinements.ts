@@ -1,4 +1,4 @@
-import { match, P } from "ts-pattern";
+import { isMatching, match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
@@ -14,11 +14,11 @@ import { scope } from "../logic/translate";
 
 export type ExtractModalitiesFn = (nf: NF.Value, ctx: EB.Context) => Verification<NF.Modalities>;
 
-export const binderDomain = (binder: NF.Binder): NF.Value =>
+export const wrapPsiRequirement = (binder: NF.Binder): NF.Value =>
 	binder.type === "Psi" && binder.requirement ? NF.Constructors.Modal(binder.annotation, { quantity: Q.Many, liquid: binder.requirement }) : binder.annotation;
 
-/** Only a bare value in an explicit callback input position acquires a value predicate. */
-export function* propagate(type: NF.Value, position: "type" | "input" = "type"): Verification<NF.Value> {
+/** Add predicate holes at the unrefined inputs of a callback. */
+export function* propagate(type: NF.Value): Verification<NF.Value> {
 	return yield* match(yield* NF.view(type))
 		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: modal }) {
 			const inner = yield* propagate(modal.value);
@@ -35,25 +35,27 @@ export function* propagate(type: NF.Value, position: "type" | "input" = "type"):
 				)
 				.otherwise(() => NF.Constructors.Modal(inner, modal.modalities));
 		})
-		.with(NF.View.Sealed(P.union(NF.Patterns.Psi, NF.Patterns.Pi)), function* ({ value: { binder, closure } }) {
-			const opened = yield* match(binder)
-				.with({ type: "Psi" }, function* (psi) {
-					return { ...psi, requirement: psi.requirement ?? NF.Constructors.Flex(yield* EB.Liquid.hole(psi.annotation)) };
-				})
-				.with({ type: "Pi", icit: "Explicit" }, function* (pi) {
-					return { ...pi, annotation: yield* propagate(pi.annotation, "input") };
-				})
-				.otherwise(function* (implicit) {
-					return implicit;
-				});
-			const ctx = EB.bind(yield* reader.ask(), opened, opened.annotation);
-			const body = yield* NF.apply(binder, closure, ctx.env[0].nf);
-			const result = yield* reader.local(() => ctx, propagate(body));
-			return NF.mk({ type: "Abs", binder: opened, closure: yield* NF.closeVal(result) });
+		.with(NF.View.Sealed(NF.Patterns.Psi), function* ({ value: { binder, closure } }) {
+			const requirement = binder.requirement ?? NF.Constructors.Flex(yield* EB.Liquid.hole(binder.annotation));
+			return yield* propagateBody({ ...binder, requirement }, closure);
+		})
+		.with(NF.View.Sealed(NF.Patterns.Pi), function* ({ value: { binder, closure } }) {
+			const domain = binder.annotation;
+			const annotation = isMatching(NF.View.Sealed(P.union(NF.Patterns.Modal, NF.Patterns.Psi, NF.Patterns.Pi)), yield* NF.view(domain))
+				? yield* propagate(domain)
+				: NF.Constructors.Modal(domain, { quantity: Q.Many, liquid: NF.Constructors.Flex(yield* EB.Liquid.hole(domain)) });
+			return yield* propagateBody({ ...binder, annotation }, closure);
 		})
 		.otherwise(function* () {
-			return position === "input" ? NF.Constructors.Modal(type, { quantity: Q.Many, liquid: NF.Constructors.Flex(yield* EB.Liquid.hole(type)) }) : type;
+			return type;
 		});
+}
+
+function* propagateBody(binder: NF.Binder, closure: NF.Closure): Verification<NF.Value> {
+	const ctx = EB.bind(yield* reader.ask(), binder, binder.annotation);
+	const body = yield* NF.apply(binder, closure, ctx.env[0].nf);
+	const result = yield* reader.local(() => ctx, propagate(body));
+	return NF.mk({ type: "Abs", binder, closure: yield* NF.closeVal(result) });
 }
 
 export const selfify = function* (tm: EB.Term, ty: NF.Value): Verification<NF.Value> {

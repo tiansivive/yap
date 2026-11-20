@@ -17,6 +17,9 @@ describe("Callback input refinements", () => {
 		["String -> Num", ["State", "String"]],
 		["(String -> Num) -> Num", ["State", "State", "String"]],
 		["String -> Num -> Num", ["Num", "State", "State", "String"]],
+		["(n: Num) => String -> Num", ["Num", "State", "String"]],
+		["(a: Type) => String -> Num", ["State", "String", "Type"]],
+		["(f: String -> Num) => Bool -> Num", ["Bool", "State", "State", "String"]],
 		[String.raw`(key: String [| \v -> false |]) -> Num`, ["State"]],
 	] as const)("opens the omitted callback inputs of %s when checking a lambda", (domain, expected) => {
 		const [declaration] = elaborateModule(String.raw`let f: (get: ${domain}) -> Num = \get -> 0;`).declarations;

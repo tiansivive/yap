@@ -13,7 +13,7 @@ import { Build } from "../solver/ivl/build";
 import type { SynthResult, VerificationArtefacts } from "./types";
 import { reader, logger, state, State, obligations, supply, type Verification } from "./effects";
 import { noCapture } from "./utils/context";
-import { binderDomain, extractModalities, selfify } from "./utils/refinements";
+import { wrapPsiRequirement, extractModalities, selfify } from "./utils/refinements";
 import { check } from "./check";
 import { formula, live, quantify, scope } from "./logic/translate";
 
@@ -135,7 +135,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 		.with(EB.CtorPatterns.Psi, function* ({ binding, body }) {
 			const requirement = binding.requirement && (yield* NF.evaluate(binding.requirement));
 			const binder = { type: "Psi", variable: binding.variable, annotation: NF.State, requirement } as const;
-			const annotation = binderDomain(binder);
+			const annotation = wrapPsiRequirement(binder);
 			const name = yield* supply.freshFrom(binding.variable);
 			const [bodyType, artefacts] = yield* scope(name, binder, annotation, synth(body));
 			const quoted = yield* NF.quote(ctx.env.length + 1, bodyType);
@@ -211,7 +211,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 								}
 							})
 							.otherwise(function* () {});
-						const domain = binderDomain(psi.binder);
+						const domain = wrapPsiRequirement(psi.binder);
 						const artefacts = yield* reader.local(_ => ctx, check(arg, domain));
 						const value = yield* reader.local(_ => ctx, NF.evaluate(arg));
 						const out = yield* NF.apply(psi.binder, psi.closure, value);

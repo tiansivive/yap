@@ -9,7 +9,7 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import { Liquid } from "../modalities";
-import { binderDomain, extractModalities, isFirstOrder } from "./utils/refinements";
+import { wrapPsiRequirement, extractModalities, isFirstOrder } from "./utils/refinements";
 import { noCapture, withRowLabels } from "./utils/context";
 import { reader, fail, logger, obligations, supply, type Verification } from "./effects";
 import { mkSort, formula, quantify, scope } from "./logic/translate";
@@ -204,8 +204,8 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			return Build.and(vc1, vc2);
 		})
 		.with([NF.Patterns.Psi, NF.Patterns.Psi], [NF.Patterns.Pi, NF.Patterns.Pi], [NF.Patterns.Lambda, NF.Patterns.Lambda], function* ([at, bt]) {
-			const annotationA = binderDomain(at.binder);
-			const annotationB = binderDomain(bt.binder);
+			const annotationA = wrapPsiRequirement(at.binder);
+			const annotationB = wrapPsiRequirement(bt.binder);
 			const vcArg = yield* subtype(annotationB, annotationA);
 			const lvl = ctx.env.length;
 			const anf = yield* NF.apply(at.binder, at.closure, NF.Constructors.Rigid(lvl));
