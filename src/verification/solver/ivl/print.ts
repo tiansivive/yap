@@ -31,7 +31,7 @@ export namespace Print {
 					...entry,
 					name: { ...entry.name, variable: names.get(ctx.env.length - 1 - index) ?? entry.name.variable },
 				}));
-				return `(hole ${NF.probe({ ...ctx, env }, {})(() => NF.display(term))})`;
+				return `?(hole: ${NF.probe({ ...ctx, env }, {})(() => NF.display(term))})`;
 			})
 			.with({ tag: "Var" }, ({ name }) => name)
 			.with({ tag: "Const" }, ({ name }) => name)

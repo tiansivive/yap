@@ -154,7 +154,7 @@ const hole = function* (term: NF.Value, head: EB.Meta[]): Verification<IVL.Hole>
 	return { tag: "Hole", term, head, scope: { ctx: yield* reader.ask(), names: yield* names.ask(), definitions: yield* definitions.ask() } };
 };
 
-export const forceHole = ({ term: value, scope }: IVL.Hole): Verification<IVL.Term> =>
+export const force = ({ term: value, scope }: IVL.Hole): Verification<IVL.Term> =>
 	reader.local(
 		() => scope.ctx,
 		names.local(
@@ -201,7 +201,7 @@ const application = function* (nf: NF.Value): Verification<IVL.Term> {
 				.with({ type: "Free" }, ({ name }) => name)
 				.with({ type: "Foreign" }, ({ name }) => {
 					if (!(name in PrimOps)) {
-						throw new Error("Foreign variable not supported in logical formulas");
+						throw new Error(`Foreign function "${name}" is unsupported in logical formulas`);
 					}
 					return primopMapping[name];
 				})
@@ -209,15 +209,22 @@ const application = function* (nf: NF.Value): Verification<IVL.Term> {
 			const ctx = yield* reader.ask();
 			return Build.const_(variable.name, yield* mkSort(ctx.imports[symbol][1]));
 		})
-		.with(NF.Patterns.Flex, function* () {
+		.with(NF.Patterns.Flex, function* ({ variable }) {
 			const head = yield* term(nf);
 			if (head.tag === "Hole") {
 				return head;
 			}
-			throw new Error("Expected a predicate meta in function position");
+			const entry = Metas.lookup(yield* Metas.registry.get(), variable.val);
+			throw new Error(`Expected a predicate in function position, found ${entry?.kind ?? "unregistered"} meta ?${variable.val}`);
 		})
-		.otherwise(function* () {
-			throw new Error("Not a logical function");
+		.with(NF.Patterns.External, function* ({ name }) {
+			throw new Error(`External "${name}" requires external translation before its use as a logical function head`);
+		})
+		.with(NF.Patterns.Label, NF.Patterns.DepLabel, NF.Patterns.NuLabel, function* ({ variable }) {
+			throw new Error(`Unsupported ${variable.type} variable "${variable.name}" in logical function position`);
+		})
+		.otherwise(function* (value) {
+			throw new Error(`Expected a logical function, found ${value.type}`);
 		});
 };
 

@@ -2,37 +2,61 @@
 // IVL = Intermediate Verification Language.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/cdcl-t-solver.md
 
+import * as E from "fp-ts/Either";
+import * as O from "fp-ts/Option";
+import { findFirstMap } from "fp-ts/ReadonlyArray";
+import { pipe } from "fp-ts/function";
 import { match, P } from "ts-pattern";
 import { Build } from "../../ivl/build";
 import { Patterns } from "../../ivl/patterns";
 import type { IVL } from "../../ivl/types";
 
-export class OpenPredicate extends Error {
-	static reject(this: void, hole: IVL.Hole): never {
-		throw new OpenPredicate(`Unsolved predicate ${hole.head.map(meta => "?" + meta.val).join(", ")}`);
-	}
-}
+type Normal = IVL.Formula | IVL.Hole;
 
-export const normalize = (formula: IVL.Formula): IVL.Formula =>
+const combine = <A>(parts: readonly A[], visit: (part: A) => Normal, build: (parts: readonly IVL.Formula[]) => IVL.Formula): Normal =>
+	pipe(
+		parts,
+		E.traverseArray((part: A) => {
+			const value = visit(part);
+			return value.tag === "Hole" ? E.left(value) : E.right(value);
+		}),
+		E.match<IVL.Hole, readonly IVL.Formula[], Normal>(hole => hole, build),
+	);
+
+export const normalize = (formula: IVL.Formula): Normal =>
 	match(formula)
 		.with(Patterns.Formula.True, Patterns.Formula.False, f => f)
-		.with(Patterns.Formula.Not, ({ value, origin }) => Build.not(normalize(value), origin))
-		.with(Patterns.Formula.And, ({ values, origin }) => Build.andWithOrigin(values.map(normalize), origin))
-		.with(Patterns.Formula.Or, ({ values, origin }) => Build.orWithOrigin(values.map(normalize), origin))
-		.with(Patterns.Formula.Implies, ({ left, right, origin }) => Build.implies(normalize(left), normalize(right), origin))
-		.with(Patterns.Formula.Forall, ({ binders, body, triggers: hints, origin }) => Build.forall(binders, normalize(body), origin, triggers(hints)))
-		.with(Patterns.Formula.Exists, ({ binders, body, origin }) => Build.exists(binders, normalize(body), origin))
+		.with(Patterns.Formula.Not, ({ value, origin }) => combine([value], normalize, ([f]) => Build.not(f, origin)))
+		.with(Patterns.Formula.And, ({ values, origin }) => combine(values, normalize, fs => Build.andWithOrigin([...fs], origin)))
+		.with(Patterns.Formula.Or, ({ values, origin }) => combine(values, normalize, fs => Build.orWithOrigin([...fs], origin)))
+		.with(Patterns.Formula.Implies, ({ left, right, origin }) => combine([left, right], normalize, ([a, b]) => Build.implies(a, b, origin)))
+		.with(Patterns.Formula.Forall, ({ binders, body, triggers: hints, origin }) => {
+			const inner = normalize(body);
+			if (inner.tag === "Hole") {
+				return inner;
+			}
+			const safe = triggers(hints);
+			return safe && "tag" in safe ? safe : Build.forall(binders, inner, origin, safe);
+		})
+		.with(Patterns.Formula.Exists, ({ binders, body, origin }) => combine([body], normalize, ([f]) => Build.exists(binders, f, origin)))
 		.with(Patterns.Formula.Atom, ({ op, args, origin }) => Lift.args(args.map(normalizeTerm), ([left, right]) => Bool.atom(op, [left, right], origin), origin))
 		.exhaustive();
 
 /* Splitting at the containing atom keeps each formula value inside its original binders. */
 const Lift = {
-	term: (term: IVL.Term, body: (term: IVL.Term) => IVL.Formula, origin?: string): IVL.Formula =>
+	term: (term: IVL.Term, body: (term: IVL.Term) => Normal, origin?: string): Normal =>
 		match(term)
-			.with(Patterns.Term.Hole, OpenPredicate.reject)
+			.with(Patterns.Term.Hole, hole => hole)
 			.with(Patterns.Term.Prop, ({ value }) => {
 				const condition = normalize(value);
-				return Build.orWithOrigin([Build.and(condition, body(Build.bool(true))), Build.and(Build.not(condition), body(Build.bool(false)))], origin);
+				if (condition.tag === "Hole") {
+					return condition;
+				}
+				return combine(
+					[true, false],
+					b => body(Build.bool(b)),
+					([yes, no]) => Build.orWithOrigin([Build.and(condition, yes), Build.and(Build.not(condition), no)], origin),
+				);
 			})
 			.with(Patterns.Term.App, ({ head, args, sort }) => Lift.args(args, terms => body(Build.app(head, terms, sort)), origin))
 			.with(Patterns.Term.Arith, ({ op, args, sort }) => Lift.args(args, ([left, right]) => body(Build.arith(op, left, right, sort)), origin))
@@ -41,14 +65,14 @@ const Lift = {
 			.with(Patterns.Term.Var, Patterns.Term.Const, Patterns.Term.Num, Patterns.Term.Bool, Patterns.Term.Str, body)
 			.exhaustive(),
 
-	args: (terms: IVL.Term[], body: (terms: IVL.Term[]) => IVL.Formula, origin?: string): IVL.Formula =>
-		match(terms.findIndex(Prop.contains))
+	args: (terms: IVL.Term[], body: (terms: IVL.Term[]) => Normal, origin?: string): Normal =>
+		match(terms.findIndex(t => embedded(t) !== undefined))
 			.with(-1, () => body(terms))
 			.otherwise(index =>
 				Lift.term(terms[index], value => Lift.args(terms.slice(index + 1), tail => body([...terms.slice(0, index), value, ...tail]), origin), origin),
 			),
 
-	row: (row: IVL.RowTerm, body: (row: IVL.RowTerm) => IVL.Formula, origin?: string): IVL.Formula =>
+	row: (row: IVL.RowTerm, body: (row: IVL.RowTerm) => Normal, origin?: string): Normal =>
 		match(row)
 			.with(Patterns.Row.Extend, ({ label, value, rest }) =>
 				Lift.term(value, field => Lift.row(rest, tail => body(Build.rowExtend(label, field, tail)), origin), origin),
@@ -57,32 +81,43 @@ const Lift = {
 			.exhaustive(),
 };
 
-const triggers = (hints: IVL.Trigger[] | undefined): IVL.Trigger[] | undefined =>
-	match(hints)
-		.with(undefined, () => undefined)
-		.with([], () => [])
-		.otherwise(hints =>
-			match(hints.filter(({ terms }) => !terms.some(Prop.contains)))
-				.with([], () => undefined)
-				.otherwise(safe => safe),
-		);
+type Embedded = IVL.Hole | Extract<IVL.Term, { tag: "Prop" }>;
 
-const Prop = {
-	contains: (term: IVL.Term): boolean =>
-		match(term)
-			.with(Patterns.Term.Hole, OpenPredicate.reject)
-			.with(Patterns.Term.Prop, () => true)
-			.with(Patterns.Term.App, Patterns.Term.Arith, ({ args }) => args.some(Prop.contains))
-			.with(Patterns.Term.Select, ({ array, index }) => Prop.contains(array) || Prop.contains(index))
-			.with(Patterns.Term.Row, ({ row }) => Prop.row(row))
-			.with(Patterns.Term.Var, Patterns.Term.Const, Patterns.Term.Num, Patterns.Term.Bool, Patterns.Term.Str, () => false)
-			.exhaustive(),
+const first = <T, A>(values: readonly T[], read: (value: T) => A | undefined): A | undefined =>
+	pipe(
+		values,
+		findFirstMap((value: T) => O.fromNullable(read(value))),
+		O.toUndefined,
+	);
 
-	row: (row: IVL.RowTerm): boolean =>
-		match(row)
-			.with(Patterns.Row.Extend, ({ value, rest }) => Prop.contains(value) || Prop.row(rest))
-			.with(Patterns.Row.Empty, Patterns.Row.Var, () => false)
-			.exhaustive(),
+const embedded = (term: IVL.Term | IVL.RowTerm): Embedded | undefined =>
+	match(term)
+		.with(Patterns.Term.Hole, Patterns.Term.Prop, value => value)
+		.with(Patterns.Term.App, Patterns.Term.Arith, ({ args }) => first(args, embedded))
+		.with(Patterns.Term.Select, ({ array, index }) => embedded(array) ?? embedded(index))
+		.with(Patterns.Term.Row, ({ row }) => embedded(row))
+		.with(Patterns.Row.Extend, ({ value, rest }) => embedded(value) ?? embedded(rest))
+		.with(Patterns.Term.Var, Patterns.Term.Const, Patterns.Term.Num, Patterns.Term.Bool, Patterns.Term.Str, Patterns.Row.Empty, () => undefined)
+		.exhaustive();
+
+const triggers = (hints: IVL.Trigger[] | undefined): IVL.Hole | IVL.Trigger[] | undefined => {
+	if (!hints?.length) {
+		return hints;
+	}
+	return pipe(
+		hints,
+		E.traverseArray((hint: IVL.Trigger) => {
+			const value = first(hint.terms, embedded);
+			return value?.tag === "Hole" ? E.left(value) : E.right(value ? undefined : hint);
+		}),
+		E.matchW(
+			(hole: IVL.Hole) => hole,
+			(groups: readonly (IVL.Trigger | undefined)[]) => {
+				const safe = groups.filter(hint => hint !== undefined);
+				return safe.length ? safe : undefined;
+			},
+		),
+	);
 };
 
 /* Expressing both Boolean literals through equality to true makes their distinction visible to the solver. */

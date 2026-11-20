@@ -12,7 +12,6 @@ import type * as Encoding from "./encoding";
 import { CNF } from "./encoding";
 import type * as EUF from "./euf";
 import * as Formulas from "./formulas";
-import { OpenPredicate } from "./formulas/normalize";
 import * as Quantifier from "./quantifier";
 import * as Trace from "./trace";
 import * as Theory from "./theory";
@@ -42,7 +41,7 @@ export type Model = {
 const run = (formula: IVL.Formula): Check => {
 	const [collector, state] = Core.run(trace(formula), { ...Core.Env.default, problem: { original: formula } });
 	const result = E.match(
-		(err: Core.Err): Result => ({ tag: "unknown", reason: err.cause.tag }),
+		({ cause }: Core.Err): Result => ({ tag: "unknown", reason: cause.tag === "Unsupported" ? cause.feature : cause.tag }),
 		(r: Result): Result => r,
 	)(collector.result);
 	return {
@@ -57,18 +56,14 @@ const run = (formula: IVL.Formula): Check => {
 
 const trace = (formula: IVL.Formula): Core.Solver<Result> =>
 	Core.Do(function* () {
-		try {
-			const prepared = Formulas.run(formula);
-			const encoding = CNF.encode(prepared.propositional);
-			const quantifiers = prepared.quantifiers.flatMap(Quantifier.extract);
-			yield* Core.State.modify(s => ({ ...s, encoding, quantifiers: Quantifier.State.from(quantifiers) }));
-			return yield* loop(encoding.clauses);
-		} catch (error) {
-			if (error instanceof OpenPredicate) {
-				return { tag: "unknown", reason: error.message };
-			}
-			throw error;
+		const prepared = Formulas.run(formula);
+		if (prepared.tag === "Hole") {
+			return yield* Core.Error.fail<Result>({ tag: "Unsupported", feature: `Unsolved predicate ${prepared.head.map(meta => "?" + meta.val).join(", ")}` });
 		}
+		const encoding = CNF.encode(prepared.propositional);
+		const quantifiers = prepared.quantifiers.flatMap(Quantifier.extract);
+		yield* Core.State.modify(s => ({ ...s, encoding, quantifiers: Quantifier.State.from(quantifiers) }));
+		return yield* loop(encoding.clauses);
 	});
 
 const loop = function* (clauses: Clause.T[]): Core.G<Result> {

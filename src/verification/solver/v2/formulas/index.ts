@@ -8,16 +8,22 @@ import { skolemize } from "./skolem";
 
 export const run = (formula: IVL.Formula): Result => {
 	const normalized = normalize(formula);
+	if (normalized.tag === "Hole") {
+		return normalized;
+	}
 	const skolemized = skolemize(normalized);
 	const separated = separate(skolemized);
-	return { normalized, skolemized, ...separated };
+	return { tag: "prepared", normalized, skolemized, ...separated };
 };
 
-export type Result = {
-	normalized: IVL.Formula;
-	skolemized: IVL.Formula;
-	propositional: IVL.Formula;
-	quantifiers: IVL.Formula[];
-};
+export type Result =
+	| IVL.Hole
+	| {
+			tag: "prepared";
+			normalized: IVL.Formula;
+			skolemized: IVL.Formula;
+			propositional: IVL.Formula;
+			quantifiers: IVL.Formula[];
+	  };
 
 export { normalize, separate, skolemize };

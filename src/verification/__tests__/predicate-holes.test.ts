@@ -7,9 +7,11 @@ import * as Eff from "@yap/utils/effects";
 import { elaborateModule } from "../../elaboration/__tests__/module";
 import { mkCtx } from "../../elaboration/inference/__tests__/util";
 import { run } from "../V2/effects";
-import { forceHole, scope, term } from "../V2/logic/translate";
+import { force, scope, term } from "../V2/logic/translate";
 import { VerificationServiceV2 } from "../V2/service";
 import { Build, Print } from "../solver/ivl";
+import * as Formulas from "../solver/v2/formulas";
+import { Solver } from "../solver/v2/solver";
 import { Validity } from "../validity";
 
 describe("Open predicate translation", () => {
@@ -27,12 +29,41 @@ describe("Open predicate translation", () => {
 			assert(bound.tag === "Hole" && literal.tag === "Hole");
 			expect(bound.head).toEqual([predicate]);
 			expect(literal.head).toEqual([predicate]);
-			expect(Print.term(bound)).toContain("local!1");
+			expect(Print.term(bound)).toBe(`?(hole: (?${predicate.val}) local!1)`);
 			const identity = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure(ctx, EB.DSL.bound(0)), bool);
 			yield* Metas.registry.modify(registry => Metas.solve(registry, predicate.val, identity));
-			return [yield* forceHole(bound), yield* forceHole(literal)];
+			return [yield* force(bound), yield* force(literal)];
 		});
 		expect(answer).toEqual([Build.var_("local!1", Build.Bool), Build.bool(false)]);
+	});
+
+	it("identifies surviving holes in terms and trigger groups during solver preparation", () => {
+		const { answer: hole } = run(mkCtx(), {}, function* () {
+			const meta = yield* EB.Liquid.hole(NF.Type);
+			return yield* term(NF.Constructors.Flex(meta));
+		});
+		assert(!Eff.failed(hole) && hole.tag === "Hole");
+		const x = Build.var_("x", Build.Bool);
+		const guard = Build.atom("=", x, Build.bool(true));
+		const open = Build.atom("=", x, hole);
+		const row = Build.row(Build.rowExtend("field", Build.prop(open), Build.rowEmpty), Build.Row);
+		const nested = Build.atom("=", Build.app("f", [row], Build.Bool), x);
+		const hint = Build.app("f", [x, hole], Build.Bool);
+		const binders = [{ name: "x", sort: Build.Bool }];
+
+		expect(Formulas.run(nested)).toBe(hole);
+		expect(Formulas.run(Build.forall(binders, guard, undefined, [{ terms: [hint] }]))).toBe(hole);
+		expect(Solver.check(nested)).toEqual({ tag: "unknown", reason: `Unsolved predicate ?${hole.head[0].val}` });
+		expect(Formulas.run(Build.forall(binders, guard, undefined, [{ terms: [hint, Build.prop(open)] }]))).toBe(hole);
+		expect(Formulas.run(Build.forall(binders, guard, undefined, [{ terms: [Build.prop(open), hint] }]))).toEqual(Formulas.run(Build.forall(binders, guard)));
+	});
+
+	it.each([
+		[NF.Constructors.External("test", 1, () => NF.Type, []), /External "test" requires external translation/],
+		[NF.Constructors.Var({ type: "Label", name: "field" }), /Unsupported Label variable "field"/],
+		[NF.Constructors.Flex(EB.Meta(120, 0)), /unregistered meta \?120/],
+	] as const)("reports the unsupported application head (%#)", (head, diagnostic) => {
+		expect(() => run(mkCtx(), {}, () => term(NF.Constructors.App(head, NF.Type, "Explicit")))).toThrow(diagnostic);
 	});
 
 	it("retains a type argument until the predicate can reduce", () => {
@@ -47,7 +78,7 @@ describe("Open predicate translation", () => {
 			expect(retained.term).toBe(applied);
 			const closed = NF.Constructors.Lambda("a", "Explicit", NF.Constructors.Closure(ctx, EB.Constructors.Lit({ type: "Bool", value: true })), NF.Type);
 			yield* Metas.registry.modify(registry => Metas.solve(registry, predicate.val, closed));
-			return yield* forceHole(retained);
+			return yield* force(retained);
 		});
 		expect(answer).toEqual(Build.bool(true));
 	});
