@@ -135,7 +135,7 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 			return EB.Constructors.Nu({ ...binding, scoped, annotation }, yield* M.reader.local(_ => within, instantiate(body, resolutions)));
 		})
 		.with(EB.CtorPatterns.Psi, function* ({ binding, body }) {
-			const requirement = yield* instantiate(binding.requirement, resolutions);
+			const requirement = binding.requirement && (yield* instantiate(binding.requirement, resolutions));
 			const extended = EB.bind(ctx, binding, NF.State);
 			return EB.Constructors.Psi(binding.variable, requirement, yield* M.reader.local(_ => extended, instantiate(body, resolutions)));
 		})

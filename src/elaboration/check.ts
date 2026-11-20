@@ -61,7 +61,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 
 				.with([{ type: "lambda" }, NF.Patterns.Psi], function* ([tm, { binder, closure }]) {
 					const body = yield* NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length));
-					const requirement = yield* NF.quote(ctx.env.length, binder.requirement);
+					const requirement = binder.requirement && (yield* NF.quote(ctx.env.length, binder.requirement));
 					const [checked, [, ...usages]] = yield* M.reader.local(ctx => EB.bind(ctx, binder, NF.State, "inserted"), Check.val(tm, body));
 					return [EB.Constructors.Psi(binder.variable, requirement, checked), usages] satisfies Result;
 				})

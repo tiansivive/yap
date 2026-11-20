@@ -188,7 +188,8 @@ export const State = {
 export type Verification<A> = Eff.Eff<
 	| Eff.Actions<typeof reader>
 	| Eff.Actions<typeof names>
-	| Eff.Only<typeof Metas.registry, "Registry.get" | "Registry.modify">
+	| Eff.Actions<typeof Metas.registry>
+	| Eff.Actions<typeof M.supply>
 	| Eff.Actions<typeof state>
 	| Eff.Actions<typeof definitions>
 	| Eff.Actions<typeof except>
@@ -249,6 +250,7 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 		names.handlers(new Map()),
 		state.handlers(options.state ?? context.ffi[State.heads.empty].compute()),
 		definitions.handlers(new Map()),
+		M.supply.handlers({ meta: Object.values(registry).reduce((max, entry) => Math.max(max, entry.meta.val), 0) }),
 	]);
 
 	return { answer, obligations: collected, registry: registrySnapshot } as const;

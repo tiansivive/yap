@@ -124,7 +124,7 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 					return ["Σ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
 				.with({ type: "Psi" }, function* ({ variable, requirement }) {
-					return ["ψ", variable, " [| ", yield* go(requirement), " |]"] satisfies PP.Doc;
+					return requirement ? ["ψ", variable, " [| ", yield* go(requirement), " |]"] : ["ψ", variable];
 				})
 				.with({ type: "Phi" }, function* ({ variable, annotation }) {
 					return ["ϕ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
