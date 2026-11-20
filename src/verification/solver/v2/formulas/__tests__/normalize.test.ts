@@ -97,9 +97,7 @@ describe("normalize", () => {
 			const unsafe = Build.row(Build.rowExtend("flag", Build.prop(DSL.gt(DSL.x, DSL.int(0))), Build.rowEmpty), Build.Row);
 			const formula = Build.forall([{ name: "x", sort: Build.Int }], DSL.eq(safe, DSL.int(0)), undefined, [{ terms: [unsafe] }]);
 			expect(normalize(formula)).toEqual(Build.forall([{ name: "x", sort: Build.Int }], DSL.eq(safe, DSL.int(0))));
-			const normalized = normalize(formula);
-			assert(normalized.tag !== "Hole");
-			expect(extract(normalized)[0].triggers).toEqual([{ terms: [safe], boundVars: ["x"] }]);
+			expect(extract(normalize(formula))[0].triggers).toEqual([{ terms: [safe], boundVars: ["x"] }]);
 		});
 	});
 

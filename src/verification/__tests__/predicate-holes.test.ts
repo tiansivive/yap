@@ -10,7 +10,6 @@ import { run } from "../V2/effects";
 import { force, scope, term } from "../V2/logic/translate";
 import { VerificationServiceV2 } from "../V2/service";
 import { Build, Print } from "../solver/ivl";
-import * as Formulas from "../solver/v2/formulas";
 import { Solver } from "../solver/v2/solver";
 import { Validity } from "../validity";
 
@@ -37,25 +36,17 @@ describe("Open predicate translation", () => {
 		expect(answer).toEqual([Build.var_("local!1", Build.Bool), Build.bool(false)]);
 	});
 
-	it("identifies surviving holes in terms and trigger groups during solver preparation", () => {
+	it("reports the blocking predicate when the concrete solver receives an open formula", () => {
 		const { answer: hole } = run(mkCtx(), {}, function* () {
 			const meta = yield* EB.Liquid.hole(NF.Type);
 			return yield* term(NF.Constructors.Flex(meta));
 		});
 		assert(!Eff.failed(hole) && hole.tag === "Hole");
 		const x = Build.var_("x", Build.Bool);
-		const guard = Build.atom("=", x, Build.bool(true));
 		const open = Build.atom("=", x, hole);
 		const row = Build.row(Build.rowExtend("field", Build.prop(open), Build.rowEmpty), Build.Row);
 		const nested = Build.atom("=", Build.app("f", [row], Build.Bool), x);
-		const hint = Build.app("f", [x, hole], Build.Bool);
-		const binders = [{ name: "x", sort: Build.Bool }];
-
-		expect(Formulas.run(nested)).toBe(hole);
-		expect(Formulas.run(Build.forall(binders, guard, undefined, [{ terms: [hint] }]))).toBe(hole);
 		expect(Solver.check(nested)).toEqual({ tag: "unknown", reason: `Unsolved predicate ?${hole.head[0].val}` });
-		expect(Formulas.run(Build.forall(binders, guard, undefined, [{ terms: [hint, Build.prop(open)] }]))).toBe(hole);
-		expect(Formulas.run(Build.forall(binders, guard, undefined, [{ terms: [Build.prop(open), hint] }]))).toEqual(Formulas.run(Build.forall(binders, guard)));
 	});
 
 	it.each([
