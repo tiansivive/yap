@@ -103,8 +103,13 @@ export function* reduce(nff: Value, nfa: Value, icit: Elimination) {
 	return yield* fresh(() => Machine.reduce(nff, nfa, icit));
 }
 
-export function* head(value: Value) {
-	return yield* fresh(() => Arity.head(value));
+/** The underlying type after observing each outer modality. Keep aliases for readback at the first ordinary type. */
+export function* bare(value: Value): ReturnType<typeof force> {
+	return yield* match(yield* view(value))
+		.with(Machine.View.Sealed(Patterns.Modal), ({ value: modal }) => bare(modal.value))
+		.otherwise(function* () {
+			return value;
+		});
 }
 
 export function* arity(ty: Value) {

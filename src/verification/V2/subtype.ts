@@ -12,7 +12,7 @@ import { Liquid } from "../modalities";
 import { extractModalities, isFirstOrder } from "./utils/refinements";
 import { noCapture, withRowLabels } from "./utils/context";
 import { reader, fail, logger, obligations, supply, type Verification } from "./effects";
-import { subtypeOperand } from "./binders";
+import * as Binder from "./binders";
 import { mkSort, formula, quantify, scope } from "./logic/translate";
 
 export const subtype = function* (left: NF.Value, right: NF.Value): Verification<IVL.Formula> {
@@ -81,6 +81,25 @@ const dispatch = function* (left: NF.Value, right: NF.Value): Verification<IVL.F
 		})
 		.otherwise(() => unsupported(left, right));
 };
+
+/** Subtyping compares the application contract of a function-valued parameter. */
+function* subtypeOperand(type: NF.Value): Verification<NF.View> {
+	const viewed = yield* NF.view(type);
+	return yield* match(viewed)
+		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: modal }) {
+			const bare = yield* NF.view(yield* NF.bare(type));
+			return yield* match(bare)
+				.with(NF.View.Sealed(NF.Patterns.FunctionType), function* () {
+					return !modal.modalities.liquid || (yield* Binder.hole(modal.modalities.liquid)) ? bare : viewed;
+				})
+				.otherwise(function* () {
+					return viewed;
+				});
+		})
+		.otherwise(function* () {
+			return viewed;
+		});
+}
 
 const unsupported = function* (a: NF.Value, b: NF.Value): Verification<never> {
 	const ctx = yield* reader.ask();
@@ -205,14 +224,8 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			return Build.and(vc1, vc2);
 		})
 		.with([NF.Patterns.Psi, NF.Patterns.Psi], [NF.Patterns.Pi, NF.Patterns.Pi], [NF.Patterns.Lambda, NF.Patterns.Lambda], function* ([at, bt]) {
-			const domain = (binder: NF.Binder): NF.Value =>
-				match(binder)
-					.with({ type: "Psi" }, ({ annotation, requirement }) =>
-						requirement ? NF.Constructors.Modal(annotation, { quantity: Q.Many, liquid: requirement }) : annotation,
-					)
-					.otherwise(({ annotation }) => annotation);
-			const annotationA = domain(at.binder);
-			const annotationB = domain(bt.binder);
+			const annotationA = Binder.annotation(at.binder);
+			const annotationB = Binder.annotation(bt.binder);
 			const vcArg = yield* subtype(annotationB, annotationA);
 			const lvl = ctx.env.length;
 			const anf = yield* NF.apply(at.binder, at.closure, NF.Constructors.Rigid(lvl));

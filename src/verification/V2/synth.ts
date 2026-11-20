@@ -10,12 +10,12 @@ import { primopMapping } from "@yap/shared/lib/primitives";
 
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
-import type { SynthResult, VerificationArtefacts } from "./types";
+import { type SynthResult, type VerificationArtefacts } from "./types";
 import { reader, logger, state, State, obligations, supply, type Verification } from "./effects";
 import { noCapture } from "./utils/context";
 import { extractModalities, selfify } from "./utils/refinements";
-import { check } from "./check";
-import { functionBinder } from "./binders";
+import { ascribed, check, parameter } from "./check";
+import * as Binder from "./binders";
 import { formula, live, quantify, scope } from "./logic/translate";
 
 export const synth = function* (term: EB.Term): Verification<SynthResult> {
@@ -115,8 +115,9 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			};
 			return [NF.Constructors.Modal(nf, modalities), { vc: Build.true_() }] satisfies SynthResult;
 		})
-		.with(EB.CtorPatterns.Pi, function* () {
-			return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
+		.with(EB.CtorPatterns.Pi, EB.CtorPatterns.Phi, function* (term) {
+			const { vc } = yield* check(term, NF.Type);
+			return [NF.Type, { vc }] satisfies SynthResult;
 		})
 		.with(EB.CtorPatterns.Mu, function* () {
 			return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
@@ -135,12 +136,24 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 		.with(EB.CtorPatterns.Psi, function* ({ binding, body }) {
 			const requirement = binding.requirement && (yield* NF.evaluate(binding.requirement));
 			const binder = { type: "Psi", variable: binding.variable, annotation: NF.State, requirement } as const;
-			return yield* functionBinder(binder, { body });
+			const annotation = Binder.annotation(binder);
+			const name = yield* supply.freshFrom(binding.variable);
+			const [codomain, artefacts] = yield* scope(name, binder, annotation, synth(body));
+			const type = yield* match(yield* NF.view(codomain))
+				.with(NF.View.Sealed(NF.Patterns.Type), function* () {
+					return NF.Type;
+				})
+				.otherwise(function* () {
+					return NF.Constructors.Psi(binding.variable, requirement, yield* NF.closeVal(codomain));
+				});
+			return [type, { vc: yield* quantify(name, annotation, artefacts.vc) }] satisfies SynthResult;
 		})
 		.with(EB.CtorPatterns.Lambda, function* (tm) {
-			const annotation = yield* NF.evaluate(tm.binding.annotation);
-			const binder = { ...tm.binding, type: "Pi", annotation } as const;
-			return yield* functionBinder(binder, { body: tm.body });
+			const { variable, icit } = tm.binding;
+			const domain = icit === "Explicit" ? yield* parameter(tm.binding.annotation) : { value: yield* NF.evaluate(tm.binding.annotation), vc: Build.true_() };
+			const name = yield* supply.freshFrom(variable);
+			const [codomain, { vc }] = yield* scope(name, tm.binding, domain.value, synth(tm.body));
+			return [NF.Constructors.Pi(variable, icit, domain.value, yield* NF.closeVal(codomain)), { vc: Build.and(domain.vc, vc) }] satisfies SynthResult;
 		})
 		.with(EB.CtorPatterns.Variant, function* () {
 			return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
@@ -208,7 +221,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 						return [out, artefacts] satisfies SynthResult;
 					})
 					.with(NF.View.Sealed(NF.Patterns.Pi), function* ({ value: pi }) {
-						const { vc, nf } = yield* reader.local(_ => ctx, check(arg, pi.binder.annotation));
+						const checked = yield* reader.local(_ => ctx, check(arg, pi.binder.annotation));
 
 						const evaluatedArg = yield* reader.local(_ => ctx, NF.evaluate(arg));
 						// TODO: investigate observing through `view`. This tests for an opaque argument, which needs a sealed neutral
@@ -222,7 +235,10 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 							.otherwise(() => evaluatedArg);
 						const out = yield* NF.apply(pi.binder, pi.closure, appliedArg);
 
-						return [NF.Constructors.Exists(pi.binder.variable, nf ?? pi.binder.annotation, { value: out, ctx: localCtx }), { vc }] satisfies SynthResult;
+						return [
+							NF.Constructors.Exists(pi.binder.variable, checked.type?.value ?? pi.binder.annotation, { value: out, ctx: localCtx }),
+							{ vc: checked.vc },
+						] satisfies SynthResult;
 					})
 					.otherwise(function* () {
 						throw new Error("Function application expected a Pi type");
@@ -256,7 +272,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 				const name = yield* supply.freshFrom(current.variable);
 				const binder = { type: "Let", variable: current.variable } as const;
 				const artefacts = yield* scope(name, binder, current.annotation, check(current.value, current.annotation));
-				const retained = artefacts.nf ?? current.annotation;
+				const retained = artefacts.type?.value ?? current.annotation;
 				const [ty, restArtefacts] = yield* scope(name, binder, retained, recurse(rest));
 				const quantified = yield* quantify(name, retained, restArtefacts.vc);
 				const existential = NF.Constructors.Exists(current.variable, retained, { ctx: outer, value: ty });
@@ -404,7 +420,8 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 		.with({ type: "Ann" }, function* (tm) {
 			const ann = yield* NF.evaluate(tm.ann);
 			const artefacts = yield* check(tm.term, ann);
-			return [artefacts.contract ?? ann, artefacts] satisfies SynthResult;
+			const { value, vc } = yield* ascribed(ann, artefacts);
+			return [value, { vc }] satisfies SynthResult;
 		})
 		.with({ type: "Reset", handling: P.nonNullable }, function* ({ term, handling }) {
 			const [annotation, identityArtefacts] = yield* synth(handling.identity);

@@ -4,7 +4,7 @@ import * as Metas from "@yap/elaboration/shared/metas";
 import * as EB from "@yap/elaboration";
 import type * as NF from "@yap/elaboration/normalization";
 import type { IVL } from "../solver/ivl/types";
-import type { VerificationArtefacts, SynthResult, Obligation } from "./types";
+import type { Checked, SynthResult, Obligation } from "./types";
 import type { Err } from "./effects";
 import { run, type VerificationOptions } from "./effects";
 import { check } from "./check";
@@ -18,11 +18,11 @@ type Outcome<A> = {
 };
 
 export const VerificationServiceV2 = (options: VerificationOptions = {}) => ({
-	check: (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry): Outcome<VerificationArtefacts> => {
+	check: (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry): Outcome<Checked> => {
 		return run(ctx, registry, () => check(tm, ty), options);
 	},
 	/* Let bodies retain the self-binder introduced during elaboration. */
-	letdec: (variable: string, tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry): Outcome<VerificationArtefacts> => {
+	letdec: (variable: string, tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry): Outcome<Checked> => {
 		return run(EB.bind(ctx, { type: "Let", variable }, ty), registry, () => check(tm, ty), options);
 	},
 	synth: (tm: EB.Term, ctx: EB.Context, registry: Metas.Registry): Outcome<SynthResult> => {

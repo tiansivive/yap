@@ -51,7 +51,7 @@ const lambda = (lam: Lambda): M.Elaboration<EB.AST> =>
 		);
 		//yield* M.constrain({ type: "usage", expected: mty[1], computed: vu });
 
-		const hole = !lam.annotation && lam.icit === "Explicit" ? yield* Liquid.Predicate.hole(ty, NF.Constructors.Rigid(ctx.env.length - 1)) : undefined;
+		const hole = !lam.annotation && lam.icit === "Explicit" ? yield* Liquid.Predicate.hole(ty) : undefined;
 		const annotation = hole ? EB.Constructors.Modal(ann, { quantity: Q.Many, liquid: hole }) : ann;
 		const domain = hole ? NF.Constructors.Modal(ty, { quantity: Q.Many, liquid: yield* NF.normalize(hole) }) : ty;
 		const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm, annotation);

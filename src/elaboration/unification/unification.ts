@@ -8,6 +8,7 @@ import * as Eff from "@yap/utils/effects";
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
+import * as Nullable from "@yap/utils/Nullable";
 import * as NF from "@yap/elaboration/normalization";
 import * as Sub from "./substitution";
 import { Subst } from "./substitution";
@@ -38,11 +39,11 @@ export type Unification<A> = Eff.Eff<
  * lazily, on demand. The overlay never commits — a failing unification leaves
  * the registry untouched; sound to discard since force's row is Registry.get.
  */
-const zonk = function* (value: NF.Value): Unification<NF.Value> {
+const zonk = function* (value: NF.Value, observe = NF.force): Unification<NF.Value> {
 	const subst = yield* Sub.subst.get();
 	const registry = yield* Metas.registry.get();
 
-	const [forced] = yield* Eff.with([Metas.registry.handlers(Metas.withSolutions(registry, subst))], () => NF.force(value));
+	const [forced] = yield* Eff.with([Metas.registry.handlers(Metas.withSolutions(registry, subst))], () => observe(value));
 
 	return forced;
 };
@@ -144,7 +145,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 				([pi1, pi2]) => pi1.binder.icit === pi2.binder.icit,
 				function* ([pi1, pi2]) {
 					/* The domain predicate belongs to the function contract and can mention its call state. Solve its structural type before opening the body. */
-					yield* unify(yield* domain(pi1.binder.annotation), yield* domain(pi2.binder.annotation), lvl);
+					yield* unify(yield* zonk(pi1.binder.annotation, NF.bare), yield* zonk(pi2.binder.annotation, NF.bare), lvl);
 					const body1 = yield* NF.apply(pi1.binder, pi1.closure, NF.Constructors.Rigid(lvl));
 					const body2 = yield* NF.apply(pi2.binder, pi2.closure, NF.Constructors.Rigid(lvl));
 					yield* unify(body1, body2, lvl + 1);
@@ -391,14 +392,6 @@ const speculate = function* (left: NF.Value, right: NF.Value, lvl: number): Unif
 	return !Eff.failed(outcome) && Object.keys(after).every(key => key in ambient);
 };
 
-/** A domain meta can already have a refined solution in the current substitution. */
-const domain = function* (annotation: NF.Value): Unification<NF.Value> {
-	const forced = yield* zonk(annotation);
-	return yield* match(NF.unwrapNeutral(forced))
-		.with(NF.Patterns.Modal, ({ value }) => domain(value))
-		.otherwise(() => M.of(forced));
-};
-
 type Meta = Extract<EB.Variable, { type: "Meta" }>;
 
 /** A single binding for v, occurs-checked; the caller composes it into the accumulator. */
@@ -439,7 +432,7 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 			.with(NF.Patterns.Match, ({ closure, scrutinee }) => check(scrutinee) || inTerm(closure.term))
 			.with(NF.Patterns.Inj, ({ base, injected }) => check(base) || check(injected))
 			.with(NF.Patterns.Lambda, ({ closure }) => inTerm(closure.term))
-			.with(NF.Patterns.Psi, ({ binder, closure }) => (binder.requirement !== undefined && check(binder.requirement)) || inTerm(closure.term))
+			.with(NF.Patterns.Psi, ({ binder, closure }) => (Nullable.map(binder.requirement, check) ?? false) || inTerm(closure.term))
 			.with(NF.Patterns.Phi, ({ binder, closure }) => check(binder.annotation) || inTerm(closure.term))
 			.with(NF.Patterns.Pi, ({ closure }) => inTerm(closure.term))
 			.with(NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, ({ closure }) => inTerm(closure.term))
@@ -470,7 +463,7 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 
 				return _.isEqual(variable, v);
 			})
-			.with(EB.CtorPatterns.Psi, ({ binding, body }) => (binding.requirement !== undefined && inTerm(binding.requirement)) || inTerm(body))
+			.with(EB.CtorPatterns.Psi, ({ binding, body }) => (Nullable.map(binding.requirement, inTerm) ?? false) || inTerm(body))
 			.with({ type: "Abs" }, ({ binding, body }) => inTerm(binding.annotation) || inTerm(body))
 			.with({ type: "App" }, ({ func, arg }) => inTerm(func) || inTerm(arg))
 			.with({ type: "Ann" }, ({ term }) => inTerm(term))

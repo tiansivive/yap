@@ -304,6 +304,7 @@ export const Patterns = {
 	StuckInj: { type: "Neutral", kind: "Blocked", value: { type: "Inj" } } as const,
 
 	App: { type: "App" } as const,
+	FunctionType: { type: "Abs", binder: { type: P.union("Pi", "Psi", "Phi") } } as const,
 	Psi: { type: "Abs", binder: { type: "Psi" } } as const,
 	Phi: { type: "Abs", binder: { type: "Phi" } } as const,
 	Pi: { type: "Abs", binder: { type: "Pi" } } as const,

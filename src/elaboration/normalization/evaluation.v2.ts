@@ -1087,24 +1087,22 @@ export const schedule = {
 	 */
 	*combine(domain: NF.Value, a: Modal.Annotations<NF.Value>, b: Modal.Annotations<NF.Value>): Evaluation<Machine<Modal.Annotations<NF.Value>>> {
 		const quantity = Q.SR.mul(a.quantity, b.quantity);
-		if (!a.liquid || !b.liquid) {
-			return yield* result({ quantity, liquid: a.liquid ?? b.liquid });
-		}
-		const left = a.liquid;
-		const right = b.liquid;
-		const ctx = yield* NbE.Env.ask();
-		const lvl = ctx.env.length;
-		const value = NF.Constructors.Rigid(lvl);
-
-		return yield* Do.let("anf", () => schedule.reduce(left, value, "Explicit"))
-			.let("bnf", () => schedule.reduce(right, value, "Explicit"))
-			.bind("term", ({ anf, bnf }) => schedule.quote(lvl + 1, DSL.Binop.and(anf, bnf)))
-			.in(({ term }) =>
-				result({
-					quantity,
-					liquid: NF.Constructors.Lambda("v", "Explicit", NF.Constructors.Closure(ctx, term), domain),
-				}),
-			);
+		return yield* match([a, b])
+			.with([{ liquid: P.nonNullable }, { liquid: P.nonNullable }], function* ([a, b]) {
+				const ctx = yield* NbE.Env.ask();
+				const lvl = ctx.env.length;
+				const value = NF.Constructors.Rigid(lvl);
+				return yield* Do.let("anf", () => schedule.reduce(a.liquid, value, "Explicit"))
+					.let("bnf", () => schedule.reduce(b.liquid, value, "Explicit"))
+					.bind("term", ({ anf, bnf }) => schedule.quote(lvl + 1, DSL.Binop.and(anf, bnf)))
+					.in(({ term }) =>
+						result({
+							quantity,
+							liquid: NF.Constructors.Lambda("v", "Explicit", NF.Constructors.Closure(ctx, term), domain),
+						}),
+					);
+			})
+			.otherwise(() => result({ quantity, liquid: a.liquid ?? b.liquid }));
 	},
 
 	/**
@@ -1268,6 +1266,7 @@ export function* view(value: NF.Value): Evaluation<View> {
  * Sealed protects a concrete value, and under either sits the value itself. Blocked
  * stays — it is the only thing distinguishing a suspended elimination from a
  * reducible one, so consumers match it through the Stuck* patterns.
+ * @deprecated Observe semantic values with force or view.
  */
 export const unwrapNeutral = (value: NF.Value): NF.Value => {
 	return match(value)

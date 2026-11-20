@@ -2,11 +2,12 @@ import type * as NF from "@yap/elaboration/normalization";
 import type { IVL } from "../solver/ivl/types";
 import type { Verification } from "./effects";
 
-export type VerificationArtefacts = {
-	vc: IVL.Formula;
-	nf?: NF.Value;
-	/** Expected function type with the callback contracts used to check its body. */
-	contract?: NF.Value;
+export type VerificationArtefacts = { vc: IVL.Formula };
+
+export type Checked = VerificationArtefacts & {
+	/** Normal form of a type checked against the universe. */
+	value?: NF.Value;
+	type?: { source: "checking" | "synthesis"; value: NF.Value };
 };
 
 export type SynthResult = [NF.Value, VerificationArtefacts];

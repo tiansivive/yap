@@ -28,12 +28,8 @@ export const selfify = function* (tm: EB.Term, ty: NF.Value): Verification<NF.Va
 
 	return yield* match(yield* NF.view(ty))
 		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: modal }) {
-			const liquid = NF.Constructors.Lambda(
-				"v",
-				"Explicit",
-				NF.Constructors.Closure(ctx, modal.modalities.liquid ? EB.DSL.and(yield* body(modal.modalities.liquid), self) : self),
-				modal.value,
-			);
+			const predicate = modal.modalities.liquid ? EB.DSL.and(yield* body(modal.modalities.liquid), self) : self;
+			const liquid = NF.Constructors.Lambda("v", "Explicit", NF.Constructors.Closure(ctx, predicate), modal.value);
 			return NF.Constructors.Modal(modal.value, { quantity: modal.modalities.quantity, liquid });
 		})
 		.otherwise(function* () {

@@ -20,19 +20,16 @@ const fresh = () => {
 type Inference<A> = Eff.Eff<Eff.Actions<typeof M.reader | typeof M.supply | typeof Metas.registry>, A>;
 
 type Predicate = {
-	hole: (domain: NF.Value, psiState?: NF.Value) => Inference<EB.Term>;
+	hole: (domain: NF.Value) => Inference<EB.Term>;
 	Kind: (arg: NF.Value) => Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Actions<typeof Metas.registry>, NF.Value>;
 	Neutral: (ann: EB.Term) => EB.Term;
 	NeutralNF: (ann: NF.Value, ctx: EB.Context) => NF.Value;
 };
 
 export const Predicate: Predicate = {
-	hole: function* (domain, psiState) {
-		const lvl = (yield* M.reader.ask()).env.length;
-		const unary = yield* Predicate.Kind(domain);
-		const kind = psiState ? NF.Constructors.Pi("s", "Explicit", NF.State, yield* NF.closeVal(unary)) : unary;
-		const meta = EB.Constructors.Var(yield* Metas.fresh(lvl, kind, "Predicate"));
-		return psiState ? EB.Constructors.App("Explicit", meta, yield* NF.quote(lvl, psiState)) : meta;
+	hole: function* (domain) {
+		const ctx = yield* M.reader.ask();
+		return EB.Constructors.Var(yield* Metas.fresh(ctx.env.length, yield* Predicate.Kind(domain), "Predicate"));
 	},
 	Kind: function* (arg: NF.Value) {
 		const closure = yield* NF.closeVal(NF.Constructors.Lit(Lit.Atom("Bool")));
