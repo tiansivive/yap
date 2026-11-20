@@ -1,5 +1,4 @@
 import { match, P } from "ts-pattern";
-import assert from "assert";
 
 import * as Eff from "@yap/utils/effects";
 
@@ -476,15 +475,13 @@ export const quantify = function* (name: string, annotation: NF.Value, vc: IVL.F
 		})
 		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: { modalities } }) {
 			const sort = yield* mkSort(annotation);
-			assert(modalities.liquid.type === "Abs", "Liquid refinements must be unary functions");
-			const { binder, closure } = modalities.liquid;
 			const value = NF.Constructors.Rigid(ctx.env.length);
 			const phi = yield* scope(
 				name,
 				{ type: "Pi", variable: name },
 				annotation,
 				(function* () {
-					const applied = yield* NF.apply(binder, closure, value);
+					const applied = yield* NF.reduce(modalities.liquid, value, "Explicit");
 					return yield* formula(applied);
 				})(),
 			);

@@ -1,4 +1,3 @@
-import assert from "assert";
 import { match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
@@ -139,7 +138,6 @@ export const isFirstOrder = function* (ty: NF.Value): Verification<boolean> {
 };
 
 const body = function* (liquid: NF.Value): Verification<EB.Term> {
-	assert(liquid.type === "Abs" && liquid.binder.type === "Lambda", "Liquid refinement must be a lambda");
 	const lvl = (yield* reader.ask()).env.length;
-	return yield* NF.quote(lvl + 1, yield* NF.apply(liquid.binder, liquid.closure, NF.Constructors.Rigid(lvl)));
+	return yield* NF.quote(lvl + 1, yield* NF.reduce(liquid, NF.Constructors.Rigid(lvl), "Explicit"));
 };

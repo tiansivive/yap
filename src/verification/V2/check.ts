@@ -72,13 +72,8 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 								return artefacts;
 							}
 
-							const liq = modalities.liquid;
-							assert(liq.type === "Abs", "Liquid refinement must be unary");
-
 							const sort = yield* mkSort(annotation);
-
-							const lvl = ctx.env.length;
-							const applied = yield* NF.apply(liq.binder, liq.closure, NF.Constructors.Rigid(lvl));
+							const applied = yield* NF.reduce(modalities.liquid, NF.Constructors.Rigid(ctx.env.length), "Explicit");
 							const phi = yield* formula(applied);
 							const imp = yield* obligations.record("check.abs.quantification", Build.forall([{ name, sort }], Build.implies(phi, artefacts.vc)), {
 								type: p(() => NF.display(type)),

@@ -11,6 +11,7 @@ import { elaborateModule } from "../../elaboration/__tests__/module";
 import { VerificationServiceV2 } from "../V2/service";
 import { reader, run, state, State } from "../V2/effects";
 import { live, scope, term } from "../V2/logic/translate";
+import { selfify } from "../V2/utils/refinements";
 import { Build } from "../solver/ivl/build";
 import { Validity } from "../validity";
 
@@ -32,6 +33,38 @@ beforeEach(() => {
 });
 
 describe("Psi verification", () => {
+	it.each([
+		["x", "valid"],
+		["0", "invalid"],
+	] as const)("applies the state and input predicates to their binders when returning %s", (body, expected) => {
+		const predicate = (domain: EB.Term) => normalize(C.Pi("v", "Explicit", domain, D.type("Bool")));
+		const outer = EB.bind(mkCtx(), { type: "Pi", variable: "q" }, predicate(EB.State));
+		const ctx = EB.bind(outer, { type: "Pi", variable: "p" }, predicate(num));
+		const stateRequirement = D.bound(1);
+		const refinedBy = (index: number) => C.Modal(num, { quantity: Q.Many, liquid: D.bound(index) });
+		const type = normalize(C.Psi("s", stateRequirement, C.Pi("x", "Explicit", refinedBy(1), refinedBy(2))), ctx);
+		const core = C.Psi("s", stateRequirement, C.Lambda("x", "Explicit", body === "x" ? D.bound(0) : D.num(0), refinedBy(1)));
+		const { answer } = VerificationServiceV2().check(core, type, ctx, Metas.empty);
+		assert(!Eff.failed(answer));
+		expect(Validity.check(answer.vc).tag).toBe(expected);
+	});
+
+	it("preserves an open input predicate when selfifying a value", () => {
+		const ctx = mkCtx();
+		const registry = Metas.register(Metas.empty, { kind: "Predicate", meta, annotation: normalize(C.Pi("v", "Explicit", num, D.type("Bool"))) });
+		const { answer, registry: verified } = run(ctx, registry, function* () {
+			const domain = yield* NF.evaluate(C.Modal(num, { quantity: Q.Many, liquid: C.Var(meta) }));
+			const refined = yield* selfify(D.num(3), domain);
+			assert(refined.type === "Modal");
+			const applied = yield* NF.reduce(refined.modalities.liquid, yield* NF.evaluate(D.num(7)), "Explicit");
+			return yield* NF.quote(ctx.env.length, applied);
+		});
+		expect(answer).toMatchObject({
+			statements: [{ value: { type: "App", icit: "Explicit", func: { variable: meta }, arg: { value: { type: "Num", value: 7 } } } }],
+		});
+		expect(Metas.solution(verified, meta.val)).toBeUndefined();
+	});
+
 	it.each([
 		[false, "valid"],
 		[true, "invalid"],

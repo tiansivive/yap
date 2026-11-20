@@ -228,10 +228,7 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			const sort = yield* mkSort(annotationB);
 
 			const modalities = yield* extractModalities(annotationB, ctx);
-			if (modalities.liquid.type !== "Abs") {
-				throw new Error("Liquid refinement must be a unary function");
-			}
-			const applied = yield* NF.apply(modalities.liquid.binder, modalities.liquid.closure, NF.Constructors.Rigid(lvl));
+			const applied = yield* NF.reduce(modalities.liquid, NF.Constructors.Rigid(lvl), "Explicit");
 			const phiX = yield* scope(name, bt.binder, annotationB, formula(applied));
 
 			const guarded = yield* obligations.record("subtype.pi.body", Build.forall([{ name, sort }], Build.implies(phiX, vcBody)), {
@@ -259,21 +256,19 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 
 			const pAt = at.modalities.liquid;
 			const pBt = bt.modalities.liquid;
-			if (pAt.type !== "Abs" || pBt.type !== "Abs") {
-				throw new Error("Liquid refinements must be unary functions");
-			}
-
-			const lvl = ctx.env.length;
+			const value = NF.Constructors.Rigid(ctx.env.length);
 
 			const sort = yield* mkSort(at.value);
-			const name = yield* supply.freshFrom(pAt.binder.variable);
+			const name = yield* match(pAt)
+				.with(NF.Patterns.Lambda, ({ binder }) => supply.freshFrom(binder.variable))
+				.otherwise(() => supply.fresh());
 			const [phiAt, phiBt] = yield* scope(
 				name,
 				{ type: "Pi", variable: name },
 				at.value,
 				(function* (): Verification<[IVL.Formula, IVL.Formula]> {
-					const appliedAt = yield* NF.apply(pAt.binder, pAt.closure, NF.Constructors.Rigid(lvl));
-					const appliedBt = yield* NF.apply(pBt.binder, pBt.closure, NF.Constructors.Rigid(lvl));
+					const appliedAt = yield* NF.reduce(pAt, value, "Explicit");
+					const appliedBt = yield* NF.reduce(pBt, value, "Explicit");
 					return [yield* formula(appliedAt), yield* formula(appliedBt)];
 				})(),
 			);
