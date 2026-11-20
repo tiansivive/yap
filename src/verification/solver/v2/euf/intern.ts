@@ -59,8 +59,8 @@ export const Intern = {
 				return Intern.raw(selected.state, "select", [source.id, selected.id], sort);
 			})
 			.with(Patterns.Term.Row, ({ sort }) => Intern.raw(state, "row", [], sort))
-			.with(Patterns.Term.Prop, () => {
-				throw new Error("Formula normalization must eliminate Prop before term interning");
+			.with(Patterns.Term.Prop, Patterns.Term.Hole, term => {
+				throw new Error(`Formula normalization must eliminate ${term.tag} before term interning`);
 			})
 			.exhaustive(),
 

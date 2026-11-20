@@ -25,6 +25,7 @@ import {
 	PrimOps,
 } from "@yap/shared/lib/primitives";
 
+import { Patterns } from "../../solver/ivl/patterns";
 import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
 import { reader, obligations, names, state, State, definitions, supply, type Verification } from "../effects";
@@ -149,8 +150,20 @@ export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
 		});
 };
 
-const getFnSorts = function* (nf: NF.Value): Verification<{ head: IVL.Term; ret: IVL.Sort }> {
-	const ctx = yield* reader.ask();
+const hole = function* (term: NF.Value, head: EB.Meta[]): Verification<IVL.Hole> {
+	return { tag: "Hole", term, head, scope: { ctx: yield* reader.ask(), names: yield* names.ask(), definitions: yield* definitions.ask() } };
+};
+
+export const force = ({ term: value, scope }: IVL.Hole): Verification<IVL.Term> =>
+	reader.local(
+		() => scope.ctx,
+		names.local(
+			() => scope.names,
+			definitions.local(() => scope.definitions, term(value)),
+		),
+	);
+
+const application = function* (nf: NF.Value): Verification<IVL.Term> {
 	const { value } = yield* NF.view(nf);
 	return yield* match(value)
 		.with(
@@ -159,78 +172,59 @@ const getFnSorts = function* (nf: NF.Value): Verification<{ head: IVL.Term; ret:
 			function* ({ assumptions, body }) {
 				return yield* definitions.local(
 					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
-					getFnSorts(body.value),
+					application(body.value),
 				);
 			},
 		)
-		.with(NF.Patterns.App, ({ func }) => getFnSorts(func))
+		.with(NF.Patterns.App, function* ({ func, arg }) {
+			const fn = yield* application(func);
+			return yield* match(fn)
+				.with(Patterns.Term.Hole, f => hole(nf, f.head))
+				.with({ sort: P.select() }, function* (sort) {
+					const input = yield* term(arg);
+					return yield* match(input)
+						.with(Patterns.Term.Hole, x => hole(nf, x.head))
+						.otherwise(function* (x) {
+							return Build.select(fn, x, sort.tag === "Fn" ? sort.ret : sort);
+						});
+				})
+				.otherwise(function* () {
+					throw new Error("Expected a logical function");
+				});
+		})
 		.with(NF.Patterns.Rigid, function* ({ variable }) {
-			const env = yield* definitions.ask();
-			const definition = env.get(variable.lvl);
-			if (!definition) {
-				const sort = yield* mkSort(ctx.env[EB.lvl2idx(ctx, variable.lvl)].type[2]);
-				const ret = match(sort)
-					.with({ tag: "Fn" }, ({ ret }) => ret)
-					.otherwise(sort => sort);
-				return { head: Build.var_(nameAt(yield* names.ask(), variable.lvl), sort), ret };
-			}
-			return yield* getFnSorts(definition);
+			const definition = (yield* definitions.ask()).get(variable.lvl);
+			return yield* definition ? application(definition) : term(nf);
 		})
 		.with(NF.Patterns.Free, NF.Patterns.Foreign, function* ({ variable }) {
 			const symbol = match(variable)
 				.with({ type: "Free" }, ({ name }) => name)
 				.with({ type: "Foreign" }, ({ name }) => {
 					if (!(name in PrimOps)) {
-						throw new Error("Foreign variable not supported in logical formulas");
+						throw new Error(`Foreign function "${name}" is unsupported in logical formulas`);
 					}
 					return primopMapping[name];
 				})
 				.exhaustive();
-			const sort = yield* mkSort(ctx.imports[symbol][1]);
-			const ret = match(sort)
-				.with({ tag: "Fn" }, ({ ret }) => ret)
-				.otherwise(sort => sort);
-			return { head: Build.const_(variable.name, sort), ret };
+			const ctx = yield* reader.ask();
+			return Build.const_(variable.name, yield* mkSort(ctx.imports[symbol][1]));
 		})
-		.with(NF.Patterns.Var, function* () {
-			throw new Error("Unsupported variable type in getFnSorts");
-		})
-		.with(NF.Patterns.External, function* (e) {
-			throw new Error(`getType reached External "${e.name}" — this node should be handled before getFnSorts`);
-		})
-		.otherwise(function* () {
-			throw new Error("Not a function");
-		});
-};
-
-const collectArgs = function* (nf: NF.Value): Verification<IVL.Term[]> {
-	const { value } = yield* NF.view(nf);
-	return yield* match(value)
-		.with(
-			NF.Patterns.Existential,
-			ex => ex.assumptions.size > 0,
-			function* ({ assumptions, body }) {
-				return yield* definitions.local(
-					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
-					collectArgs(body.value),
-				);
-			},
-		)
-		.with(NF.Patterns.App, function* ({ func, arg }) {
-			const head = yield* collectArgs(func);
-			const translated = yield* term(arg);
-			return [...head, translated];
-		})
-		.with(NF.Patterns.Rigid, function* ({ variable }) {
-			const env = yield* definitions.ask();
-			const definition = env.get(variable.lvl);
-			if (!definition) {
-				return [];
+		.with(NF.Patterns.Flex, function* ({ variable }) {
+			const head = yield* term(nf);
+			if (head.tag === "Hole") {
+				return head;
 			}
-			return yield* collectArgs(definition);
+			const entry = Metas.lookup(yield* Metas.registry.get(), variable.val);
+			throw new Error(`Expected a predicate in function position, found ${entry?.kind ?? "unregistered"} meta ?${variable.val}`);
 		})
-		.otherwise(function* (): Verification<IVL.Term[]> {
-			return [];
+		.with(NF.Patterns.External, function* ({ name }) {
+			throw new Error(`External "${name}" requires external translation before its use as a logical function head`);
+		})
+		.with(NF.Patterns.Label, NF.Patterns.DepLabel, NF.Patterns.NuLabel, function* ({ variable }) {
+			throw new Error(`Unsupported ${variable.type} variable "${variable.name}" in logical function position`);
+		})
+		.otherwise(function* (value) {
+			throw new Error(`Expected a logical function, found ${value.type}`);
 		});
 };
 
@@ -276,15 +270,7 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 			const sort = yield* mkSort(NF.State);
 			return Build.app(State.heads.insert, [current, identity], sort);
 		})
-		.with(NF.Patterns.App, function* (fn) {
-			const { head, ret } = yield* getFnSorts(fn);
-			const args = yield* collectArgs(fn);
-
-			if (args.length === 0) {
-				return head;
-			}
-			return Build.select(head, args[0], ret);
-		})
+		.with(NF.Patterns.App, () => application(nf))
 		.with(NF.Patterns.DepLabel, function* ({ variable }) {
 			return Build.const_(`&${variable.lvl}.${variable.name}`, yield* mkSort(variable.annotation));
 		})
@@ -313,6 +299,10 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 				return yield* term(evaluated);
 			}
 			if (v.variable.type === "Meta") {
+				const entry = Metas.lookup(yield* Metas.registry.get(), v.variable.val);
+				if (entry?.kind === "Predicate") {
+					return yield* hole(nf, [entry.meta]);
+				}
 				return Build.const_(`?${v.variable.val}`, Build.uninterpreted("Any"));
 			}
 			if (v.variable.type === "Label") {

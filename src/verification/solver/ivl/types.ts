@@ -1,3 +1,6 @@
+import type * as EB from "@yap/elaboration";
+import type * as NF from "@yap/elaboration/normalization";
+
 export namespace IVL {
 	export type Sort =
 		| { tag: "Bool" }
@@ -11,7 +14,15 @@ export namespace IVL {
 
 	export type RowTerm = { tag: "Empty" } | { tag: "Extend"; label: string; value: Term; rest: RowTerm } | { tag: "Var"; name: string };
 
+	export type Hole = {
+		tag: "Hole";
+		term: NF.Value;
+		head: EB.Meta[];
+		scope: { ctx: EB.Context; names: ReadonlyMap<number, string>; definitions: ReadonlyMap<number, NF.Value> };
+	};
+
 	export type Term =
+		| Hole
 		| { tag: "Var"; name: string; sort: Sort }
 		| { tag: "Const"; name: string; sort: Sort }
 		| { tag: "Num"; value: string; sort: NumSort }
