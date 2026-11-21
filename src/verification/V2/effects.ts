@@ -7,6 +7,7 @@ import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import { getMonoid, partitionMap } from "fp-ts/Array";
 import * as E from "fp-ts/Either";
+import { identity, pipe } from "fp-ts/function";
 import * as Horn from "../horn";
 import { Patterns } from "../solver/ivl/patterns";
 import type { IVL } from "../solver/ivl/types";
@@ -176,12 +177,14 @@ const constraints = Eff.writer(getMonoid<Horn.Constraint>());
 
 export type Hypothesis = { binder: IVL.Binder; premise?: IVL.Formula };
 
+const Assumed = { ...Horn.Positive, args: [{ ...Patterns.Term.Hole, spine: P.array(Patterns.Term.Var) }, Horn.Positive.args[1]] } as const;
+
 const classify = (premise: IVL.Formula): E.Either<IVL.Formula, Horn.Assumption> =>
-	match(premise)
-		.with(Horn.Positive, ({ args: [{ kappa, spine }] }) =>
-			spine.every(t => isMatching(Patterns.Term.Var, t)) ? E.right({ kappa, params: spine.map(({ name, sort }) => ({ name, sort })) }) : E.left(premise),
-		)
-		.otherwise(E.left);
+	pipe(
+		premise,
+		E.fromPredicate((p: IVL.Formula): p is P.narrow<IVL.Formula, typeof Assumed> => isMatching(Assumed, p), identity),
+		E.map(({ args: [{ kappa, spine }] }) => ({ kappa, params: spine.map(({ name, sort }) => ({ name, sort })) })),
+	);
 
 export const VC = {
 	extend:
