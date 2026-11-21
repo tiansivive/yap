@@ -69,7 +69,12 @@ describe("Open predicate translation", () => {
 		const { tm, ty, ctx, registry } = declaration.elaborated;
 		const { answer } = VerificationServiceV2().letdec("twice", tm, ty, ctx, registry);
 		assert(!Eff.failed(answer) && answer.vc.tag === "Forall" && answer.vc.body.tag === "And");
+		const state = answer.vc.binders[0];
 		const uses = answer.vc.body.values.flatMap(clause => {
+			if (clause.tag === "Atom") {
+				expect(clause.args[0]).toMatchObject({ tag: "Hole", spine: [{ tag: "Var", name: state.name }] });
+				return [];
+			}
 			assert(clause.tag === "Forall" && clause.body.tag === "Implies");
 			const { left, right } = clause.body;
 			assert(left.tag === "Atom" && right.tag === "Atom");

@@ -8,6 +8,7 @@ import type { IVL } from "../solver/ivl/types";
 import type { VerificationArtefacts, SynthResult, Obligation } from "./types";
 import type { Err } from "./effects";
 import { run, type VerificationOptions } from "./effects";
+import { binding } from "./binding";
 import { check } from "./check";
 import { synth } from "./synth";
 import { subtype } from "./subtype";
@@ -25,7 +26,7 @@ export const VerificationServiceV2 = (options: VerificationOptions = {}) => ({
 	},
 	/* Let bodies retain the self-binder introduced during elaboration. */
 	letdec: (variable: string, tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry): Outcome<VerificationArtefacts> => {
-		return run(EB.bind(ctx, { type: "Let", variable }, ty), registry, () => check(tm, ty), options);
+		return run(EB.bind(ctx, { type: "Let", variable }, ty), registry, () => binding(tm, ty, "declaration"), options);
 	},
 	synth: (tm: EB.Term, ctx: EB.Context, registry: Metas.Registry): Outcome<SynthResult> => {
 		return run(ctx, registry, () => synth(tm), options);

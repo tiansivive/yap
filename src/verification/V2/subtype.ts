@@ -12,7 +12,7 @@ import { Liquid } from "../modalities";
 import { wrapPsiRequirement, extractModalities, isFirstOrder } from "./utils/refinements";
 import { noCapture, withRowLabels } from "./utils/context";
 import { reader, fail, logger, obligations, supply, hypotheses, VC, type Verification } from "./effects";
-import { mkSort, formula, bindings, quantify, scope } from "./logic/translate";
+import { mkSort, predicate, bindings, quantify, scope } from "./logic/translate";
 
 export const subtype = function* (left: NF.Value, right: NF.Value): Verification<IVL.Formula> {
 	const ctx = yield* reader.ask();
@@ -226,11 +226,11 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 
 			const modalities = yield* extractModalities(annotationB, ctx);
 			const applied = yield* NF.reduce(modalities.liquid, NF.Constructors.Rigid(lvl), "Explicit");
-			const phiX = yield* scope(name, bt.binder, annotationB, formula(applied));
+			const phiX = yield* scope(name, bt.binder, annotationB, predicate(applied));
 
 			const binder = { name, sort };
-			const vcBody = yield* hypotheses.local(VC.extend({ binder, premise: phiX }), body);
-			const guarded = yield* obligations.record("subtype.pi.body", Build.forall([binder], Build.implies(phiX, vcBody)), {
+			const vcBody = yield* hypotheses.local(VC.extend({ binder, ...phiX }), body);
+			const guarded = yield* obligations.record("subtype.pi.body", Build.forall([binder], Build.implies(phiX.premise, vcBody)), {
 				type: `${display(() => NF.display(at))} <: ${display(() => NF.display(bt))}`,
 				description: `Function result must be subtype under parameter ${bt.binder.variable} assumption`,
 			});
@@ -269,15 +269,15 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 				name,
 				{ type: "Pi", variable: name },
 				at.value,
-				(function* (): Verification<[IVL.Formula, IVL.Formula]> {
+				(function* () {
 					const appliedAt = yield* NF.reduce(pAt, value, "Explicit");
 					const appliedBt = yield* NF.reduce(pBt, value, "Explicit");
-					return [yield* formula(appliedAt), yield* formula(appliedBt)];
+					return [yield* predicate(appliedAt), yield* predicate(appliedBt)] as const;
 				})(),
 			);
 			const binder = { name, sort };
-			const required = yield* hypotheses.local(VC.extend({ binder, premise: phiAt }), VC.require(phiBt));
-			const forall = Build.forall([binder], Build.implies(phiAt, required));
+			const required = yield* hypotheses.local(VC.extend({ binder, ...phiAt }), VC.require(phiBt.premise, phiBt.parts));
+			const forall = Build.forall([binder], Build.implies(phiAt.premise, required));
 			return Build.and(baseVc, forall);
 		})
 		.with([{ type: "Modal" }, P._], function* ([at, bt]) {

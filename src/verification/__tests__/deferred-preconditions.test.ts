@@ -1,11 +1,13 @@
 import assert from "node:assert";
 import { describe, expect, it } from "vitest";
+import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Metas from "@yap/elaboration/shared/metas";
 import { defaultContext } from "@yap/shared/lib/constants";
 import * as Eff from "@yap/utils/effects";
 import { elaborateModule } from "../../elaboration/__tests__/module";
 import { hypotheses, run, VC } from "../V2/effects";
+import { solution } from "../V2/binding";
 import { VerificationServiceV2 } from "../V2/service";
 import * as Horn from "../horn";
 import { Build, DSL } from "../solver/ivl";
@@ -76,5 +78,52 @@ describe("Deferred verification constraints", () => {
 		});
 		expect(inferred.find(p => p.params[0]?.sort.tag === "String")?.body).toEqual(Build.true_());
 		expect(assignment.size).toBe(2);
+	});
+});
+
+describe("Publishing local predicate solutions", () => {
+	it.each([
+		["Fetch", "valid"],
+		["Tell", "invalid"],
+		[undefined, "invalid"],
+	] as const)("checks relay against the installed identity %s", (effect, expected) => {
+		const block = String.raw`{ let relay = \key -> fetch key; return relay "foo"; }`;
+		const expression = effect ? String.raw`with ${effect}: (\p k -> k 3) in ${block}` : block;
+		const module = elaborateModule(String.raw`
+foreign Fetch: Effect String (Num [| \v -> true |]);
+foreign Tell: Effect String (Num [| \v -> true |]);
+let fetch: (st |- key: String [| \v -> live st Fetch |]) -> Num = \key -> suspend @Fetch key;
+let result = ${expression};
+`);
+		const declaration = module.declarations.find(d => d.name === "result");
+		assert(declaration?.elaborated, declaration?.error);
+		const { tm, ty, ctx, registry } = declaration.elaborated;
+		const { answer, constraints } = VerificationServiceV2().letdec("result", tm, ty, ctx, registry);
+		assert(!Eff.failed(answer));
+		expect(Validity.check(answer.vc, Horn.solve(constraints)).tag).toBe(expected);
+	});
+
+	it("abstracts the selected binder by level and rejects its shadow", () => {
+		const binder = { type: "Pi", variable: "x" } as const;
+		const ctx = EB.bind(EB.bind(defaultContext, binder, NF.Constructors.Atom("Bool")), binder, NF.Constructors.Atom("Bool"));
+		const params = [{ name: "x!0", sort: Build.Bool }];
+		const names = new Map([
+			[0, "x!0"],
+			[1, "x!1"],
+		]);
+		const quoted = (level: number) =>
+			run(defaultContext, Metas.empty, function* () {
+				const term = yield* solution(
+					{
+						params,
+						body: Build.atom("=", Build.var_("x!0", Build.Bool), Build.bool(true)),
+						parts: [{ params, guards: [], goal: { value: NF.Constructors.Rigid(level), names, ctx } }],
+					},
+					{ meta: EB.Meta(0, 0), annotation: yield* NF.evaluate(EB.Constructors.Pi("x", "Explicit", EB.DSL.type("Bool"), EB.DSL.type("Bool"))) },
+				);
+				return term && (yield* NF.quote(0, term));
+			}).answer;
+		expect(quoted(0)).toMatchObject({ type: "Abs", body: { type: "Var", variable: { type: "Bound", index: 0 } } });
+		expect(quoted(1)).toBeUndefined();
 	});
 });

@@ -1,21 +1,23 @@
 import { match, P } from "ts-pattern";
 import assert from "node:assert";
+import * as Eff from "@yap/utils/effects";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as Row from "@yap/shared/rows";
 import * as Q from "@yap/shared/modalities/multiplicity";
-import { primopMapping } from "@yap/shared/lib/primitives";
+import { OP_LIVE, PrimOps, primopMapping } from "@yap/shared/lib/primitives";
 
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
-import type { SynthResult, VerificationArtefacts } from "./types";
+import type { SynthResult } from "./types";
 import { reader, logger, state, State, obligations, supply, hypotheses, VC, type Verification } from "./effects";
 import { noCapture } from "./utils/context";
 import { wrapPsiRequirement, extractModalities, selfify } from "./utils/refinements";
+import { binding } from "./binding";
 import { check } from "./check";
-import { formula, live, bindings, quantify, scope } from "./logic/translate";
+import { requirePredicate, bindings, quantify, scope } from "./logic/translate";
 
 export const synth = function* (term: EB.Term): Verification<SynthResult> {
 	yield* logger.enter();
@@ -41,7 +43,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const evaluated = yield* NF.evaluate(tm);
 			const predicate = yield* NF.reduce(liquid, evaluated, "Explicit");
 
-			return [selfified, { vc: yield* VC.require(yield* formula(predicate)) }] satisfies SynthResult;
+			return [selfified, { vc: yield* requirePredicate(predicate) }] satisfies SynthResult;
 		})
 		.with({ type: "Var", variable: { type: "Free" } }, function* (tm) {
 			const entry = ctx.imports[tm.variable.name];
@@ -52,7 +54,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const modalities = yield* extractModalities(ty, ctx);
 			const evaluated = yield* NF.evaluate(tm);
 			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
-			return [ty, { vc: yield* VC.require(yield* formula(predicate)) }] satisfies SynthResult;
+			return [ty, { vc: yield* requirePredicate(predicate) }] satisfies SynthResult;
 		})
 		.with({ type: "Var", variable: { type: "Label" } }, function* ({ variable }) {
 			const type = ctx.labels[variable.name];
@@ -63,7 +65,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const modalities = yield* extractModalities(type, ctx);
 			const evaluated = yield* NF.evaluate(term);
 			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
-			return [type, { vc: yield* VC.require(yield* formula(predicate)) }] satisfies SynthResult;
+			return [type, { vc: yield* requirePredicate(predicate) }] satisfies SynthResult;
 		})
 		.with(EB.CtorPatterns.Vars.DepLabel, EB.CtorPatterns.Vars.NuLabel, function* ({ variable }) {
 			return [variable.annotation, { vc: Build.true_() }] satisfies SynthResult;
@@ -80,7 +82,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const modalities = yield* extractModalities(selfified, ctx);
 			const evaluated = yield* NF.evaluate(tm);
 			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
-			return [selfified, { vc: yield* VC.require(yield* formula(predicate)) }] satisfies SynthResult;
+			return [selfified, { vc: yield* requirePredicate(predicate) }] satisfies SynthResult;
 		})
 		.with(
 			{ type: "Var", variable: { type: "Meta" } },
@@ -212,11 +214,12 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 								}
 							})
 							.otherwise(function* () {});
-						const domain = wrapPsiRequirement(psi.binder);
-						const artefacts = yield* reader.local(_ => ctx, check(arg, domain));
+						const artefacts = yield* reader.local(_ => ctx, check(arg, psi.binder.annotation));
 						const value = yield* reader.local(_ => ctx, NF.evaluate(arg));
+						const requirement = psi.binder.requirement;
+						const vc = requirement ? yield* requirePredicate(yield* NF.reduce(requirement, value, "Explicit")) : Build.true_();
 						const out = yield* NF.apply(psi.binder, psi.closure, value);
-						return [out, artefacts] satisfies SynthResult;
+						return [out, { vc: Build.and(artefacts.vc, vc) }] satisfies SynthResult;
 					})
 					.with(NF.View.Sealed(NF.Patterns.Pi), function* ({ value: pi }) {
 						const { vc, nf } = yield* reader.local(_ => ctx, check(arg, pi.binder.annotation));
@@ -266,7 +269,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 				const outer = yield* reader.ask();
 				const name = yield* supply.freshFrom(current.variable);
 				const binder = { type: "Let", variable: current.variable } as const;
-				const artefacts = yield* scope(name, binder, current.annotation, check(current.value, current.annotation));
+				const artefacts = yield* scope(name, binder, current.annotation, binding(current.value, current.annotation, "local"));
 				const retained = artefacts.nf ?? current.annotation;
 				const entries = yield* bindings(name, retained);
 				const [ty, restArtefacts] = yield* hypotheses.local(VC.extend(...entries), scope(name, binder, retained, recurse(rest)));
@@ -435,21 +438,22 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			return [NF.Any, { vc: Build.true_() }] satisfies SynthResult;
 		})
 		.with({ type: "Bubble" }, function* (tm) {
-			const payload = function* (type: NF.Value): Verification<VerificationArtefacts> {
+			const payload = function* (type: NF.Value): Verification<[NF.Value, NF.Value]> {
 				return yield* match(yield* NF.view(type))
 					.with(NF.View.Sealed(NF.Patterns.Modal), ({ value }) => payload(value.value))
-					.with(NF.View.Sealed(NF.Patterns.Effect), ({ value: { func } }) => check(tm.payload, func.arg))
+					.with(NF.View.Sealed(NF.Patterns.Effect), ({ value: { func, arg } }) => Eff.of<[NF.Value, NF.Value]>([func.arg, arg]))
 					.otherwise(function* () {
 						throw new Error("Suspension requires an Effect carrier");
 					});
 			};
 			const [type, identityArtefacts] = yield* synth(tm.identity);
-			const payloadArtefacts = yield* payload(type);
+			const [input, output] = yield* payload(type);
+			const payloadArtefacts = yield* check(tm.payload, input);
 			const annotation = yield* NF.evaluate(tm.ann);
 			const identity = yield* NF.evaluate(tm.identity);
 			const current = yield* state.ask();
-			const available = yield* live(current, identity);
-			const vc = yield* obligations.record("suspend.live", yield* VC.require(available));
+			const available = PrimOps[OP_LIVE].compute(current, input, output, identity);
+			const vc = yield* obligations.record("suspend.live", yield* requirePredicate(available));
 			return [annotation, { vc: Build.and(identityArtefacts.vc, payloadArtefacts.vc, vc) }] satisfies SynthResult;
 		})
 		.otherwise(function* () {
