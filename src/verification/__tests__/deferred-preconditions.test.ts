@@ -11,6 +11,7 @@ const source = String.raw`
 foreign Fetch: Effect String Num;
 let fetch: (st |- key: String [| \v -> live st Fetch |]) -> Num = \key -> suspend @Fetch key;
 let relay = \key -> fetch key;
+let localRelay = \key -> { let unused: Num = unused; return fetch key; };
 let declared: String -> Num = \key -> fetch key;
 let withConfig: (get: String -> Num) -> Num = \get -> get "config";
 `;
@@ -18,6 +19,7 @@ let withConfig: (get: String -> Num) -> Num = \get -> get "config";
 describe("Deferred verification constraints", () => {
 	it.each([
 		["relay", "unknown", "valid"],
+		["localRelay", "unknown", "valid"],
 		["declared", "invalid", "invalid"],
 		["withConfig", "unknown", "unknown"],
 	] as const)("checks %s with its scoped assignment", (name, before, after) => {
@@ -29,7 +31,7 @@ describe("Deferred verification constraints", () => {
 		const assignment = Horn.solve(constraints);
 		expect(Validity.check(answer.vc).tag).toBe(before);
 		expect(Validity.check(answer.vc, assignment).tag).toBe(after);
-		if (name !== "relay") {
+		if (after !== "valid") {
 			expect(assignment.size).toBe(0);
 			return;
 		}

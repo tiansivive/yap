@@ -41,16 +41,20 @@ export namespace Horn {
 				? [{ kappa, value: { params, body: Build.true_() } }]
 				: [];
 		});
-		if (candidates.length !== holes.length || new Set(binders.map(b => b.name)).size !== binders.length || !guards.every(g => scoped(g, bound))) {
-			return [undefined];
-		}
+		const scopedPremises =
+			candidates.length === holes.length && new Set(binders.map(b => b.name)).size === binders.length && guards.every(g => scoped(g, bound));
 
 		const open: Use[] = holes.map(({ kappa }) => ({ kappa, value: "open" }));
 		return conjuncts(goal).flatMap((part): (Use | undefined)[] => {
+			if (isMatching(Patterns.Formula.True, part)) {
+				return candidates;
+			}
+			if (!scopedPremises) {
+				return [undefined];
+			}
 			const reflexive = match(part)
 				.with(Positive, ({ args: [hole] }) => holes.some(h => isEqual(h, hole)))
 				.with({ tag: "Atom", op: "=" }, ({ args: [a, b] }) => isEqual(a, b) && scoped(part, () => true))
-				.with(Patterns.Formula.True, () => true)
 				.otherwise(() => false);
 			if (reflexive || guards.some(g => isEqualWith(g, part, ignoreOrigin))) {
 				return candidates;
