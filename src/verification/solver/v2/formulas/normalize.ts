@@ -2,7 +2,7 @@
 // IVL = Intermediate Verification Language.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/cdcl-t-solver.md
 
-import type { Horn } from "../../../horn";
+import type * as Horn from "../../../horn";
 import { Substitute } from "../../ivl/substitute";
 import { match, P } from "ts-pattern";
 import { Build } from "../../ivl/build";

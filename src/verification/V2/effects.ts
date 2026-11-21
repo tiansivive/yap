@@ -5,11 +5,11 @@ import * as M from "@yap/elaboration/shared/effects";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
-import type { Horn } from "../horn";
-import { Build } from "../solver/ivl/build";
+import type * as Horn from "../horn";
+import { Patterns } from "../solver/ivl/patterns";
 import type { IVL } from "../solver/ivl/types";
 import type { Obligation } from "./types";
-import { P } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 /*
  * The verification row. Metacontext state solutions, reader
@@ -169,40 +169,29 @@ export const names = Eff.reader<ReadonlyMap<number, string>, "VC.Names">("VC.Nam
 export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
 export const definitions = Eff.reader<ReadonlyMap<number, NF.Value>, "VC.Definitions">("VC.Definitions");
 
-const hypotheses = Eff.reader<readonly Horn.Frame[], "VC.Hypotheses">("VC.Hypotheses");
-type RequireAction = Eff.Action<"VC.require", Horn.Constraint, IVL.Formula>;
+export const hypotheses = Eff.reader<Horn.Scope, "VC.Hypotheses">("VC.Hypotheses");
+const constraints = Eff.writer<Horn.Constraint[]>(batches => batches.flat());
 
-export type Quantifier = {
-	under: <A>(program: Verification<A>) => Verification<A>;
-	close: (vc: IVL.Formula) => Verification<IVL.Formula>;
-};
+export type Hypothesis = { binder: IVL.Binder; premise?: IVL.Formula };
 
 export const VC = {
-	forall: (binder: IVL.Binder, predicate?: IVL.Formula, record: Quantifier["close"] = Eff.of): Quantifier => ({
-		under: program =>
-			hypotheses.local(
-				path => (predicate ? [...path, { tag: "forall", binder }, { tag: "assume", predicate }] : [...path, { tag: "forall", binder }]),
-				program,
-			),
-		close: vc => record(Build.forall([binder], predicate ? Build.implies(predicate, vc) : vc)),
-	}),
+	extend:
+		(...entries: Hypothesis[]) =>
+		({ binders, premises }: Horn.Scope): Horn.Scope => ({
+			binders: [...binders, ...entries.map(entry => entry.binder)],
+			premises: [...premises, ...entries.flatMap(({ premise }) => (premise ? conjuncts(premise) : []))],
+		}),
 	require: function* (goal: IVL.Formula): Verification<IVL.Formula> {
 		const scope = yield* hypotheses.ask();
-		return yield* Eff.ctl.action<RequireAction>("VC.require", { scope, goal });
-	},
-	handlers: (): Eff.Handler<RequireAction, Horn.Constraint[]> => {
-		const emitted: Horn.Constraint[] = [];
-		return {
-			clauses: {
-				"VC.require": constraint => {
-					emitted.push(constraint);
-					return Eff.ctl.resume(constraint.goal);
-				},
-			},
-			output: () => emitted,
-		};
+		yield* constraints.tell(conjuncts(goal).map(part => ({ ...scope, goal: part })));
+		return goal;
 	},
 };
+
+const conjuncts = (formula: IVL.Formula, inherited?: string): IVL.Formula[] =>
+	match(formula)
+		.with(Patterns.Formula.And, ({ values, origin }) => values.flatMap(value => conjuncts(value, origin ?? inherited)))
+		.otherwise(f => [f.origin === undefined && inherited !== undefined ? { ...f, origin: inherited } : f]);
 
 const heads = { empty: "$empty", insert: "$insert" } as const;
 
@@ -230,7 +219,7 @@ export type Verification<A> = Eff.Eff<
 	| Eff.Actions<typeof state>
 	| Eff.Actions<typeof definitions>
 	| Eff.Actions<typeof hypotheses>
-	| RequireAction
+	| Eff.Actions<typeof constraints>
 	| Eff.Actions<typeof except>
 	| LoggerActions
 	| RecordAction
@@ -285,8 +274,8 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 		except.handlers(),
 		logger.handlers(options.logging ?? false),
 		obligations.handlers(),
-		VC.handlers(),
-		hypotheses.handlers([]),
+		constraints.handlers(),
+		hypotheses.handlers({ binders: [], premises: [] }),
 		supply.handlers(),
 		names.handlers(new Map()),
 		state.handlers(options.state ?? context.ffi[State.heads.empty].compute()),

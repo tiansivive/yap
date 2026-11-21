@@ -5,7 +5,7 @@
 import * as E from "fp-ts/Either";
 import * as O from "fp-ts/Option";
 import { match } from "ts-pattern";
-import type { Horn } from "../../horn";
+import type * as Horn from "../../horn";
 import type { IVL } from "../ivl/types";
 import { CDCL, Clause, type Result as CDCLResult } from "./cdcl";
 import * as Core from "./core";

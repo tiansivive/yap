@@ -1,6 +1,6 @@
 import { match } from "ts-pattern";
 
-import type { Horn } from "./horn";
+import type * as Horn from "./horn";
 import { Build } from "./solver/ivl/build";
 import { Patterns } from "./solver/ivl/patterns";
 import type { IVL } from "./solver/ivl/types";

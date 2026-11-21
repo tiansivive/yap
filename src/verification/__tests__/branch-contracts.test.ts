@@ -33,12 +33,12 @@ describe("Branch contracts", () => {
 		assert(!Eff.failed(answer));
 
 		const input = { tag: "Hole", spine: [{ tag: "Var", sort: { tag: "String" } }] } as const;
-		const uses = constraints.flatMap(({ scope, goal }) => {
+		const uses = constraints.flatMap(({ premises, goal }) => {
 			if (!isMatching({ tag: "Atom", op: "=", args: [input, { tag: "Bool", value: true }] }, goal)) {
 				return [];
 			}
 			const [hole] = goal.args;
-			const guards = scope.flatMap(f => (f.tag === "assume" && f.predicate.tag !== "True" ? [f.predicate] : []));
+			const guards = premises.filter(p => p.tag !== "True");
 			return [{ hole, guards }];
 		});
 		expect(uses).toHaveLength(2);
@@ -48,7 +48,8 @@ describe("Branch contracts", () => {
 				[true, "yes"],
 				[false, "no"],
 			].map(([value, key]) => [
-				{ tag: "And", values: [{ tag: "Atom" }, { tag: "Atom", args: [{ tag: "Var" }, { tag: "Bool", value }] }] },
+				{ tag: "Atom" },
+				{ tag: "Atom", args: [{ tag: "Var" }, { tag: "Bool", value }] },
 				{ tag: "Atom", args: [{ tag: "Var" }, { tag: "Str", value: key }] },
 			]),
 		);

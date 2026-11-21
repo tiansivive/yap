@@ -1,10 +1,14 @@
 import assert from "node:assert";
 import { describe, expect, it } from "vitest";
+import * as NF from "@yap/elaboration/normalization";
+import * as Metas from "@yap/elaboration/shared/metas";
+import { defaultContext } from "@yap/shared/lib/constants";
 import * as Eff from "@yap/utils/effects";
 import { elaborateModule } from "../../elaboration/__tests__/module";
+import { hypotheses, run, VC } from "../V2/effects";
 import { VerificationServiceV2 } from "../V2/service";
-import { Horn } from "../horn";
-import { Build } from "../solver/ivl";
+import * as Horn from "../horn";
+import { Build, DSL } from "../solver/ivl";
 import { Validity } from "../validity";
 
 const source = String.raw`
@@ -17,6 +21,25 @@ let withConfig: (get: String -> Num) -> Num = \get -> get "config";
 `;
 
 describe("Deferred verification constraints", () => {
+	it("emits one clause per conjunct and retains each goal’s diagnostic origin", () => {
+		const lower = DSL.gt(DSL.x, DSL.int(0));
+		const upper = DSL.lt(DSL.x, DSL.int(10), "upper bound");
+		const goal = Build.andWithOrigin([lower, upper], "range");
+		const binder = { name: "x", sort: Build.Int };
+		const { answer, constraints } = run(defaultContext, Metas.empty, () => hypotheses.local(VC.extend({ binder }), VC.require(goal)));
+		expect(answer).toBe(goal);
+		expect(constraints).toEqual([
+			{ binders: [binder], premises: [], goal: { ...lower, origin: "range" } },
+			{ binders: [binder], premises: [], goal: upper },
+		]);
+	});
+
+	it("returns a false VC for incompatible literal types without inferring a precondition", () => {
+		const { answer, constraints } = VerificationServiceV2().subtype(NF.Constructors.Atom("Num"), NF.Constructors.Atom("String"), defaultContext, Metas.empty);
+		expect(answer).toEqual(Build.false_());
+		expect(constraints).toEqual([]);
+	});
+
 	it.each([
 		["relay", "unknown", "valid"],
 		["localRelay", "unknown", "valid"],

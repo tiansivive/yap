@@ -12,12 +12,12 @@ import * as E from "fp-ts/Either";
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import type { VerificationArtefacts } from "./types";
-import { reader, fail, logger, obligations, supply, VC, type Verification } from "./effects";
+import { reader, fail, logger, obligations, supply, hypotheses, VC, type Verification } from "./effects";
 import { collectSigmaBindings, noCapture } from "./utils/context";
 import { wrapPsiRequirement, extractModalities, meet, propagate } from "./utils/refinements";
 import { synth } from "./synth";
 import { subtype } from "./subtype";
-import { mkSort, formula, quantify, scope } from "./logic/translate";
+import { mkSort, formula, bindings, quantify, scope } from "./logic/translate";
 
 export const check = function* (tm: EB.Term, ty: NF.Value): Verification<VerificationArtefacts> {
 	yield* logger.enter();
@@ -72,9 +72,9 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 							const sort = yield* mkSort(annotation);
 							const applied = yield* NF.reduce(modalities.liquid, NF.Constructors.Rigid(ctx.env.length), "Explicit");
 							const phi = yield* formula(applied);
-							const binder = VC.forall({ name, sort }, phi);
-							const artefacts = yield* binder.under(body);
-							const imp = yield* obligations.record("check.abs.quantification", yield* binder.close(artefacts.vc), {
+							const binder = { name, sort };
+							const artefacts = yield* hypotheses.local(VC.extend({ binder, premise: phi }), body);
+							const imp = yield* obligations.record("check.abs.quantification", Build.forall([binder], Build.implies(phi, artefacts.vc)), {
 								type: p(() => NF.display(type)),
 								description: `Function term must satisfy body's postcondition under the precondition on ${term.binding.variable}`,
 							});
@@ -251,14 +251,15 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					})
 					.otherwise(function* ([[variable, binderTy], ...rest]) {
 						const name = yield* supply.freshFrom(variable);
-						const binder = yield* quantify(name, binderTy);
-						const vc = yield* binder.under(scope(name, { type: "Lambda", variable }, binderTy, telescope(rest)));
-						return yield* binder.close(vc);
+						const entries = yield* bindings(name, binderTy);
+						const vc = yield* hypotheses.local(VC.extend(...entries), scope(name, { type: "Lambda", variable }, binderTy, telescope(rest)));
+						return yield* quantify(entries, vc);
 					});
 			};
 
-			const matched = yield* quantify(yield* supply.freshNum(), met);
-			const vc = yield* matched.close(yield* matched.under(telescope(binders)));
+			const matched = yield* bindings(yield* supply.freshNum(), met);
+			const branchVC = yield* hypotheses.local(VC.extend(...matched), telescope(binders));
+			const vc = yield* quantify(matched, branchVC);
 			const combinedVc = Build.and(scrutineeArtefacts.vc, patternArtefacts.vc, vc);
 
 			return { vc: combinedVc } satisfies VerificationArtefacts;

@@ -11,11 +11,11 @@ import { primopMapping } from "@yap/shared/lib/primitives";
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import type { SynthResult, VerificationArtefacts } from "./types";
-import { reader, logger, state, State, obligations, supply, VC, type Verification } from "./effects";
+import { reader, logger, state, State, obligations, supply, hypotheses, VC, type Verification } from "./effects";
 import { noCapture } from "./utils/context";
 import { wrapPsiRequirement, extractModalities, selfify } from "./utils/refinements";
 import { check } from "./check";
-import { formula, live, quantify, scope } from "./logic/translate";
+import { formula, live, bindings, quantify, scope } from "./logic/translate";
 
 export const synth = function* (term: EB.Term): Verification<SynthResult> {
 	yield* logger.enter();
@@ -137,13 +137,13 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const binder = { type: "Psi", variable: binding.variable, annotation: NF.State, requirement } as const;
 			const annotation = wrapPsiRequirement(binder);
 			const name = yield* supply.freshFrom(binding.variable);
-			const quantified = yield* quantify(name, annotation);
-			const [bodyType, artefacts] = yield* quantified.under(scope(name, binder, annotation, synth(body)));
+			const entries = yield* bindings(name, annotation);
+			const [bodyType, artefacts] = yield* hypotheses.local(VC.extend(...entries), scope(name, binder, annotation, synth(body)));
 			const quoted = yield* NF.quote(ctx.env.length + 1, bodyType);
 			const type = match(yield* NF.view(bodyType))
 				.with(NF.View.Sealed(NF.Patterns.Type), () => NF.Type)
 				.otherwise(() => NF.Constructors.Psi(binding.variable, requirement, NF.Constructors.Closure(ctx, quoted)));
-			const vc = yield* quantified.close(artefacts.vc);
+			const vc = yield* quantify(entries, artefacts.vc);
 			return [type, { vc }] satisfies SynthResult;
 		})
 		.with(EB.CtorPatterns.Lambda, function* (tm) {
@@ -268,9 +268,9 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 				const binder = { type: "Let", variable: current.variable } as const;
 				const artefacts = yield* scope(name, binder, current.annotation, check(current.value, current.annotation));
 				const retained = artefacts.nf ?? current.annotation;
-				const retainedBinder = yield* quantify(name, retained);
-				const [ty, restArtefacts] = yield* retainedBinder.under(scope(name, binder, retained, recurse(rest)));
-				const quantified = yield* retainedBinder.close(restArtefacts.vc);
+				const entries = yield* bindings(name, retained);
+				const [ty, restArtefacts] = yield* hypotheses.local(VC.extend(...entries), scope(name, binder, retained, recurse(rest)));
+				const quantified = yield* quantify(entries, restArtefacts.vc);
 				const existential = NF.Constructors.Exists(current.variable, retained, { ctx: outer, value: ty });
 				return [existential, { vc: Build.and(artefacts.vc, quantified) }] satisfies SynthResult;
 			};

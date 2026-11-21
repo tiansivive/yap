@@ -6,8 +6,8 @@ import { Action, AnyAction, ctl, Eff, Handler, with as scoped } from "@yap/utils
 /*
  * An accumulator a computation appends to, read back as the handler's output.
  *
- * The actions fix what an entry is; the handler picks how entries combine, so
- * one set of actions admits as many handlers as there are Monoids over W.
+ * A monoid combines each entry on write. A batch fold combines entries on read
+ * and must give the same result when an inner listen groups several entries.
  *
  * listen and censor need a subprogram's writes on their own, which is what a
  * fresh handler over the same actions already is: Eff.with installs one for the
@@ -20,7 +20,7 @@ import { Action, AnyAction, ctl, Eff, Handler, with as scoped } from "@yap/utils
  * asymmetry is open, not settled: z-yap/zettels/scope-output-on-abort.md.
  */
 
-export function writer<W>(monoid: Monoid<W>) {
+export function writer<W>(fold: Monoid<W> | ((entries: readonly W[]) => W)) {
 	type Tell = Action<"Writer.tell", W, void>;
 	type Peek = Action<"Writer.peek", undefined, W>;
 
@@ -51,23 +51,38 @@ export function writer<W>(monoid: Monoid<W>) {
 
 	const handlers = (): Handler<Tell | Peek, W> => {
 		/* This handler owns the accumulator; its clauses are the only way in. */
-		let accumulated: W = monoid.empty;
+		const accumulator = buffer(fold);
 
 		return {
 			clauses: {
 				"Writer.tell": entry => {
-					accumulated = monoid.concat(accumulated, entry);
+					accumulator.append(entry);
 
 					return ctl.resume(undefined);
 				},
 
-				"Writer.peek": () => ctl.resume(accumulated),
+				"Writer.peek": () => ctl.resume(accumulator.read()),
 			},
 
 			/* Read after the scope ends, so an abort still reports what had been told. */
-			output: () => accumulated,
+			output: accumulator.read,
 		};
 	};
 
 	return { tell, peek, listen, censor, handlers };
 }
+
+/* A batch fold lets an array writer flatten once on read. Monoid writers support constant-time reads. */
+const buffer = <W>(fold: Monoid<W> | ((entries: readonly W[]) => W)) => {
+	if (typeof fold === "function") {
+		const entries: W[] = [];
+		return { append: (entry: W) => entries.push(entry), read: () => fold(entries) };
+	}
+	let value = fold.empty;
+	return {
+		append: (entry: W) => {
+			value = fold.concat(value, entry);
+		},
+		read: () => value,
+	};
+};

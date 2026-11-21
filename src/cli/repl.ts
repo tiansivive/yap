@@ -34,7 +34,7 @@ import { emit as emitC } from "../Codegen/v2/c/emit";
 import { print as printC } from "../Codegen/v2/c/print";
 import { emit as emitErl } from "../Codegen/v2/erlang/emit";
 import { print as printErl } from "../Codegen/v2/erlang/print";
-import { Horn } from "../verification/horn";
+import * as Horn from "../verification/horn";
 import { VerificationServiceV2 } from "../verification/V2/service";
 import { Build } from "../verification/solver/ivl/build";
 import { Print as IVLPrint } from "../verification/solver/ivl/print";

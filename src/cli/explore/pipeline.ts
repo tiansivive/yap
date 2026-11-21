@@ -22,7 +22,7 @@ import { emit as emitErl } from "../../Codegen/v2/erlang/emit";
 import { print as printErl } from "../../Codegen/v2/erlang/print";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as Sub from "../../elaboration/unification/substitution";
-import { Horn } from "../../verification/horn";
+import * as Horn from "../../verification/horn";
 import { VerificationServiceV2 } from "../../verification/V2/service";
 import { Build } from "../../verification/solver/ivl/build";
 import { Print as IVLPrint } from "../../verification/solver/ivl/print";
