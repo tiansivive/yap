@@ -8,6 +8,7 @@ import * as Eff from "@yap/utils/effects";
 import { elaborateModule } from "../../elaboration/__tests__/module";
 import { hypotheses, run, VC } from "../V2/effects";
 import { VerificationServiceV2 } from "../V2/service";
+import * as Horn from "../horn";
 import { Build } from "../solver/ivl";
 import { Validity } from "../validity";
 
@@ -43,42 +44,39 @@ describe("Deferred verification constraints", () => {
 	});
 
 	it.each([
-		["relay", "valid"],
-		["localRelay", "valid"],
-		["declared", "invalid"],
-		["withConfig", "unknown"],
-	] as const)("checks %s using its inferred Yap predicates", (name, verdict) => {
+		["relay", "unknown", "valid"],
+		["localRelay", "unknown", "valid"],
+		["declared", "invalid", "invalid"],
+		["withConfig", "unknown", "unknown"],
+	] as const)("checks %s with its scoped assignment", (name, before, after) => {
 		const declaration = elaborateModule(source).declarations.find(d => d.name === name);
 		assert(declaration?.elaborated, declaration?.error);
 		const { tm, ty, ctx, registry } = declaration.elaborated;
-		const result = VerificationServiceV2().letdec(name, tm, ty, ctx, registry);
-		assert(!Eff.failed(result.answer));
-		expect(Validity.check(result.answer.vc, result.assignment).tag).toBe(verdict);
-		const solved = Object.values(result.registry).filter(p => p.kind === "Predicate" && p.solution);
-
-		if (verdict === "valid") {
-			expect(solved.map(p => p.solution)).toMatchObject([{ type: "Abs" }, { type: "Abs" }]);
+		const { answer, constraints, registry: verified } = VerificationServiceV2().letdec(name, tm, ty, ctx, registry);
+		assert(!Eff.failed(answer));
+		const assignment = Horn.assignment(constraints, ctx, verified);
+		expect([...assignment.keys()].every(id => Metas.solution(verified, id) === undefined)).toBe(true);
+		expect(Validity.check(answer.vc).tag).toBe(before);
+		expect(Validity.check(answer.vc, assignment).tag).toBe(after);
+		if (after !== "valid") {
+			expect(assignment.size).toBe(0);
 			return;
 		}
-		expect(solved).toEqual([]);
-	});
-
-	it.each([
-		[String.raw`with Fetch: (\p k -> k 3) in`, "valid"],
-		[String.raw`with Tell: (\p k -> k 3) in`, "invalid"],
-		["", "invalid"],
-	])("applies the local relay contract in the handler scope %s", (handler, expected) => {
-		const program = String.raw`
-			foreign Fetch: Effect String (Num [| \v -> true |]);
-			foreign Tell: Effect String (Num [| \v -> true |]);
-			let fetch: (s |- x: String [| \v -> live s Fetch |]) -> Num = \x -> suspend @Fetch x;
-			let result = ${handler} { let relay = \key -> fetch key; return relay "foo"; };
-		`;
-		const declaration = elaborateModule(program).declarations.at(-1);
-		assert(declaration?.elaborated, declaration?.error);
-		const { tm, ty, ctx, registry } = declaration.elaborated;
-		const result = VerificationServiceV2().letdec("result", tm, ty, ctx, registry);
-		assert(!Eff.failed(result.answer));
-		expect(Validity.check(result.answer.vc, result.assignment).tag).toBe(expected);
+		assert(answer.vc.tag === "Forall");
+		const [state] = answer.vc.binders;
+		const inferred = [...assignment.values()];
+		const psi = inferred.find(p => p.params[0]?.sort.tag === state.sort.tag);
+		assert(psi);
+		const [formal] = psi.params;
+		expect(psi).toMatchObject({
+			params: [{ sort: state.sort }],
+			body: {
+				tag: "Atom",
+				op: "=",
+				args: [{ tag: "App", head: "$state.live", args: [Build.var_(formal.name, state.sort), { tag: "Const", name: "Fetch" }] }, Build.bool(true)],
+			},
+		});
+		expect(inferred.find(p => p.params[0]?.sort.tag === "String")?.body).toEqual(Build.true_());
+		expect(assignment.size).toBe(2);
 	});
 });

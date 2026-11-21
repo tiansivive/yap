@@ -1,5 +1,4 @@
 /* eslint-disable no-restricted-syntax -- the handlers own their cells (indentation, obligations, name supplies); their clauses are the only way to move them */
-import { P } from "ts-pattern";
 import * as Eff from "@yap/utils/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as M from "@yap/elaboration/shared/effects";
@@ -8,9 +7,10 @@ import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import { getMonoid } from "fp-ts/Array";
 import * as Horn from "../horn";
-import { formula, predicate } from "./logic/translate";
+import { formula } from "./logic/translate";
 import type { IVL } from "../solver/ivl/types";
 import type { Obligation } from "./types";
+import { P } from "ts-pattern";
 
 /*
  * The verification row. Metacontext state solutions, reader
@@ -168,17 +168,10 @@ export const supply = { fresh, freshNum, freshFrom, handlers: supplyHandlers };
 
 export const names = Eff.reader<ReadonlyMap<number, string>, "VC.Names">("VC.Names");
 export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
-export type Definitions = ReadonlyMap<number, { value: NF.Value; env: Definitions }>;
-export const definitions = {
-	...Eff.reader<Definitions, "VC.Definitions">("VC.Definitions"),
-	extend:
-		(assumptions: ReadonlyMap<Extract<NF.Variable, { type: "Bound" }>, NF.Value>) =>
-		(outer: Definitions): Definitions =>
-			[...assumptions].reduce<Definitions>((env, [v, value]) => new Map([...env, [v.lvl, { value, env }]]), outer),
-};
+export const definitions = Eff.reader<ReadonlyMap<number, NF.Value>, "VC.Definitions">("VC.Definitions");
 
 export const hypotheses = Eff.reader<readonly Horn.Binder[], "VC.Hypotheses">("VC.Hypotheses");
-export const constraints = Eff.writer(getMonoid<Horn.Constraint>());
+const constraints = Eff.writer(getMonoid<Horn.Constraint>());
 export type Hypothesis = Horn.Binder & { binder: IVL.Binder; formula?: IVL.Formula };
 
 export const VC = {
@@ -269,22 +262,9 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 	};
 	const initialized = function* () {
 		const outer = yield* Eff.traverse([...ctx.env].reverse(), entry => supply.freshFrom(entry.name.variable));
-		return yield* names.local(
-			() => new Map(outer.map((name, lvl) => [lvl, name])),
-			(function* () {
-				const answer = yield* program();
-				const current = yield* Metas.registry.get();
-				const inferred = Object.values(current).flatMap(p =>
-					p.kind === "Predicate" && p.solution && !Metas.solution(registry, p.meta.val) ? [{ id: p.meta.val, value: p.solution }] : [],
-				);
-				const entries = yield* Eff.traverse(inferred, function* ({ id, value }) {
-					return [id, yield* predicate(value)] as const;
-				});
-				return { answer, assignment: new Map(entries) };
-			})(),
-		);
+		return yield* names.local(() => new Map(outer.map((name, lvl) => [lvl, name])), program());
 	};
-	const [outcome, , registrySnapshot, , , collected, emitted] = Eff.run(initialized, [
+	const [answer, , registrySnapshot, , , collected, emitted] = Eff.run(initialized, [
 		reader.handlers(context),
 		Metas.registry.handlers(registry),
 		except.handlers(),
@@ -299,6 +279,5 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 		M.supply.handlers({ meta: Object.values(registry).reduce((max, entry) => Math.max(max, entry.meta.val), 0) }),
 	]);
 
-	const { answer, assignment } = Eff.failed(outcome) ? { answer: outcome, assignment: new Map() satisfies IVL.Assignment } : outcome;
-	return { answer, assignment, obligations: collected, constraints: emitted.slice(), registry: registrySnapshot } as const;
+	return { answer, obligations: collected, constraints: emitted.slice(), registry: registrySnapshot } as const;
 };

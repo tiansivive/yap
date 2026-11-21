@@ -1,4 +1,5 @@
-// Direct Horn inference over the predicate values produced by bidirectional verification.
+// Each concrete goal belongs to the innermost assumed predicate whose arguments can express it.
+// https://github.com/tiansivive/z-yap/blob/main/zettels/refinement-inference.md
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Metas from "@yap/elaboration/shared/metas";
@@ -6,17 +7,40 @@ import { OP_AND, OP_EQ } from "@yap/shared/lib/primitives";
 import * as Eff from "@yap/utils/effects";
 import { isEqualWith, groupBy } from "lodash";
 import { isMatching, match } from "ts-pattern";
-import { definitions, reader, type Definitions, type Verification } from "./V2/effects";
+import { reader, run, type Verification } from "./V2/effects";
+import type { IVL } from "./solver/ivl/types";
+import { predicate } from "./V2/logic/translate";
 
-export type Binder = { level?: number; premise?: NF.Value };
+export type Predicate = { params: IVL.Binder[]; body: IVL.Formula };
+export type Assignment = ReadonlyMap<IVL.Kappa, Predicate>;
+
+/** Validity consumes IVL assignments at the end of verification. */
+export function assignment(clauses: readonly Constraint[], ctx: EB.Context, registry: Metas.Registry): Assignment {
+	const { answer } = run(ctx, registry, function* () {
+		const solutions = yield* solve(clauses);
+		const entries = yield* Eff.traverse([...solutions], function* ([id, value]) {
+			return [id, yield* predicate(value)] as const;
+		});
+		return new Map(entries);
+	});
+	if (Eff.failed(answer)) {
+		throw new Error("Horn predicate translation failed", { cause: answer[Eff.ABORT] });
+	}
+	return answer;
+}
+
+export type Binder = { level: number; premise?: NF.Value };
 export type Constraint = { binders: readonly Binder[]; goal: NF.Value };
 type Hole = { id: number; args: NF.Value[] };
 type Use = { id: number; tag: "Default" | "Goal" | "Open" } | { id: number; tag: "Definition"; body: EB.Term };
 
-export function* solve(clauses: readonly Constraint[], owned: ReadonlySet<number>): Verification<ReadonlyMap<number, NF.Value>> {
+export function* solve(clauses: readonly Constraint[]): Verification<ReadonlyMap<number, NF.Value>> {
 	const registry = yield* Metas.registry.get();
-	const uses = (yield* Eff.traverse(clauses, c => requirements(c, registry, owned))).flat();
-	const definitions = Object.values(groupBy(uses, "id"));
+	const requirementsByClause = yield* Eff.traverse(clauses, c => requirements(c, registry));
+	if (!requirementsByClause.every((uses): uses is Use[] => uses !== undefined)) {
+		return new Map();
+	}
+	const definitions = Object.values(groupBy(requirementsByClause.flat(), "id"));
 	const solutions = yield* Eff.traverse(definitions, function* (group): Verification<[number, NF.Value][]> {
 		const { id } = group[0];
 		const bodies = group.flatMap(u => (u.tag === "Definition" ? [u.body] : []));
@@ -32,6 +56,8 @@ export function* solve(clauses: readonly Constraint[], owned: ReadonlySet<number
 	return new Map(solutions.flat());
 }
 
+type Definitions = ReadonlyMap<number, { value: NF.Value; env: Definitions }>;
+
 /** Retained computations bind their result symbols in the predicate's own scope. */
 export function* prepare(v: NF.Value, defs: Definitions = new Map()): Verification<NF.Value> {
 	const head = yield* NF.force(v);
@@ -41,7 +67,7 @@ export function* prepare(v: NF.Value, defs: Definitions = new Map()): Verificati
 	const { value } = yield* NF.view(head);
 	return yield* match(value)
 		.with(NF.Patterns.Existential, function* (ex) {
-			const bindings = definitions.extend(ex.assumptions)(defs);
+			const bindings = [...ex.assumptions].reduce<Definitions>((env, [v, rhs]) => new Map([...env, [v.lvl, { value: rhs, env }]]), defs);
 			return yield* prepare(ex.body.value, bindings);
 		})
 		.with(NF.Patterns.Rigid, function* ({ variable }) {
@@ -82,19 +108,19 @@ const level = (v: NF.Value) =>
 		.with(NF.Patterns.Rigid, x => x.variable.lvl)
 		.otherwise(() => undefined);
 
-function* requirements({ binders, goal }: Constraint, registry: Metas.Registry, owned: ReadonlySet<number>): Verification<Use[]> {
+function* requirements({ binders, goal }: Constraint, registry: Metas.Registry): Verification<Use[] | undefined> {
 	const premises = binders.flatMap(b => (b.premise ? conjuncts(b.premise) : []));
 
 	if (premises.some(p => isMatching(truth(false), peek(p)))) {
 		return [];
 	}
-	const levels = binders.flatMap(b => (b.level === undefined ? [] : [b.level]));
-	const assumptions = premises.flatMap(p => {
-		const h = hole(p, registry);
-		const spine = h?.args.map(level);
-		return h && spine && spine.every((l): l is number => l !== undefined) ? [{ id: h.id, params: spine, premise: p }] : [];
+	const levels = binders.map(b => b.level);
+	const assumptions = premises.flatMap(premise => {
+		const h = hole(premise, registry);
+		const params = h?.args.map(level);
+		return h && params?.every((l): l is number => l !== undefined) ? [{ id: h.id, params, premise }] : [];
 	});
-	const candidates = assumptions.filter(a => owned.has(a.id));
+	const candidates = assumptions.filter(({ params }) => new Set(params).size === params.length && params.every(l => levels.includes(l)));
 	const concrete = premises.filter(p => !assumptions.some(a => p === a.premise) && !isMatching(truth(true), peek(p)));
 	const defaults: Use[] = candidates.map(({ id }) => ({ id, tag: "Default" }));
 	const open: Use[] = candidates.map(({ id }) => ({ id, tag: "Open" }));
@@ -104,8 +130,8 @@ function* requirements({ binders, goal }: Constraint, registry: Metas.Registry, 
 		return defaults;
 	}
 
-	if (new Set(levels).size !== levels.length || assumptions.some(a => new Set(a.params).size !== a.params.length || !a.params.every(l => levels.includes(l)))) {
-		return open;
+	if (new Set(levels).size !== levels.length || candidates.length !== assumptions.length) {
+		return undefined;
 	}
 	const depth = Math.max((yield* reader.ask()).env.length, ...levels.map(l => l + 1));
 	const terms = [goal, ...concrete];
@@ -123,6 +149,10 @@ function* requirements({ binders, goal }: Constraint, registry: Metas.Registry, 
 		return tm && rename(tm, depth, index);
 	};
 	const same = (a: NF.Value, b: NF.Value) => isEqualWith(quotes.get(a), quotes.get(b), (_a, _b, key) => (key === "id" ? true : undefined));
+	const inScope = (l: number) => (levels.includes(l) ? l : undefined);
+	if (concrete.some(p => !read(p, inScope))) {
+		return undefined;
+	}
 	const guards = concrete.filter(p => {
 		const eq = peek(p);
 		return !(isMatching(equality, eq) && same(eq.args[0], eq.args[1]));
@@ -133,21 +163,25 @@ function* requirements({ binders, goal }: Constraint, registry: Metas.Registry, 
 	}
 	const h = hole(goal, registry);
 	if (h) {
-		if (assumptions.some(a => a.id === h.id && a.params.length === h.args.length && a.params.every((l, i) => l === level(h.args[i])))) {
+		const args = yield* Eff.traverse(h.args, a => NF.quote(depth, a));
+		if (!args.every(a => rename(a, depth, inScope))) {
+			return undefined;
+		}
+		if (candidates.some(a => a.id === h.id && a.params.length === h.args.length && a.params.every((l, i) => l === level(h.args[i])))) {
 			return defaults;
 		}
 		return [...open, { id: h.id, tag: "Goal" }];
 	}
 
-	if (!read(goal, l => (levels.includes(l) ? l : undefined)) || guards.some(p => !read(p, l => (levels.includes(l) ? l : undefined)))) {
-		return open;
+	if (!read(goal, inScope)) {
+		return undefined;
 	}
 	const selected = candidates.reduceRight<Use | undefined>((selected, { id, params }) => {
 		if (selected) {
 			return selected;
 		}
-		const rename = (l: number) => (params.includes(l) ? params.length - 1 - params.indexOf(l) : undefined);
-		const rhs = read(goal, rename);
+		const formal = (l: number) => (params.includes(l) ? params.length - 1 - params.indexOf(l) : undefined);
+		const rhs = read(goal, formal);
 
 		if (!rhs) {
 			return undefined;
@@ -158,16 +192,14 @@ function* requirements({ binders, goal }: Constraint, registry: Metas.Registry, 
 			if (!isMatching(equality, eq)) {
 				return true;
 			}
-			return !eq.args.some(v => {
-				const local = level(v);
-				return (
-					local !== undefined &&
-					!params.includes(local) &&
-					[...eq.args.filter(arg => arg !== v), goal, ...guards.filter(g => g !== p)].every(other => read(other, l => (l === local ? undefined : l)))
-				);
-			});
+			const locals = eq.args.map(level);
+			if (!locals.every((l): l is number => l !== undefined)) {
+				return true;
+			}
+			const elsewhere = [goal, ...guards.filter(g => g !== p)];
+			return !locals.some(local => !params.includes(local) && elsewhere.every(other => read(other, l => (l === local ? undefined : l))));
 		});
-		const conditions = retained.map(p => read(p, rename));
+		const conditions = retained.map(p => read(p, formal));
 		if (conditions.every((p): p is EB.Term => !!p)) {
 			const body = conditions.length ? EB.DSL.or(EB.DSL.not(conditions.reduce(EB.DSL.and)), rhs) : rhs;
 			return { id, tag: "Definition", body };

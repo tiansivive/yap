@@ -1,4 +1,4 @@
-import { match, P } from "ts-pattern";
+import { isMatching, match, P } from "ts-pattern";
 
 import * as Eff from "@yap/utils/effects";
 
@@ -25,6 +25,7 @@ import {
 	PrimOps,
 } from "@yap/shared/lib/primitives";
 
+import type { Predicate } from "../../horn";
 import { Patterns } from "../../solver/ivl/patterns";
 import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
@@ -45,7 +46,10 @@ export const live = function* (current: NF.Value, identity: NF.Value): Verificat
 			NF.Patterns.Existential,
 			ex => ex.assumptions.size > 0,
 			function* ({ assumptions, body }) {
-				return yield* definitions.local(definitions.extend(assumptions), live(body.value, identity));
+				return yield* definitions.local(
+					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
+					live(body.value, identity),
+				);
 			},
 		)
 		.with(NF.Patterns.Rigid, function* ({ variable }) {
@@ -54,7 +58,7 @@ export const live = function* (current: NF.Value, identity: NF.Value): Verificat
 			if (!definition) {
 				return yield* ambient();
 			}
-			return yield* definitions.local(() => definition.env, live(definition.value, identity));
+			return yield* live(definition, identity);
 		})
 		.with(State.Patterns.empty, function* () {
 			return Build.false_();
@@ -71,9 +75,9 @@ export const live = function* (current: NF.Value, identity: NF.Value): Verificat
 };
 
 /** The validity checker instantiates residual IVL holes in the VC emitted before inference. */
-export function* predicate(value: NF.Value): Verification<{ params: IVL.Binder[]; body: IVL.Formula }> {
+export function* predicate(value: NF.Value): Verification<Predicate> {
 	const head = yield* NF.view(value);
-	if (head.kind === "Sealed" && head.value.type === "Abs" && head.value.binder.type === "Lambda") {
+	if (isMatching(NF.View.Sealed(NF.Patterns.Lambda), head)) {
 		const { binder, closure } = head.value;
 		const outer = yield* reader.ask();
 		const name = yield* supply.freshFrom(binder.variable);
@@ -176,7 +180,10 @@ const application = function* (nf: NF.Value): Verification<IVL.Term> {
 			NF.Patterns.Existential,
 			ex => ex.assumptions.size > 0,
 			function* ({ assumptions, body }) {
-				return yield* definitions.local(definitions.extend(assumptions), application(body.value));
+				return yield* definitions.local(
+					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
+					application(body.value),
+				);
 			},
 		)
 		.with(NF.Patterns.App, function* ({ func, arg }) {
@@ -192,7 +199,7 @@ const application = function* (nf: NF.Value): Verification<IVL.Term> {
 		})
 		.with(NF.Patterns.Rigid, function* ({ variable }) {
 			const definition = (yield* definitions.ask()).get(variable.lvl);
-			return yield* definition ? definitions.local(() => definition.env, application(definition.value)) : term(nf);
+			return yield* definition ? application(definition) : term(nf);
 		})
 		.with(NF.Patterns.Free, NF.Patterns.Foreign, function* ({ variable }) {
 			const symbol = match(variable)
@@ -235,7 +242,10 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 			NF.Patterns.Existential,
 			ex => ex.assumptions.size > 0,
 			function* ({ assumptions, body }) {
-				return yield* definitions.local(definitions.extend(assumptions), term(body.value));
+				return yield* definitions.local(
+					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
+					term(body.value),
+				);
 			},
 		)
 		.with({ type: "Neutral" }, function* ({ value }) {
@@ -285,7 +295,7 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 				const sort = yield* mkSort(entry.type[2]);
 				return Build.var_(nameAt(yield* names.ask(), variable.lvl), sort);
 			}
-			return yield* definitions.local(() => definition.env, term(definition.value));
+			return yield* term(definition);
 		})
 		.with(NF.Patterns.Var, function* (v) {
 			if (v.variable.type === "Free") {
@@ -355,7 +365,10 @@ export const formula = function* (nf: NF.Value): Verification<IVL.Formula> {
 			NF.Patterns.Existential,
 			ex => ex.assumptions.size > 0,
 			function* ({ assumptions, body }) {
-				return yield* definitions.local(definitions.extend(assumptions), formula(body.value));
+				return yield* definitions.local(
+					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
+					formula(body.value),
+				);
 			},
 		)
 		.with(NF.Patterns.Rigid, function* ({ variable }) {
@@ -364,7 +377,7 @@ export const formula = function* (nf: NF.Value): Verification<IVL.Formula> {
 			if (!definition) {
 				return Build.atom("=", yield* term(nf), Build.bool(true));
 			}
-			return yield* definitions.local(() => definition.env, formula(definition.value));
+			return yield* formula(definition);
 		})
 		.with({ type: "Neutral" }, function* ({ value }) {
 			return yield* formula(value);

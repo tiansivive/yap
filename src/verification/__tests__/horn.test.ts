@@ -21,7 +21,7 @@ const registry = [1, 2, 3].reduce<Metas.Registry>(
 	{},
 );
 const solve = (clauses: Horn.Constraint[], metas = registry) => {
-	const { answer } = run(defaultContext, metas, () => Horn.solve(clauses, new Set([1, 2, 3])));
+	const { answer } = run(defaultContext, metas, () => Horn.solve(clauses));
 	assert(!Eff.failed(answer));
 	return answer;
 };
@@ -88,6 +88,7 @@ describe("Direct inference on Yap predicates", () => {
 		expect(apply(a.get(1)!, 20)).toBe(true);
 	});
 	it.each([
+		{ binders: [{ level: 0, premise: hole(1, num(1)) }], goal: gt(x, num(0)) },
 		{ binders: [{ level: 0, premise: hole(1, x, x) }], goal: gt(x, num(0)) },
 		{ binders: [{ level: 0, premise: hole(1, x) }, { level: 0 }], goal: gt(x, num(0)) },
 		{ binders: [{ level: 0, premise: hole(1, x) }, { level: 1 }], goal: gt(y, num(0)) },

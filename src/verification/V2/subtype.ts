@@ -265,18 +265,18 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			const name = yield* match(pAt)
 				.with(NF.Patterns.Lambda, ({ binder }) => supply.freshFrom(binder.variable))
 				.otherwise(() => supply.fresh());
-			const forall = yield* scope(
+			const [phiAt, required] = yield* scope(
 				name,
 				{ type: "Pi", variable: name },
 				at.value,
-				(function* () {
-					const left = yield* NF.reduce(pAt, value, "Explicit");
-					const right = yield* NF.reduce(pBt, value, "Explicit");
-					const binder = { name, sort };
-					const goal = yield* hypotheses.local(VC.extend({ level: ctx.env.length, premise: left }), VC.require(right));
-					return Build.forall([binder], Build.implies(yield* formula(left), goal));
+				(function* (): Verification<[IVL.Formula, IVL.Formula]> {
+					const appliedAt = yield* NF.reduce(pAt, value, "Explicit");
+					const appliedBt = yield* NF.reduce(pBt, value, "Explicit");
+					return [yield* formula(appliedAt), yield* hypotheses.local(VC.extend({ level: ctx.env.length, premise: appliedAt }), VC.require(appliedBt))];
 				})(),
 			);
+			const binder = { name, sort };
+			const forall = Build.forall([binder], Build.implies(phiAt, required));
 			return Build.and(baseVc, forall);
 		})
 		.with([{ type: "Modal" }, P._], function* ([at, bt]) {

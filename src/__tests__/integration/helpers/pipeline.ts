@@ -1,5 +1,4 @@
 import { basename } from "node:path";
-import type { IVL } from "../../../verification/solver/ivl/types";
 import { expect } from "vitest";
 import { match, P } from "ts-pattern";
 
@@ -47,8 +46,6 @@ const safe = <A>(fn: () => A): E.Either<string, A> => E.tryCatch(fn, e => (e ins
 
 const get = E.getOrElse((): string => "");
 
-type Verified = VerificationArtefacts & { assignment: IVL.Assignment };
-
 const pipeline = (
 	tm: EB.Term,
 	ty: NF.Value,
@@ -74,30 +71,30 @@ const pipeline = (
 	Build.simplify = true; // global state required by the verification library
 	const verified = safe(() => {
 		const svc = VerificationServiceV2();
-		const { answer, assignment } = match(binder)
+		const { answer } = match(binder)
 			.with(P.string, name => svc.letdec(name, tm, ty, ctx, registry))
 			.otherwise(() => svc.check(tm, ty, ctx, registry));
-		return Eff.failed(answer) ? answer : { ...answer, assignment };
+		return answer;
 	});
-	const artefacts = E.map((a: Verified | Eff.Aborted<M.Err>) => (Eff.failed(a) ? O.none : O.some(a)))(verified);
+	const artefacts = E.map((a: VerificationArtefacts | Eff.Aborted<M.Err>) => (Eff.failed(a) ? O.none : O.some(a)))(verified);
 	const ivl = E.chain(
 		O.fold(
 			() => E.right<string, string>(""),
-			(a: Verified) => safe(() => IVLPrint.formula(a.vc)),
+			(a: VerificationArtefacts) => safe(() => IVLPrint.formula(a.vc)),
 		),
 	)(artefacts);
 	const validity = E.chain(
 		O.fold(
 			() => E.right<string, string>(""),
-			(a: Verified) => safe(() => Validity.display(Validity.check(a.vc, a.assignment))),
+			(a: VerificationArtefacts) => safe(() => Validity.display(Validity.check(a.vc))),
 		),
 	)(artefacts);
 	const solverTrace = E.chain(
 		O.fold(
 			() => E.right<string, string>(""),
-			(a: Verified) =>
+			(a: VerificationArtefacts) =>
 				safe(() => {
-					const checked = Solver.run(a.vc, a.assignment);
+					const checked = Solver.run(a.vc);
 					return Replay.replay({
 						formula: IVLPrint.formula(a.vc),
 						steps: checked.steps,
