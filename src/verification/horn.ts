@@ -4,82 +4,78 @@
 
 import * as O from "fp-ts/lib/Option";
 import { pipe } from "fp-ts/lib/function";
-import { groupBy, isEqual, isEqualWith, isObject, omit, uniqBy } from "lodash";
+import * as RA from "fp-ts/ReadonlyArray";
+import fp from "lodash/fp";
+import { isEqual, isEqualWith, isObject, omit, uniqBy } from "lodash";
 import { isMatching, match } from "ts-pattern";
 import { Build, Patterns, type IVL } from "./solver/ivl";
 import { Substitute } from "./solver/ivl/substitute";
 
-const Positive = { tag: "Atom", op: "=", args: [Patterns.Term.Hole, { tag: "Bool", value: true }] } as const;
+export const Positive = { tag: "Atom", op: "=", args: [Patterns.Term.Hole, { tag: "Bool", value: true }] } as const;
 const Alias = { tag: "Atom", op: "=", args: [Patterns.Term.Var, Patterns.Term.Var] } as const;
 
 export const solve = (constraints: readonly Constraint[]): Assignment =>
 	pipe(
 		constraints,
 		O.traverseArray(requirements),
-		O.match(
-			(): Assignment => new Map(),
-			uses => new Map(Object.values(groupBy(uses.flat(), use => use.kappa)).flatMap(combine)),
-		),
+		O.getOrElse(RA.zero<Use[]>),
+		RA.flatten,
+		fp.groupBy<Use>("kappa"),
+		Object.values,
+		RA.flatMap(combine),
+		entries => new Map(entries),
 	);
 
-export type Scope = { binders: readonly IVL.Binder[]; premises: readonly IVL.Formula[] };
+export type Assumption = { kappa: IVL.Kappa; params: IVL.Binder[] };
+export type Scope = { binders: readonly IVL.Binder[]; assumptions: readonly Assumption[]; guards: readonly IVL.Formula[] };
 export type Constraint = Scope & { goal: IVL.Formula };
 export type Predicate = { params: IVL.Binder[]; body: IVL.Formula };
 export type Assignment = ReadonlyMap<IVL.Kappa, Predicate>;
 
-type Definition = { kappa: IVL.Kappa; value: Predicate };
-type Use = Definition | { kappa: IVL.Kappa; value: "open" | "goal" };
+type Definition = { tag: "Definition"; kappa: IVL.Kappa; predicate: Predicate };
+type Use = Definition | { tag: "Open"; kappa: IVL.Kappa } | { tag: "Goal"; kappa: IVL.Kappa };
 
-const requirements = ({ binders, premises, goal }: Constraint): O.Option<Use[]> => {
-	if (premises.some(isMatching(Patterns.Formula.False))) {
+const requirements = ({ binders, assumptions, guards, goal }: Constraint): O.Option<Use[]> => {
+	if (guards.some(isMatching(Patterns.Formula.False))) {
 		return O.some([]);
 	}
-	const holes = premises.filter(p => isMatching(Positive, p)).map(({ args: [hole] }) => hole);
-	const guards = premises.filter(p => !isMatching(Positive, p) && !isMatching(Patterns.Formula.True, p));
-	const candidates = holes.flatMap(hole => candidate(hole, binders));
 	const bound = (v: IVL.Binder) => binders.some(b => sameBinder(b, v));
-	const wellScoped = distinct(binders) && candidates.length === holes.length && guards.every(g => scoped(g, bound));
-	const open: Use[] = holes.map(({ kappa }) => ({ kappa, value: "open" }));
+	const candidates = assumptions.filter(({ params }) => params.every(bound) && distinct(params));
+	const definitions: Definition[] = candidates.map(({ kappa, params }) => ({ tag: "Definition", kappa, predicate: { params, body: Build.true_() } }));
+	const wellScoped = distinct(binders) && candidates.length === assumptions.length && guards.every(g => scoped(g, bound));
+	const open = (): Use[] => candidates.map(({ kappa }) => ({ tag: "Open", kappa }));
 
 	return match(goal)
-		.with(Patterns.Formula.True, () => O.some(candidates))
+		.with(Patterns.Formula.True, () => O.some(definitions))
 		.when(
 			() => !wellScoped,
 			() => O.none,
 		)
 		.when(
-			g => discharged(g, premises),
-			() => O.some(candidates),
+			g => discharged(g, guards, candidates),
+			() => O.some(definitions),
 		)
 		.with(
 			Positive,
-			({ args: [hole] }): O.Option<Use[]> => (hole.spine.every(t => term(t, bound)) ? O.some<Use[]>([...open, { kappa: hole.kappa, value: "goal" }]) : O.none),
+			({ args: [hole] }): O.Option<Use[]> => (hole.spine.every(t => term(t, bound)) ? O.some<Use[]>([...open(), { tag: "Goal", kappa: hole.kappa }]) : O.none),
 		)
 		.when(
 			g => scoped(g, bound),
 			g => {
 				const selected = innermost(candidates, guards, g);
-				return O.some(selected ? [...candidates, selected] : open);
+				return O.some(selected ? [...definitions, selected] : open());
 			},
 		)
 		.otherwise(() => O.none);
 };
 
-const candidate = ({ kappa, spine }: IVL.Hole, binders: readonly IVL.Binder[]): Definition[] => {
-	const params = spine.map(arg =>
-		match(arg)
-			.with(Patterns.Term.Var, v => binders.find(b => sameBinder(b, v)))
-			.otherwise(() => undefined),
-	);
-	return params.every(p => p !== undefined) && distinct(params) ? [{ kappa, value: { params, body: Build.true_() } }] : [];
-};
-
 const sameBinder = (a: IVL.Binder, b: IVL.Binder) => a.name === b.name && isEqual(a.sort, b.sort);
 const distinct = (binders: readonly IVL.Binder[]) => uniqBy(binders, b => b.name).length === binders.length;
 
-const discharged = (goal: IVL.Formula, premises: readonly IVL.Formula[]): boolean =>
-	premises.some(p => isEqualWith(p, goal, ignoreOrigin)) ||
+const discharged = (goal: IVL.Formula, guards: readonly IVL.Formula[], assumptions: readonly Assumption[]): boolean =>
+	guards.some(p => isEqualWith(p, goal, ignoreOrigin)) ||
 	match(goal)
+		.with(Positive, ({ args: [hole] }) => assumptions.some(({ kappa, params }) => hole.kappa === kappa && isEqual(hole.spine, spine(params))))
 		.with({ tag: "Atom", op: "=" }, ({ args: [a, b] }) => isEqual(a, b) && scoped(goal, () => true))
 		.otherwise(() => false);
 
@@ -89,16 +85,16 @@ const ignoreOrigin = (left: unknown, right: unknown): boolean | undefined =>
 		? isEqualWith(omit(left, "origin"), omit(right, "origin"), ignoreOrigin)
 		: undefined;
 
-const innermost = (candidates: Definition[], guards: IVL.Formula[], goal: IVL.Formula): Definition | undefined =>
-	candidates.reduceRight<Definition | undefined>((selected, { kappa, value: { params } }) => {
+const innermost = (candidates: Assumption[], guards: readonly IVL.Formula[], goal: IVL.Formula): Definition | undefined =>
+	candidates.reduceRight<Definition | undefined>((selected, { kappa, params }) => {
 		if (selected) {
 			return selected;
 		}
 		const body = abstract(params, guards, goal);
-		return body && { kappa, value: { params, body } };
+		return body && { tag: "Definition", kappa, predicate: { params, body } };
 	}, undefined);
 
-const abstract = (params: IVL.Binder[], guards: IVL.Formula[], goal: IVL.Formula): IVL.Formula | undefined => {
+const abstract = (params: IVL.Binder[], guards: readonly IVL.Formula[], goal: IVL.Formula): IVL.Formula | undefined => {
 	const accepts = (v: IVL.Binder) => params.some(p => sameBinder(p, v));
 	if (!scoped(goal, accepts)) {
 		return undefined;
@@ -136,9 +132,11 @@ const term = (t: IVL.Term, accepts: (v: IVL.Binder) => boolean): boolean =>
 		.with(Patterns.Term.Num, Patterns.Term.Str, Patterns.Term.Bool, Patterns.Term.Const, () => true)
 		.otherwise(() => false);
 
+const spine = (params: IVL.Binder[]) => params.map(p => Build.var_(p.name, p.sort));
+
 const combine = (uses: Use[]): [IVL.Kappa, Predicate][] => {
-	const definitions = uses.flatMap(({ value }) => (typeof value === "string" ? [] : [value]));
-	if (!definitions.length || uses.some(u => u.value === "open")) {
+	const definitions = uses.filter(u => isMatching({ tag: "Definition" }, u)).map(d => d.predicate);
+	if (!definitions.length || uses.some(isMatching({ tag: "Open" }))) {
 		return [];
 	}
 	const { params } = definitions[0];
@@ -147,11 +145,11 @@ const combine = (uses: Use[]): [IVL.Kappa, Predicate][] => {
 	if (!definitions.every(p => isEqual(signature(p), sorts))) {
 		return [];
 	}
-	const spine = params.map(p => Build.var_(p.name, p.sort));
+	const args = spine(params);
 	const bodies = definitions
 		.filter(d => !isMatching(Patterns.Formula.True, d.body))
-		.map(d => Substitute.formula(d.body, new Map(d.params.map((p, i) => [p.name, spine[i]]))));
-	if (!bodies.length && uses.some(u => u.value === "goal")) {
+		.map(d => Substitute.formula(d.body, new Map(d.params.map((p, i) => [p.name, args[i]]))));
+	if (!bodies.length && uses.some(isMatching({ tag: "Goal" }))) {
 		return [];
 	}
 	return [[uses[0].kappa, { params, body: bodies.length === 1 ? bodies[0] : Build.and(...bodies) }]];

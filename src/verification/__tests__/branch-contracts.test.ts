@@ -33,12 +33,11 @@ describe("Branch contracts", () => {
 		assert(!Eff.failed(answer));
 
 		const input = { tag: "Hole", spine: [{ tag: "Var", sort: { tag: "String" } }] } as const;
-		const uses = constraints.flatMap(({ premises, goal }) => {
+		const uses = constraints.flatMap(({ guards, goal }) => {
 			if (!isMatching({ tag: "Atom", op: "=", args: [input, { tag: "Bool", value: true }] }, goal)) {
 				return [];
 			}
 			const [hole] = goal.args;
-			const guards = premises.filter(p => p.tag !== "True");
 			return [{ hole, guards }];
 		});
 		expect(uses).toHaveLength(2);

@@ -5,12 +5,13 @@ import { Validity } from "../validity";
 
 const { and, eq, gt, int, lt, x, y } = DSL;
 const binder = (name: string): IVL.Binder => ({ name, sort: Build.Int });
+const assume = (kappa: IVL.Kappa, ...names: string[]) => ({ kappa, params: names.map(binder) });
 const hole = (id: IVL.Kappa, ...args: IVL.Term[]) => eq(Build.hole(id, args), Build.bool(true));
 
 describe("Solving emitted Horn constraints", () => {
 	it("accumulates conjuncts and guards under one set of formal parameters", () => {
-		const scope = { binders: [binder("x")], premises: [hole(1, x)] };
-		const guarded = { binders: [binder("y")], premises: [hole(1, y), gt(y, int(2))] };
+		const scope = { binders: [binder("x")], assumptions: [assume(1, "x")], guards: [] };
+		const guarded = { binders: [binder("y")], assumptions: [assume(1, "y")], guards: [gt(y, int(2))] };
 		const assignment = Horn.solve([
 			{ ...scope, goal: gt(x, int(0)) },
 			{ ...scope, goal: lt(x, int(10)) },
@@ -25,7 +26,7 @@ describe("Solving emitted Horn constraints", () => {
 	});
 
 	it("discharges a reflexive equality on an ambient variable while inferring a local predicate", () => {
-		const scope = { binders: [binder("x")], premises: [hole(1, x)] };
+		const scope = { binders: [binder("x")], assumptions: [assume(1, "x")], guards: [] };
 		const assignment = Horn.solve([
 			{ ...scope, goal: gt(x, int(0)) },
 			{ ...scope, goal: eq(y, y) },
@@ -34,7 +35,7 @@ describe("Solving emitted Horn constraints", () => {
 	});
 
 	it("selects the innermost eligible assumption and projects a fresh alias", () => {
-		const scope = { binders: [binder("x"), binder("y")], premises: [hole(1, x), hole(2, x), hole(3, y), eq(y, x)] };
+		const scope = { binders: [binder("x"), binder("y")], assumptions: [assume(1, "x"), assume(2, "x"), assume(3, "y")], guards: [eq(y, x)] };
 		const assignment = Horn.solve([{ ...scope, goal: gt(x, int(0), "argument") }]);
 		expect(assignment.get(2)?.body).toEqual(gt(x, int(0), "argument"));
 		expect(assignment.get(1)?.body).toEqual(DSL.T);
@@ -44,9 +45,9 @@ describe("Solving emitted Horn constraints", () => {
 	it("keeps dependent premises and independent callback goals open", () => {
 		const binders = [binder("x")];
 		const assignment = Horn.solve([
-			{ binders, premises: [hole(1, x)], goal: hole(2, x) },
-			{ binders, premises: [hole(2, x)], goal: gt(x, int(0)) },
-			{ binders: [], premises: [], goal: hole(3, int(1)) },
+			{ binders, assumptions: [assume(1, "x")], guards: [], goal: hole(2, x) },
+			{ binders, assumptions: [assume(2, "x")], guards: [], goal: gt(x, int(0)) },
+			{ binders: [], assumptions: [], guards: [], goal: hole(3, int(1)) },
 		]);
 		expect([...assignment.keys()]).toEqual([2]);
 		expect(assignment.get(2)?.body).toEqual(gt(x, int(0)));
@@ -54,22 +55,24 @@ describe("Solving emitted Horn constraints", () => {
 	});
 
 	it("recognizes reflexive goals and guards from different source locations", () => {
-		const scope = { binders: [binder("x")], premises: [hole(1, x), DSL.not(gt(x, int(0), "premise comparison"), "premise")] };
+		const scope = { binders: [binder("x")], assumptions: [assume(1, "x")], guards: [DSL.not(gt(x, int(0), "premise comparison"), "premise")] };
+		const concrete = DSL.lt(x, int(10));
 		const assignment = Horn.solve([
+			{ ...scope, guards: [], goal: concrete },
 			{ ...scope, goal: hole(1, x) },
 			{ ...scope, goal: DSL.not(gt(x, int(0), "goal comparison"), "goal") },
-			{ binders: [], premises: [], goal: hole(1, int(1)) },
+			{ binders: [], assumptions: [], guards: [], goal: hole(1, int(1)) },
 		]);
-		expect(assignment.size).toBe(0);
+		expect(assignment.get(1)?.body).toEqual(concrete);
 	});
 
 	it.each([
-		{ binders: [binder("x")], premises: [hole(1, x, x)], goal: gt(x, int(0)) },
-		{ binders: [binder("x")], premises: [hole(1, int(0))], goal: gt(x, int(0)) },
-		{ binders: [binder("x"), binder("x")], premises: [hole(1, x)], goal: gt(x, int(0)) },
-		{ binders: [binder("x"), binder("y")], premises: [hole(1, x), gt(y, int(0))], goal: lt(x, int(1)) },
-		{ binders: [binder("x")], premises: [hole(1, x)], goal: Build.exists([{ name: "y", sort: Build.Int }], gt(y, x)) },
-		{ binders: [binder("x")], premises: [hole(1, x)], goal: DSL.not(hole(1, int(0))) },
+		{ binders: [binder("x")], assumptions: [assume(1, "x", "x")], guards: [], goal: gt(x, int(0)) },
+		{ binders: [binder("x")], assumptions: [], guards: [hole(1, int(0))], goal: gt(x, int(0)) },
+		{ binders: [binder("x"), binder("x")], assumptions: [assume(1, "x")], guards: [], goal: gt(x, int(0)) },
+		{ binders: [binder("x"), binder("y")], assumptions: [assume(1, "x")], guards: [gt(y, int(0))], goal: lt(x, int(1)) },
+		{ binders: [binder("x")], assumptions: [assume(1, "x")], guards: [], goal: Build.exists([{ name: "y", sort: Build.Int }], gt(y, x)) },
+		{ binders: [binder("x")], assumptions: [assume(1, "x")], guards: [], goal: DSL.not(hole(1, int(0))) },
 	])("leaves a requirement outside the direct fragment open: $goal.tag", constraint => {
 		expect(Horn.solve([constraint]).size).toBe(0);
 	});

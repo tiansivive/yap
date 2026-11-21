@@ -26,11 +26,15 @@ describe("Deferred verification constraints", () => {
 		const upper = DSL.lt(DSL.x, DSL.int(10), "upper bound");
 		const goal = Build.andWithOrigin([lower, upper], "range");
 		const binder = { name: "x", sort: Build.Int };
-		const { answer, constraints } = run(defaultContext, Metas.empty, () => hypotheses.local(VC.extend({ binder }), VC.require(goal)));
+		const predicate = DSL.eq(Build.hole(1, [DSL.x]), Build.bool(true));
+		const guard = DSL.gt(DSL.x, DSL.int(-1));
+		const applied = DSL.eq(Build.hole(2, [DSL.int(1)]), Build.bool(true));
+		const premise = Build.and(predicate, guard, applied);
+		const { answer, constraints } = run(defaultContext, Metas.empty, () => hypotheses.local(VC.extend({ binder, premise }), VC.require(goal)));
 		expect(answer).toBe(goal);
 		expect(constraints).toEqual([
-			{ binders: [binder], premises: [], goal: { ...lower, origin: "range" } },
-			{ binders: [binder], premises: [], goal: upper },
+			{ binders: [binder], assumptions: [{ kappa: 1, params: [binder] }], guards: [guard, applied], goal: { ...lower, origin: "range" } },
+			{ binders: [binder], assumptions: [{ kappa: 1, params: [binder] }], guards: [guard, applied], goal: upper },
 		]);
 	});
 

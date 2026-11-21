@@ -5,12 +5,13 @@ import * as M from "@yap/elaboration/shared/effects";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
-import { getMonoid } from "fp-ts/Array";
-import type * as Horn from "../horn";
+import { getMonoid, partitionMap } from "fp-ts/Array";
+import * as E from "fp-ts/Either";
+import * as Horn from "../horn";
 import { Patterns } from "../solver/ivl/patterns";
 import type { IVL } from "../solver/ivl/types";
 import type { Obligation } from "./types";
-import { match, P } from "ts-pattern";
+import { isMatching, match, P } from "ts-pattern";
 
 /*
  * The verification row. Metacontext state solutions, reader
@@ -175,13 +176,25 @@ const constraints = Eff.writer(getMonoid<Horn.Constraint>());
 
 export type Hypothesis = { binder: IVL.Binder; premise?: IVL.Formula };
 
+const classify = (premise: IVL.Formula): E.Either<IVL.Formula, Horn.Assumption> =>
+	match(premise)
+		.with(Horn.Positive, ({ args: [{ kappa, spine }] }) =>
+			spine.every(t => isMatching(Patterns.Term.Var, t)) ? E.right({ kappa, params: spine.map(({ name, sort }) => ({ name, sort })) }) : E.left(premise),
+		)
+		.otherwise(E.left);
+
 export const VC = {
 	extend:
 		(...entries: Hypothesis[]) =>
-		({ binders, premises }: Horn.Scope): Horn.Scope => ({
-			binders: [...binders, ...entries.map(entry => entry.binder)],
-			premises: [...premises, ...entries.flatMap(({ premise }) => (premise ? conjuncts(premise) : []))],
-		}),
+		(scope: Horn.Scope): Horn.Scope => {
+			const premises = entries.flatMap(({ premise }) => (premise ? conjuncts(premise) : []));
+			const { left: guards, right: assumptions } = partitionMap(classify)(premises);
+			return {
+				binders: [...scope.binders, ...entries.map(entry => entry.binder)],
+				assumptions: [...scope.assumptions, ...assumptions],
+				guards: [...scope.guards, ...guards.filter(p => !isMatching(Patterns.Formula.True, p))],
+			};
+		},
 	require: function* (goal: IVL.Formula): Verification<IVL.Formula> {
 		const scope = yield* hypotheses.ask();
 		yield* constraints.tell(conjuncts(goal).map(part => ({ ...scope, goal: part })));
@@ -276,7 +289,7 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 		logger.handlers(options.logging ?? false),
 		obligations.handlers(),
 		constraints.handlers(),
-		hypotheses.handlers({ binders: [], premises: [] }),
+		hypotheses.handlers({ binders: [], assumptions: [], guards: [] }),
 		supply.handlers(),
 		names.handlers(new Map()),
 		state.handlers(options.state ?? context.ffi[State.heads.empty].compute()),
@@ -284,5 +297,5 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 		M.supply.handlers({ meta: Object.values(registry).reduce((max, entry) => Math.max(max, entry.meta.val), 0) }),
 	]);
 
-	return { answer, obligations: collected, constraints: [...emitted], registry: registrySnapshot } as const;
+	return { answer, obligations: collected, constraints: emitted.slice(), registry: registrySnapshot } as const;
 };
