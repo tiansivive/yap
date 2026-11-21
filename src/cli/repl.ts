@@ -35,6 +35,7 @@ import { print as printC } from "../Codegen/v2/c/print";
 import { emit as emitErl } from "../Codegen/v2/erlang/emit";
 import { print as printErl } from "../Codegen/v2/erlang/print";
 import { VerificationServiceV2 } from "../verification/V2/service";
+import { Horn } from "../verification/horn";
 import { Build } from "../verification/solver/ivl/build";
 import { Print as IVLPrint } from "../verification/solver/ivl/print";
 import { Validity } from "../verification/validity";
@@ -358,7 +359,8 @@ const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: M
 				console.log("-------------------------------------\n");
 			}
 
-			const validity = Validity.check(vc);
+			const { formula } = Horn.infer(vc);
+			const validity = Validity.check(formula);
 
 			match(validity)
 				.with({ tag: "valid" }, () => {

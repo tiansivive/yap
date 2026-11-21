@@ -23,6 +23,7 @@ import { print as printErl } from "../../Codegen/v2/erlang/print";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as Sub from "../../elaboration/unification/substitution";
 import { VerificationServiceV2 } from "../../verification/V2/service";
+import { Horn } from "../../verification/horn";
 import { Build } from "../../verification/solver/ivl/build";
 import { Print as IVLPrint } from "../../verification/solver/ivl/print";
 import { Solver } from "../../verification/solver/v2/solver";
@@ -286,14 +287,19 @@ export const run = (source: string, opts: Options): Result => {
 
 	if (ivlArtefacts) {
 		result.ivl = attempt("Verification / IVL display", () => IVLPrint.formula(ivlArtefacts.vc), errors) ?? "";
-		result.validity = attempt("Verification / validity", () => Validity.display(Validity.check(ivlArtefacts.vc)), errors) ?? "";
+	}
+
+	const inferred = ivlArtefacts && attempt("Verification / Horn inference", () => Horn.infer(ivlArtefacts.vc), errors);
+	if (inferred) {
+		const { formula } = inferred;
+		result.validity = attempt("Verification / validity", () => Validity.display(Validity.check(formula)), errors) ?? "";
 
 		result.solverTrace =
 			attempt(
 				"Verification / solver trace",
 				() => {
-					const checked = Solver.run(ivlArtefacts.vc);
-					return Replay.replay({ formula: IVLPrint.formula(ivlArtefacts.vc), steps: checked.steps, encoding: checked.encoding, arena: checked.arena });
+					const checked = Solver.run(formula);
+					return Replay.replay({ formula: IVLPrint.formula(formula), steps: checked.steps, encoding: checked.encoding, arena: checked.arena });
 				},
 				errors,
 			) ?? "";
