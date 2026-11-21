@@ -275,20 +275,20 @@ export const run = (source: string, opts: Options): Result => {
 		"Verification / IVL",
 		() => {
 			const svc = VerificationServiceV2();
-			const { answer, constraints } = svc.check(tm, ty, ctx, elabRegistry);
+			const { answer, constraints, registry } = svc.check(tm, ty, ctx, elabRegistry);
 
 			if (Eff.failed(answer)) {
 				return undefined;
 			}
-			return { vc: answer.vc, constraints };
+			return { vc: answer.vc, constraints, registry };
 		},
 		errors,
 	);
 
 	if (ivlArtefacts) {
-		const { vc, constraints } = ivlArtefacts;
+		const { vc, constraints, registry } = ivlArtefacts;
 		result.ivl = attempt("Verification / IVL display", () => IVLPrint.formula(vc), errors) ?? "";
-		const assignment = attempt("Verification / Horn inference", () => Horn.solve(constraints), errors);
+		const assignment = attempt("Verification / Horn inference", () => Horn.assignment(constraints, ctx, registry), errors);
 		if (assignment) {
 			result.validity = attempt("Verification / validity", () => Validity.display(Validity.check(vc, assignment)), errors) ?? "";
 

@@ -346,7 +346,7 @@ const displayValue = (v: Pipeline.Value): string => {
 const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry, display: DisplayOpts, binder?: string): void => {
 	try {
 		const svc = VerificationServiceV2();
-		const { answer, constraints } = match(binder)
+		const { answer, constraints, registry: verified } = match(binder)
 			.with(P.string, name => svc.letdec(name, tm, ty, ctx, registry))
 			.otherwise(() => svc.check(tm, ty, ctx, registry));
 
@@ -359,7 +359,7 @@ const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: M
 				console.log("-------------------------------------\n");
 			}
 
-			const assignment = Horn.solve(constraints);
+			const assignment = Horn.assignment(constraints, ctx, verified);
 			const validity = Validity.check(vc, assignment);
 
 			match(validity)

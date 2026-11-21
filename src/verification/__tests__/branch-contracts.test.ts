@@ -2,6 +2,8 @@ import assert from "node:assert";
 import { isMatching } from "ts-pattern";
 import { describe, expect, it } from "vitest";
 
+import * as NF from "@yap/elaboration/normalization";
+import * as Horn from "../horn";
 import * as Eff from "@yap/utils/effects";
 import { elaborateModule } from "../../elaboration/__tests__/module";
 import { VerificationServiceV2 } from "../V2/service";
@@ -32,26 +34,33 @@ describe("Branch contracts", () => {
 		const { answer, constraints } = VerificationServiceV2().letdec("guarded", tm, ty, ctx, registry);
 		assert(!Eff.failed(answer));
 
-		const input = { tag: "Hole", spine: [{ tag: "Var", sort: { tag: "String" } }] } as const;
-		const uses = constraints.flatMap(({ guards, goal }) => {
-			if (!isMatching({ tag: "Atom", op: "=", args: [input, { tag: "Bool", value: true }] }, goal)) {
+		const unwrap = (value: NF.Value) => NF.unwrapNeutral(NF.unglue(value));
+		const uses = constraints.flatMap(({ goal, binders }) => {
+			const app = unwrap(goal);
+			if (!isMatching(NF.Patterns.App, app)) {
 				return [];
 			}
-			const [hole] = goal.args;
-			return [{ hole, guards }];
+			const meta = unwrap(app.func);
+			const literals = binders
+				.flatMap(b => (b.premise ? Horn.conjuncts(b.premise) : []))
+				.map(unwrap)
+				.flatMap(eq => (eq.type === "External" && eq.name === "$eq" ? eq.args : []))
+				.map(unwrap)
+				.flatMap(arg => (arg.type === "Lit" ? [arg.value] : []));
+			return isMatching(NF.Patterns.Flex, meta) && literals.some(l => l.type === "String") ? [{ id: meta.variable.val, literals }] : [];
 		});
 		expect(uses).toHaveLength(2);
-		expect(uses[0].hole.kappa).toBe(uses[1].hole.kappa);
-		expect(uses.map(({ guards }) => guards)).toMatchObject(
+		expect(uses[0].id).toBe(uses[1].id);
+		expect(uses.map(u => u.literals)).toEqual([
 			[
-				[true, "yes"],
-				[false, "no"],
-			].map(([value, key]) => [
-				{ tag: "Atom" },
-				{ tag: "Atom", args: [{ tag: "Var" }, { tag: "Bool", value }] },
-				{ tag: "Atom", args: [{ tag: "Var" }, { tag: "Str", value: key }] },
-			]),
-		);
+				{ type: "Bool", value: true },
+				{ type: "String", value: "yes" },
+			],
+			[
+				{ type: "Bool", value: false },
+				{ type: "String", value: "no" },
+			],
+		]);
 	});
 });
 

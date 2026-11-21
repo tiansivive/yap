@@ -73,7 +73,7 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 							const applied = yield* NF.reduce(modalities.liquid, NF.Constructors.Rigid(ctx.env.length), "Explicit");
 							const phi = yield* formula(applied);
 							const binder = { name, sort };
-							const artefacts = yield* hypotheses.local(VC.extend({ binder, premise: phi }), body);
+							const artefacts = yield* hypotheses.local(VC.extend({ level: ctx.env.length, premise: applied }), body);
 							const imp = yield* obligations.record("check.abs.quantification", Build.forall([binder], Build.implies(phi, artefacts.vc)), {
 								type: p(() => NF.display(type)),
 								description: `Function term must satisfy body's postcondition under the precondition on ${term.binding.variable}`,
