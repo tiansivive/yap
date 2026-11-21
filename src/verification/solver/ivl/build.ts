@@ -31,6 +31,7 @@ export namespace Build {
 	export const rowVar = (name: string): IVL.RowTerm => ({ tag: "Var", name });
 
 	// --- Terms ---
+	export const hole = (kappa: IVL.Kappa, spine: IVL.Term[] = []): IVL.Hole => ({ tag: "Hole", kappa, spine });
 	export const var_ = (name: string, sort: IVL.Sort): IVL.Term => ({ tag: "Var", name, sort });
 	export const const_ = (name: string, sort: IVL.Sort): IVL.Term => ({ tag: "Const", name, sort });
 	export const num = (value: string | number, sort: IVL.NumSort): IVL.Term => ({ tag: "Num", value: value.toString(), sort });

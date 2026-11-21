@@ -10,7 +10,7 @@ import type { IVL } from "../../ivl/types";
 export const OpenPredicate = Symbol("OpenPredicate");
 
 const reject = (hole: IVL.Hole): never => {
-	throw new Error(`Unsolved predicate ${hole.head.map(meta => "?" + meta.val).join(", ")}`, { cause: OpenPredicate });
+	throw new Error(`Unsolved predicate ?${hole.kappa}`, { cause: OpenPredicate });
 };
 
 export const normalize = (formula: IVL.Formula): IVL.Formula =>
