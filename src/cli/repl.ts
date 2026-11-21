@@ -34,7 +34,6 @@ import { emit as emitC } from "../Codegen/v2/c/emit";
 import { print as printC } from "../Codegen/v2/c/print";
 import { emit as emitErl } from "../Codegen/v2/erlang/emit";
 import { print as printErl } from "../Codegen/v2/erlang/print";
-import * as Horn from "../verification/horn";
 import { VerificationServiceV2 } from "../verification/V2/service";
 import { Build } from "../verification/solver/ivl/build";
 import { Print as IVLPrint } from "../verification/solver/ivl/print";
@@ -343,10 +342,14 @@ const displayValue = (v: Pipeline.Value): string => {
 	return String(v);
 };
 
-const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry, display: DisplayOpts, binder?: string): void => {
+const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry, display: DisplayOpts, binder?: string): Metas.Registry => {
 	try {
 		const svc = VerificationServiceV2();
-		const { answer, constraints } = match(binder)
+		const {
+			answer,
+			assignment,
+			registry: verified,
+		} = match(binder)
 			.with(P.string, name => svc.letdec(name, tm, ty, ctx, registry))
 			.otherwise(() => svc.check(tm, ty, ctx, registry));
 
@@ -359,7 +362,6 @@ const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: M
 				console.log("-------------------------------------\n");
 			}
 
-			const assignment = Horn.solve(constraints);
 			const validity = Validity.check(vc, assignment);
 
 			match(validity)
@@ -374,12 +376,19 @@ const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: M
 					console.log(`? Verification inconclusive: ${reason}\n`);
 				})
 				.exhaustive();
+			if (validity.tag === "valid") {
+				return [...assignment.keys()].reduce((published, id) => {
+					const solution = Metas.solution(verified, id);
+					return solution && Metas.lookup(registry, id) ? Metas.solve(published, id, solution) : published;
+				}, registry);
+			}
 		} else {
 			console.warn("Verification error:", answer[Eff.ABORT]);
 		}
 	} catch (err) {
 		console.warn("Verification failed:", err instanceof Error ? err.message : String(err));
 	}
+	return registry;
 };
 
 const evalCodegenJS = (mod: MIR.Module, ffi: Record<string, (...args: unknown[]) => unknown>): unknown => {
@@ -505,14 +514,12 @@ const interpret = (stmt: Src.Statement, state: ReplState, opts: ReplOpts): ReplS
 				console.log("-------------------------------------\n");
 			}
 
-			if (opts.verify) {
-				runVerification(tm, ty, next, nextBoundary.registry, state.display, name);
-			}
+			const boundary = opts.verify ? { ...nextBoundary, registry: runVerification(tm, ty, next, nextBoundary.registry, state.display, name) } : nextBoundary;
 
 			const compiled = Pipeline.lowerTermWithContext(tm, next, Metas.solutions(nextBoundary.registry), { parentBinders: [name] });
 			if (E.isLeft(compiled)) {
 				console.error(compiled.left);
-				return { ...state, ctx: next, boundary: nextBoundary };
+				return { ...state, ctx: next, boundary };
 			}
 
 			const { graph, mod } = compiled.right;
@@ -541,12 +548,12 @@ const interpret = (stmt: Src.Statement, state: ReplState, opts: ReplOpts): ReplS
 				newGlobals.set(name, value);
 			} catch (err) {
 				console.error("Runtime error:", err instanceof Error ? err.message : String(err));
-				return { ...state, ctx: next, boundary: nextBoundary, runtime: { ...state.runtime, functions: newFunctions } };
+				return { ...state, ctx: next, boundary, runtime: { ...state.runtime, functions: newFunctions } };
 			}
 
 			console.log(`${name} : ${disp(() => NF.display(ty))}\n`);
 
-			return { ...state, ctx: next, boundary: nextBoundary, runtime: { ...state.runtime, functions: newFunctions, globals: newGlobals } };
+			return { ...state, ctx: next, boundary, runtime: { ...state.runtime, functions: newFunctions, globals: newGlobals } };
 		})
 		.with({ type: "using" }, s => {
 			const [result, nextBoundary] = EB.Mod.using(s, state.ctx, state.boundary);

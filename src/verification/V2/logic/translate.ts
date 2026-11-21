@@ -45,10 +45,7 @@ export const live = function* (current: NF.Value, identity: NF.Value): Verificat
 			NF.Patterns.Existential,
 			ex => ex.assumptions.size > 0,
 			function* ({ assumptions, body }) {
-				return yield* definitions.local(
-					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
-					live(body.value, identity),
-				);
+				return yield* definitions.local(definitions.extend(assumptions), live(body.value, identity));
 			},
 		)
 		.with(NF.Patterns.Rigid, function* ({ variable }) {
@@ -57,7 +54,7 @@ export const live = function* (current: NF.Value, identity: NF.Value): Verificat
 			if (!definition) {
 				return yield* ambient();
 			}
-			return yield* live(definition, identity);
+			return yield* definitions.local(() => definition.env, live(definition.value, identity));
 		})
 		.with(State.Patterns.empty, function* () {
 			return Build.false_();
@@ -72,6 +69,28 @@ export const live = function* (current: NF.Value, identity: NF.Value): Verificat
 		})
 		.otherwise(ambient);
 };
+
+/** The validity checker instantiates residual IVL holes in the VC emitted before inference. */
+export function* predicate(value: NF.Value): Verification<{ params: IVL.Binder[]; body: IVL.Formula }> {
+	const head = yield* NF.view(value);
+	if (head.kind === "Sealed" && head.value.type === "Abs" && head.value.binder.type === "Lambda") {
+		const { binder, closure } = head.value;
+		const outer = yield* reader.ask();
+		const name = yield* supply.freshFrom(binder.variable);
+		const sort = yield* mkSort(binder.annotation);
+		const nested = yield* scope(
+			name,
+			binder,
+			binder.annotation,
+			(function* () {
+				const applied = yield* NF.apply(binder, closure, NF.Constructors.Rigid(outer.env.length));
+				return yield* predicate(applied);
+			})(),
+		);
+		return { params: [{ name, sort }, ...nested.params], body: nested.body };
+	}
+	return { params: [], body: yield* formula(value) };
+}
 
 export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
 	const ctx = yield* reader.ask();
@@ -157,10 +176,7 @@ const application = function* (nf: NF.Value): Verification<IVL.Term> {
 			NF.Patterns.Existential,
 			ex => ex.assumptions.size > 0,
 			function* ({ assumptions, body }) {
-				return yield* definitions.local(
-					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
-					application(body.value),
-				);
+				return yield* definitions.local(definitions.extend(assumptions), application(body.value));
 			},
 		)
 		.with(NF.Patterns.App, function* ({ func, arg }) {
@@ -176,7 +192,7 @@ const application = function* (nf: NF.Value): Verification<IVL.Term> {
 		})
 		.with(NF.Patterns.Rigid, function* ({ variable }) {
 			const definition = (yield* definitions.ask()).get(variable.lvl);
-			return yield* definition ? application(definition) : term(nf);
+			return yield* definition ? definitions.local(() => definition.env, application(definition.value)) : term(nf);
 		})
 		.with(NF.Patterns.Free, NF.Patterns.Foreign, function* ({ variable }) {
 			const symbol = match(variable)
@@ -219,10 +235,7 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 			NF.Patterns.Existential,
 			ex => ex.assumptions.size > 0,
 			function* ({ assumptions, body }) {
-				return yield* definitions.local(
-					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
-					term(body.value),
-				);
+				return yield* definitions.local(definitions.extend(assumptions), term(body.value));
 			},
 		)
 		.with({ type: "Neutral" }, function* ({ value }) {
@@ -272,7 +285,7 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 				const sort = yield* mkSort(entry.type[2]);
 				return Build.var_(nameAt(yield* names.ask(), variable.lvl), sort);
 			}
-			return yield* term(definition);
+			return yield* definitions.local(() => definition.env, term(definition.value));
 		})
 		.with(NF.Patterns.Var, function* (v) {
 			if (v.variable.type === "Free") {
@@ -342,10 +355,7 @@ export const formula = function* (nf: NF.Value): Verification<IVL.Formula> {
 			NF.Patterns.Existential,
 			ex => ex.assumptions.size > 0,
 			function* ({ assumptions, body }) {
-				return yield* definitions.local(
-					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
-					formula(body.value),
-				);
+				return yield* definitions.local(definitions.extend(assumptions), formula(body.value));
 			},
 		)
 		.with(NF.Patterns.Rigid, function* ({ variable }) {
@@ -354,7 +364,7 @@ export const formula = function* (nf: NF.Value): Verification<IVL.Formula> {
 			if (!definition) {
 				return Build.atom("=", yield* term(nf), Build.bool(true));
 			}
-			return yield* formula(definition);
+			return yield* definitions.local(() => definition.env, formula(definition.value));
 		})
 		.with({ type: "Neutral" }, function* ({ value }) {
 			return yield* formula(value);
@@ -447,20 +457,19 @@ export const bindings = function* (name: string, annotation: NF.Value): Verifica
 		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: { modalities } }) {
 			const sort = yield* mkSort(annotation);
 			const value = NF.Constructors.Rigid(ctx.env.length);
-			const phi = yield* scope(
+			return yield* scope(
 				name,
 				{ type: "Pi", variable: name },
 				annotation,
 				(function* () {
-					const applied = yield* NF.reduce(modalities.liquid, value, "Explicit");
-					return yield* formula(applied);
+					const predicate = yield* NF.reduce(modalities.liquid, value, "Explicit");
+					return [{ binder: { name, sort }, level: ctx.env.length, premise: predicate, formula: yield* formula(predicate) }];
 				})(),
 			);
-			return [{ binder: { name, sort }, premise: phi }];
 		})
 		.otherwise(function* () {
 			const sort = yield* mkSort(annotation);
-			return [{ binder: { name, sort } }];
+			return [{ binder: { name, sort }, level: ctx.env.length }];
 		});
 };
 
@@ -468,7 +477,7 @@ export const quantify = function* ([entry, ...rest]: Hypothesis[], goal: IVL.For
 	if (!entry) {
 		return goal;
 	}
-	const { binder, premise } = entry;
+	const { binder, formula: premise } = entry;
 	const body = yield* quantify(rest, goal);
 	return yield* obligations.record(`quantify:${binder.name}`, Build.forall([binder], premise ? Build.implies(premise, body) : body), {
 		description: `Quantifying ${premise ? "refined" : "over"} ${binder.name}`,

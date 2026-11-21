@@ -9,15 +9,49 @@ import * as Row from "@yap/shared/rows";
 import * as Q from "@yap/shared/modalities/multiplicity";
 import * as E from "fp-ts/Either";
 
+import * as Horn from "../horn";
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import type { VerificationArtefacts } from "./types";
-import { reader, fail, logger, obligations, supply, hypotheses, VC, type Verification } from "./effects";
+import { reader, constraints, fail, logger, obligations, supply, hypotheses, VC, type Verification } from "./effects";
 import { collectSigmaBindings, noCapture } from "./utils/context";
 import { wrapPsiRequirement, extractModalities, meet, propagate } from "./utils/refinements";
 import { synth } from "./synth";
 import { subtype } from "./subtype";
 import { mkSort, formula, bindings, quantify, scope } from "./logic/translate";
+
+export function* binding(tm: EB.Term, type: NF.Value): Verification<VerificationArtefacts> {
+	const registry = yield* Metas.registry.get();
+	const owned = function* (ty: NF.Value): Verification<number[]> {
+		const head = (yield* NF.view(ty)).value;
+
+		if (!isMatching(P.union(NF.Patterns.Psi, NF.Patterns.Pi), head)) {
+			return [];
+		}
+		const domain = (yield* NF.view(head.binder.annotation)).value;
+		const predicate = head.binder.type === "Psi" ? head.binder.requirement : isMatching(NF.Patterns.Modal, domain) ? domain.modalities.liquid : undefined;
+		const value = predicate && (yield* NF.view(predicate)).value;
+		const ctx = yield* reader.ask();
+		const next = yield* NF.apply(head.binder, head.closure, NF.Constructors.Rigid(ctx.env.length));
+		const nested = yield* reader.local(c => EB.bind(c, head.binder, head.binder.annotation), owned(next));
+		return value && isMatching(NF.Patterns.Flex, value) && Metas.lookup(registry, value.variable.val)?.kind === "Predicate"
+			? [value.variable.val, ...nested]
+			: nested;
+	};
+	const predicates = yield* owned(type);
+
+	if (!predicates.length) {
+		return yield* check(tm, type);
+	}
+	const [checked, clauses] = yield* constraints.listen(check(tm, type));
+	const assignment = yield* Horn.solve(clauses, new Set(predicates));
+
+	if (!assignment.size) {
+		return checked;
+	}
+	yield* Metas.registry.modify(metas => [...assignment].reduce((m, [id, value]) => Metas.solve(m, id, value), metas));
+	return checked;
+}
 
 export const check = function* (tm: EB.Term, ty: NF.Value): Verification<VerificationArtefacts> {
 	yield* logger.enter();
@@ -73,7 +107,7 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 							const applied = yield* NF.reduce(modalities.liquid, NF.Constructors.Rigid(ctx.env.length), "Explicit");
 							const phi = yield* formula(applied);
 							const binder = { name, sort };
-							const artefacts = yield* hypotheses.local(VC.extend({ binder, premise: phi }), body);
+							const artefacts = yield* hypotheses.local(VC.extend({ level: ctx.env.length, premise: applied }), body);
 							const imp = yield* obligations.record("check.abs.quantification", Build.forall([binder], Build.implies(phi, artefacts.vc)), {
 								type: p(() => NF.display(type)),
 								description: `Function term must satisfy body's postcondition under the precondition on ${term.binding.variable}`,
@@ -258,7 +292,10 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 			};
 
 			const matched = yield* bindings(yield* supply.freshNum(), met);
-			const branchVC = yield* hypotheses.local(VC.extend(...matched), telescope(binders));
+			// A pattern guard refers to the scrutinee in its existing source scope.
+			const { liquid } = yield* extractModalities(met, altCtx);
+			const premise = yield* NF.reduce(liquid, yield* NF.evaluate(scrutinee), "Explicit");
+			const branchVC = yield* hypotheses.local(VC.extend({ premise }), telescope(binders));
 			const vc = yield* quantify(matched, branchVC);
 			const combinedVc = Build.and(scrutineeArtefacts.vc, patternArtefacts.vc, vc);
 

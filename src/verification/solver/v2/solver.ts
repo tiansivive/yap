@@ -5,7 +5,6 @@
 import * as E from "fp-ts/Either";
 import * as O from "fp-ts/Option";
 import { match } from "ts-pattern";
-import type * as Horn from "../../horn";
 import type { IVL } from "../ivl/types";
 import { CDCL, Clause, type Result as CDCLResult } from "./cdcl";
 import * as Core from "./core";
@@ -21,8 +20,8 @@ import * as Theory from "./theory";
 const LIMIT = 5;
 
 export const Solver = {
-	run: (formula: IVL.Formula, assignment?: Horn.Assignment): Check => run(formula, assignment),
-	check: (formula: IVL.Formula, assignment?: Horn.Assignment): Result => Solver.run(formula, assignment).result,
+	run: (formula: IVL.Formula, assignment?: IVL.Assignment): Check => run(formula, assignment),
+	check: (formula: IVL.Formula, assignment?: IVL.Assignment): Result => Solver.run(formula, assignment).result,
 };
 
 export type Check = {
@@ -40,7 +39,7 @@ export type Model = {
 	evaluate: (term: IVL.Term) => O.Option<IVL.Term>;
 };
 
-const run = (formula: IVL.Formula, assignment?: Horn.Assignment): Check => {
+const run = (formula: IVL.Formula, assignment?: IVL.Assignment): Check => {
 	const [collector, state] = Core.run(trace(formula, assignment), { ...Core.Env.default, problem: { original: formula } });
 	const result = E.match(
 		(err: Core.Err): Result => ({ tag: "unknown", reason: err.cause.tag }),
@@ -56,7 +55,7 @@ const run = (formula: IVL.Formula, assignment?: Horn.Assignment): Check => {
 	};
 };
 
-const trace = (formula: IVL.Formula, assignment?: Horn.Assignment): Core.Solver<Result> =>
+const trace = (formula: IVL.Formula, assignment?: IVL.Assignment): Core.Solver<Result> =>
 	Core.Do(function* () {
 		// TODO: Report open predicates through the solver error effect when formula preparation becomes effectful.
 		try {
