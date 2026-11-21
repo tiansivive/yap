@@ -5,11 +5,12 @@ import * as Metas from "@yap/elaboration/shared/metas";
 import { defaultContext } from "@yap/shared/lib/constants";
 import * as Eff from "@yap/utils/effects";
 import { elaborateModule } from "../../elaboration/__tests__/module";
-import { extend, hypotheses, reader, run } from "../V2/effects";
+import { VC, hypotheses, reader, run, state } from "../V2/effects";
 import { infer, VerificationServiceV2 } from "../V2/service";
 import * as EB from "@yap/elaboration";
 import { Num } from "@yap/shared/literals";
-import { hypothesis, requireGoal, scope } from "../V2/logic/translate";
+import { OP_LIVE, PrimOps } from "@yap/shared/lib/primitives";
+import { condition, hypothesis, scope } from "../V2/logic/translate";
 import { Build, DSL } from "../solver/ivl";
 import { Validity } from "../validity";
 
@@ -39,7 +40,7 @@ describe("Deferred verification constraints", () => {
 				annotation,
 				(function* () {
 					const entry = yield* hypothesis(bound, annotation, premise);
-					return yield* hypotheses.local(extend(entry), requireGoal(goal));
+					return yield* hypotheses.local(VC.extend(entry), VC.require(yield* condition(goal)));
 				})(),
 			),
 		);
@@ -53,6 +54,16 @@ describe("Deferred verification constraints", () => {
 		expect(constraints[0].binders).toMatchObject([{ name: "x", annotation }]);
 		expect(constraints[0].premises).toMatchObject([{ type: "External", name: "$and" }]);
 		expect(constraints[1].premises).toBe(constraints[0].premises);
+	});
+
+	it("emits a false Horn goal for a suspension in the empty state", () => {
+		const { answer, constraints } = run(defaultContext, Metas.empty, function* () {
+			const unit = NF.Constructors.Atom("Unit");
+			const available = PrimOps[OP_LIVE].compute(yield* state.ask(), unit, unit, NF.Constructors.Var({ type: "Foreign", name: "Ask" }));
+			return yield* VC.require(yield* condition(available));
+		});
+		expect(answer).toEqual(Build.false_());
+		expect(constraints.map(c => c.goal)).toMatchObject([{ type: "Lit", value: { type: "Bool", value: false } }]);
 	});
 
 	it("retains a sibling label's type when a definition leaves the record scope", () => {
@@ -70,7 +81,7 @@ describe("Deferred verification constraints", () => {
 					num,
 					(function* () {
 						const entry = yield* hypothesis({ name: "x", sort: Build.Real }, num, App(Flex(EB.Meta(1, 0)), x, "Explicit"));
-						return yield* hypotheses.local(extend(entry), requireGoal(NF.DSL.Binop.gt(x, label)));
+						return yield* hypotheses.local(VC.extend(entry), VC.require(yield* condition(NF.DSL.Binop.gt(x, label))));
 					})(),
 				),
 			),

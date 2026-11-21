@@ -1,6 +1,7 @@
 // Direct Horn inference assigns a concrete goal to the innermost assumed predicate
 // whose formal parameters can express it.
 
+import type { IVL } from "./solver/ivl/types";
 import * as NF from "@yap/elaboration/normalization";
 import * as Metas from "@yap/elaboration/shared/metas";
 import { OP_AND, OP_EQ, OP_LIVE, OP_NOT, OP_OR, OP_LT, OP_LTE, OP_GT, OP_GTE, OP_NEQ } from "@yap/shared/lib/primitives";
@@ -14,14 +15,14 @@ export type Binder = { lvl: number; name: string; annotation: NF.Value };
 export type Scope = { binders: readonly Binder[]; premises: readonly NF.Value[] };
 export type Constraint = Scope & { goal: NF.Value };
 export type Predicate = { params: Binder[]; body: NF.Value };
-export type Assignment = ReadonlyMap<number, Predicate>;
+export type Assignment = ReadonlyMap<IVL.Kappa, { params: IVL.Binder[]; body: IVL.Formula }>;
 
 type Application = { kappa: number; args: NF.Value[] };
 type Assumption = { kappa: number; params: Binder[] };
 type Definition = { tag: "Definition"; kappa: number; predicate: Predicate };
 type Use = Definition | { tag: "Open" | "Goal"; kappa: number };
 
-export const solve = (constraints: readonly Constraint[], registry: Metas.Registry): Assignment => {
+export const solve = (constraints: readonly Constraint[], registry: Metas.Registry): ReadonlyMap<number, Predicate> => {
 	const uses = constraints.map(c => requirements(c, registry));
 	if (!uses.every((u): u is Use[] => u !== undefined)) {
 		return new Map();

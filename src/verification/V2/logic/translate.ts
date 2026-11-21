@@ -30,48 +30,50 @@ import * as Horn from "../../horn";
 import { Patterns } from "../../solver/ivl/patterns";
 import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
-import { reader, obligations, names, state, State, definitions, supply, hypotheses, constraints, type Verification, type Hypothesis } from "../effects";
+import { reader, obligations, names, state, State, definitions, supply, type Verification, type Hypothesis } from "../effects";
 
 const BooleanExternal = { ...NF.Patterns.External, name: P.union(OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LTE, OP_GTE, OP_AND, OP_OR, OP_NOT, OP_LIVE) } as const;
 const ForeignConstant = { ...NF.Patterns.External, arity: 0, args: [] } as const;
 
-type Membership<A> = {
-	empty: () => A;
-	ambient: (current: NF.Value, requested: NF.Value) => Verification<A>;
-	insert: (installed: NF.Value, requested: NF.Value, previous: Verification<A>) => Verification<A>;
-};
-
-const membership = function* <A>(current: NF.Value, identity: NF.Value, ops: Membership<A>): Verification<A> {
+export const live = function* (current: NF.Value, identity: NF.Value): Verification<IVL.Formula> {
 	const { value } = yield* NF.view(current);
+	const ambient = function* () {
+		const available = yield* term(current);
+		const requested = yield* term(identity);
+		return Build.atom("=", Build.app("$state.live", [available, requested], Build.Bool), Build.bool(true));
+	};
 	return yield* match(value)
 		.with(
 			NF.Patterns.Existential,
 			ex => ex.assumptions.size > 0,
-			({ assumptions, body }) =>
-				definitions.local(
-					outer => new Map([...outer, ...[...assumptions].map(([v, definition]) => [v.lvl, definition] as const)]),
-					membership(body.value, identity, ops),
-				),
+			function* ({ assumptions, body }) {
+				return yield* definitions.local(
+					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
+					live(body.value, identity),
+				);
+			},
 		)
 		.with(NF.Patterns.Rigid, function* ({ variable }) {
-			const definition = (yield* definitions.ask()).get(variable.lvl);
-			return yield* definition ? membership(definition, identity, ops) : ops.ambient(current, identity);
+			const env = yield* definitions.ask();
+			const definition = env.get(variable.lvl);
+			if (!definition) {
+				return yield* ambient();
+			}
+			return yield* live(definition, identity);
 		})
-		.with(State.Patterns.empty, () => Eff.of(ops.empty()))
-		.with(State.Patterns.insert, ({ args: [, previous, added] }) => ops.insert(added, identity, membership(previous, identity, ops)))
-		.otherwise(() => ops.ambient(current, identity));
+		.with(State.Patterns.empty, function* () {
+			return Build.false_();
+		})
+		.with(State.Patterns.insert, function* ({ args: [, previous, added] }) {
+			const installed = yield* term(added);
+			const requested = yield* term(identity);
+			/* Installing an identity preserves every handler available in the previous state.
+			 * Membership holds when the requested identity matches this installation or was available before it. */
+			const availableBeforeInsertion = yield* live(previous, identity);
+			return Build.or(Build.atom("=", installed, requested), availableBeforeInsertion);
+		})
+		.otherwise(ambient);
 };
-
-export const live = (current: NF.Value, identity: NF.Value): Verification<IVL.Formula> =>
-	membership(current, identity, {
-		empty: Build.false_,
-		ambient: function* (current, requested) {
-			return Build.atom("=", Build.app("$state.live", [yield* term(current), yield* term(requested)], Build.Bool), Build.bool(true));
-		},
-		insert: function* (installed, requested, previous) {
-			return Build.or(Build.atom("=", yield* term(installed), yield* term(requested)), yield* previous);
-		},
-	});
 
 export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
 	const ctx = yield* reader.ask();
@@ -468,21 +470,6 @@ const capture = function* (nf: NF.Value): Verification<NF.Value> {
 		.with(NF.Patterns.App, function* ({ func, arg, icit }) {
 			return NF.Constructors.App(yield* capture(func), yield* capture(arg), icit);
 		})
-		.with({ ...NF.Patterns.External, name: OP_LIVE }, ({ args: [current, input, output, identity], compute }) =>
-			membership(current, identity, {
-				empty: () => NF.Constructors.Lit(Bool(false)),
-				ambient: function* (current, requested) {
-					return NF.Constructors.External(OP_LIVE, 4, compute, [yield* capture(current), input, output, yield* capture(requested)]);
-				},
-				insert: function* (added, requested, previous) {
-					const eq = NF.DSL.Binop.eq(yield* capture(added), yield* capture(requested));
-					const rest = yield* previous;
-					return match(rest)
-						.with({ ...NF.Patterns.Lit, value: { type: "Bool", value: false } }, () => eq)
-						.otherwise(() => NF.DSL.Binop.or(eq, rest));
-				},
-			}),
-		)
 		.with(NF.Patterns.External, function* ({ name, arity, compute, args }) {
 			return NF.Constructors.External(name, arity, compute, yield* Eff.traverse(args, capture));
 		})
@@ -506,18 +493,18 @@ const formal = function* (name: string, annotation: NF.Value): Verification<Horn
 	return { lvl: yield* supply.level(name), name, annotation: yield* domain(annotation) };
 };
 
+export const condition = function* (predicate: NF.Value) {
+	const vc = yield* formula(predicate);
+	const value = vc.tag === "True" || vc.tag === "False" ? NF.Constructors.Lit(Bool(vc.tag === "True")) : yield* capture(predicate);
+	return { vc, value };
+};
+
 export const hypothesis = function* (binder: IVL.Binder, annotation: NF.Value, predicate: NF.Value) {
-	return { binder, formal: yield* formal(binder.name, annotation), premise: yield* formula(predicate), condition: yield* capture(predicate) };
+	const { vc, value } = yield* condition(predicate);
+	return { binder, formal: yield* formal(binder.name, annotation), premise: vc, condition: value };
 };
 
-export const requireGoal = function* (predicate: NF.Value): Verification<IVL.Formula> {
-	const scope = yield* hypotheses.ask();
-	const goal = yield* capture(predicate);
-	yield* constraints.tell(Horn.conjuncts(goal).map(part => ({ ...scope, goal: part })));
-	return yield* formula(predicate);
-};
-
-export const assignment = function* (solved: Horn.Assignment): Verification<IVL.Assignment> {
+export const assignment = function* (solved: ReadonlyMap<number, Horn.Predicate>): Verification<Horn.Assignment> {
 	const ctx = yield* reader.ask();
 	const entries = yield* Eff.traverse([...solved], function* ([kappa, predicate]) {
 		const { params } = predicate;

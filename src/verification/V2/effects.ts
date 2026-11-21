@@ -6,7 +6,7 @@ import * as M from "@yap/elaboration/shared/effects";
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import { getMonoid } from "fp-ts/Array";
-import type * as Horn from "../horn";
+import * as Horn from "../horn";
 import type { IVL } from "../solver/ivl/types";
 import type { Obligation } from "./types";
 import { P } from "ts-pattern";
@@ -177,16 +177,23 @@ export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
 export const definitions = Eff.reader<ReadonlyMap<number, NF.Value>, "VC.Definitions">("VC.Definitions");
 
 export const hypotheses = Eff.reader<Horn.Scope, "VC.Hypotheses">("VC.Hypotheses");
-export const constraints = Eff.writer(getMonoid<Horn.Constraint>());
+const constraints = Eff.writer(getMonoid<Horn.Constraint>());
 
 export type Hypothesis = { binder: IVL.Binder; premise?: IVL.Formula; formal: Horn.Binder; condition?: NF.Value };
 
-export const extend =
-	(...entries: Hypothesis[]) =>
-	(scope: Horn.Scope): Horn.Scope => ({
-		binders: [...scope.binders, ...entries.map(entry => entry.formal)],
-		premises: [...scope.premises, ...entries.flatMap(entry => (entry.condition ? [entry.condition] : []))],
-	});
+export const VC = {
+	extend:
+		(...entries: Hypothesis[]) =>
+		(scope: Horn.Scope): Horn.Scope => ({
+			binders: [...scope.binders, ...entries.map(entry => entry.formal)],
+			premises: [...scope.premises, ...entries.flatMap(entry => (entry.condition ? [entry.condition] : []))],
+		}),
+	require: function* ({ vc, value }: { vc: IVL.Formula; value: NF.Value }): Verification<IVL.Formula> {
+		const scope = yield* hypotheses.ask();
+		yield* constraints.tell(Horn.conjuncts(value).map(part => ({ ...scope, goal: part })));
+		return vc;
+	},
+};
 
 const heads = { empty: "$empty", insert: "$insert" } as const;
 

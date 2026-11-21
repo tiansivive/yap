@@ -36,7 +36,7 @@ export const VerificationServiceV2 = (options: VerificationOptions = {}) => ({
 	},
 });
 
-export const infer = (constraints: readonly Horn.Constraint[], ctx: EB.Context, registry: Metas.Registry): IVL.Assignment => {
+export const infer = (constraints: readonly Horn.Constraint[], ctx: EB.Context, registry: Metas.Registry): Horn.Assignment => {
 	const { answer } = run(ctx, registry, () => assignment(Horn.solve(constraints, registry)));
 	if (Eff.failed(answer)) {
 		throw new Error("Could not translate the inferred predicates");
