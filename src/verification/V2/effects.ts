@@ -5,6 +5,7 @@ import * as M from "@yap/elaboration/shared/effects";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
+import { getMonoid } from "fp-ts/Array";
 import type * as Horn from "../horn";
 import { Patterns } from "../solver/ivl/patterns";
 import type { IVL } from "../solver/ivl/types";
@@ -170,7 +171,7 @@ export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
 export const definitions = Eff.reader<ReadonlyMap<number, NF.Value>, "VC.Definitions">("VC.Definitions");
 
 export const hypotheses = Eff.reader<Horn.Scope, "VC.Hypotheses">("VC.Hypotheses");
-const constraints = Eff.writer<Horn.Constraint[]>(batches => batches.flat());
+const constraints = Eff.writer(getMonoid<Horn.Constraint>());
 
 export type Hypothesis = { binder: IVL.Binder; premise?: IVL.Formula };
 
@@ -283,5 +284,5 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 		M.supply.handlers({ meta: Object.values(registry).reduce((max, entry) => Math.max(max, entry.meta.val), 0) }),
 	]);
 
-	return { answer, obligations: collected, constraints: emitted, registry: registrySnapshot } as const;
+	return { answer, obligations: collected, constraints: [...emitted], registry: registrySnapshot } as const;
 };

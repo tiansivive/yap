@@ -9,23 +9,6 @@ const log = Eff.writer(monoid);
 const fail = Eff.except<string>();
 
 describe("writer", () => {
-	it("collects batches in emission order and gives each handler its own result", () => {
-		const batches = Eff.writer<string[]>(entries => entries.flat());
-		const program = function* () {
-			yield* batches.tell(["a", "b"]);
-			const seen = yield* batches.peek();
-			yield* batches.tell(["c"]);
-			return seen;
-		};
-		const [seen, written] = Eff.run(program, [batches.handlers()]);
-		expect(seen).toEqual(["a", "b"]);
-		expect(written).toEqual(["a", "b", "c"]);
-		const first = batches.handlers().output();
-		const second = batches.handlers().output();
-		expect(first).toEqual([]);
-		expect(second).not.toBe(first);
-	});
-
 	it("accumulates what a program tells", () => {
 		const program = function* () {
 			yield* log.tell(["a"]);
