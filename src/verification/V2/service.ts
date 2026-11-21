@@ -3,13 +3,14 @@ import * as Metas from "@yap/elaboration/shared/metas";
 
 import * as EB from "@yap/elaboration";
 import type * as NF from "@yap/elaboration/normalization";
-import type * as Horn from "../horn";
+import * as Horn from "../horn";
 import type { IVL } from "../solver/ivl/types";
 import type { VerificationArtefacts, SynthResult, Obligation } from "./types";
 import type { Err } from "./effects";
 import { run, type VerificationOptions } from "./effects";
 import { check } from "./check";
 import { synth } from "./synth";
+import { assignment } from "./logic/translate";
 import { subtype } from "./subtype";
 
 type Outcome<A> = {
@@ -34,3 +35,11 @@ export const VerificationServiceV2 = (options: VerificationOptions = {}) => ({
 		return run(ctx, registry, () => subtype(left, right), options);
 	},
 });
+
+export const infer = (constraints: readonly Horn.Constraint[], ctx: EB.Context, registry: Metas.Registry): Horn.Assignment => {
+	const { answer } = run(ctx, registry, () => assignment(Horn.solve(constraints, registry)));
+	if (Eff.failed(answer)) {
+		throw new Error("Could not translate the inferred predicates");
+	}
+	return answer;
+};

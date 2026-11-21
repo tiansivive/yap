@@ -5,14 +5,11 @@ import * as M from "@yap/elaboration/shared/effects";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
-import { getMonoid, partitionMap } from "fp-ts/Array";
-import * as E from "fp-ts/Either";
-import { identity, pipe } from "fp-ts/function";
+import { getMonoid } from "fp-ts/Array";
 import * as Horn from "../horn";
-import { Patterns } from "../solver/ivl/patterns";
 import type { IVL } from "../solver/ivl/types";
 import type { Obligation } from "./types";
-import { isMatching, match, P } from "ts-pattern";
+import { P } from "ts-pattern";
 
 /*
  * The verification row. Metacontext state solutions, reader
@@ -106,7 +103,8 @@ type FreshAction = Eff.Action<"VC.fresh", undefined, string>;
 type FreshNumAction = Eff.Action<"VC.freshNum", undefined, string>;
 type FreshFromAction = Eff.Action<"VC.freshFrom", string, string>;
 
-type SupplyActions = FreshAction | FreshNumAction | FreshFromAction;
+type LevelAction = Eff.Action<"VC.level", string, number>;
+type SupplyActions = FreshAction | FreshNumAction | FreshFromAction | LevelAction;
 
 const fresh = function* () {
 	return yield* Eff.ctl.action<FreshAction>("VC.fresh", undefined);
@@ -140,12 +138,18 @@ const bumpAlpha = (s: string): string => {
 };
 
 const supplyHandlers = (): Eff.Handler<SupplyActions, undefined> => {
+	const levels = new Map<string, number>();
 	let alphaSeq = "a";
 	let numSeq = 0;
 	let fromSeq = 0;
 
 	return {
 		clauses: {
+			"VC.level": name => {
+				const lvl = levels.get(name) ?? levels.size;
+				levels.set(name, lvl);
+				return Eff.ctl.resume(lvl);
+			},
 			"VC.fresh": () => {
 				const name = `$${alphaSeq}`;
 				alphaSeq = bumpAlpha(alphaSeq);
@@ -166,7 +170,7 @@ const supplyHandlers = (): Eff.Handler<SupplyActions, undefined> => {
 	};
 };
 
-export const supply = { fresh, freshNum, freshFrom, handlers: supplyHandlers };
+export const supply = { fresh, freshNum, freshFrom, level: (name: string) => Eff.ctl.action<LevelAction>("VC.level", name), handlers: supplyHandlers };
 
 export const names = Eff.reader<ReadonlyMap<number, string>, "VC.Names">("VC.Names");
 export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
@@ -175,40 +179,21 @@ export const definitions = Eff.reader<ReadonlyMap<number, NF.Value>, "VC.Definit
 export const hypotheses = Eff.reader<Horn.Scope, "VC.Hypotheses">("VC.Hypotheses");
 const constraints = Eff.writer(getMonoid<Horn.Constraint>());
 
-export type Hypothesis = { binder: IVL.Binder; premise?: IVL.Formula };
-
-const Assumed = { ...Horn.Positive, args: [{ ...Patterns.Term.Hole, spine: P.array(Patterns.Term.Var) }, Horn.Positive.args[1]] } as const;
-
-const classify = (premise: IVL.Formula): E.Either<IVL.Formula, Horn.Assumption> =>
-	pipe(
-		premise,
-		E.fromPredicate((p: IVL.Formula): p is P.narrow<IVL.Formula, typeof Assumed> => isMatching(Assumed, p), identity),
-		E.map(({ args: [{ kappa, spine }] }) => ({ kappa, params: spine.map(({ name, sort }) => ({ name, sort })) })),
-	);
+export type Hypothesis = { binder: IVL.Binder; premise?: IVL.Formula; formal: Horn.Binder; condition?: NF.Value };
 
 export const VC = {
 	extend:
 		(...entries: Hypothesis[]) =>
-		(scope: Horn.Scope): Horn.Scope => {
-			const premises = entries.flatMap(({ premise }) => (premise ? conjuncts(premise) : []));
-			const { left: guards, right: assumptions } = partitionMap(classify)(premises);
-			return {
-				binders: [...scope.binders, ...entries.map(entry => entry.binder)],
-				assumptions: [...scope.assumptions, ...assumptions],
-				guards: [...scope.guards, ...guards.filter(p => !isMatching(Patterns.Formula.True, p))],
-			};
-		},
-	require: function* (goal: IVL.Formula): Verification<IVL.Formula> {
+		(scope: Horn.Scope): Horn.Scope => ({
+			binders: [...scope.binders, ...entries.map(entry => entry.formal)],
+			premises: [...scope.premises, ...entries.flatMap(entry => (entry.condition ? [entry.condition] : []))],
+		}),
+	require: function* ({ vc, value }: { vc: IVL.Formula; value: NF.Value }): Verification<IVL.Formula> {
 		const scope = yield* hypotheses.ask();
-		yield* constraints.tell(conjuncts(goal).map(part => ({ ...scope, goal: part })));
-		return goal;
+		yield* constraints.tell(Horn.conjuncts(value).map(part => ({ ...scope, goal: part })));
+		return vc;
 	},
 };
-
-const conjuncts = (formula: IVL.Formula, inherited?: string): IVL.Formula[] =>
-	match(formula)
-		.with(Patterns.Formula.And, ({ values, origin }) => values.flatMap(value => conjuncts(value, origin ?? inherited)))
-		.otherwise(f => [f.origin === undefined && inherited !== undefined ? { ...f, origin: inherited } : f]);
 
 const heads = { empty: "$empty", insert: "$insert" } as const;
 
@@ -292,7 +277,7 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 		logger.handlers(options.logging ?? false),
 		obligations.handlers(),
 		constraints.handlers(),
-		hypotheses.handlers({ binders: [], assumptions: [], guards: [] }),
+		hypotheses.handlers({ binders: [], premises: [] }),
 		supply.handlers(),
 		names.handlers(new Map()),
 		state.handlers(options.state ?? context.ffi[State.heads.empty].compute()),

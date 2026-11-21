@@ -1,79 +1,110 @@
 import { describe, expect, it } from "vitest";
+import * as NF from "@yap/elaboration/normalization";
+import * as EB from "@yap/elaboration";
+import * as Metas from "@yap/elaboration/shared/metas";
+import { defaultContext } from "@yap/shared/lib/constants";
+import { Bool, Num } from "@yap/shared/literals";
 import * as Horn from "../horn";
-import { Build, DSL, type IVL } from "../solver/ivl";
+import { infer } from "../V2/service";
+import { Build, DSL } from "../solver/ivl";
 import { Validity } from "../validity";
 
-const { and, eq, gt, int, lt, x, y } = DSL;
-const binder = (name: string): IVL.Binder => ({ name, sort: Build.Int });
-const assume = (kappa: IVL.Kappa, ...names: string[]) => ({ kappa, params: names.map(binder) });
-const hole = (id: IVL.Kappa, ...args: IVL.Term[]) => eq(Build.hole(id, args), Build.bool(true));
+const C = NF.Constructors;
+const { and, eq, gt, lt, or } = NF.DSL.Binop;
+const { not } = NF.DSL.Unop;
+const num = (n: number) => C.Lit(Num(n));
+const annotation = C.Atom("Num");
+const binder = (lvl: number): Horn.Binder => ({ lvl, name: "v" + lvl, annotation });
+const [x, y] = [0, 1].map(C.Rigid);
+const registry = [1, 2, 3].reduce((r, id) => Metas.register(r, { kind: "Predicate", meta: EB.Meta(id, 0), annotation }), Metas.empty);
+const hole = (id: number, ...args: NF.Value[]) => args.reduce((f, a) => C.App(f, a, "Explicit"), C.Flex(EB.Meta(id, 0)));
+const scope = { binders: [binder(0)], premises: [hole(1, x)] };
+const solve = (constraints: Horn.Constraint[]) => Horn.solve(constraints, registry);
+const shape = (nf: NF.Value): object => {
+	const v = NF.unwrapNeutral(nf);
+	switch (v.type) {
+		case "External":
+			return { type: v.type, name: v.name, args: v.args.map(shape) };
+		case "Lit":
+			return { type: v.type, value: v.value };
+		default:
+			return v.type === "Var" && v.variable.type === "Bound" ? { type: "Neutral", value: { type: "Var", variable: v.variable } } : nf;
+	}
+};
 
 describe("Solving emitted Horn constraints", () => {
 	it("accumulates conjuncts and guards under one set of formal parameters", () => {
-		const scope = { binders: [binder("x")], assumptions: [assume(1, "x")], guards: [] };
-		const guarded = { binders: [binder("y")], assumptions: [assume(1, "y")], guards: [gt(y, int(2))] };
-		const assignment = Horn.solve([
-			{ ...scope, goal: gt(x, int(0)) },
-			{ ...scope, goal: lt(x, int(10)) },
-			{ ...guarded, goal: lt(y, int(5)) },
+		const constraints = [
+			{ ...scope, goal: gt(x, num(0)) },
+			{ ...scope, goal: lt(x, num(10)) },
+			{ binders: [binder(1)], premises: [hole(1, y), gt(y, num(2))], goal: lt(y, num(5)) },
+		];
+		const predicate = solve(constraints).get(1);
+		expect(predicate?.params).toEqual(scope.binders);
+		expect(predicate?.body).toMatchObject(shape(and(and(gt(x, num(0)), lt(x, num(10))), or(not(gt(x, num(2))), lt(x, num(5))))));
+		const assignment = infer(constraints, defaultContext, registry);
+		const use = (n: number) => DSL.eq(Build.hole(1, [Build.num(n, Build.Real)]), Build.bool(true));
+		expect(Validity.check(use(1), assignment).tag).toBe("valid");
+		expect(Validity.check(use(6), assignment).tag).toBe("invalid");
+	});
+
+	it("rebinds reordered formals simultaneously across occurrences of one predicate", () => {
+		const binders = [binder(0), binder(1)];
+		const assignment = solve([
+			{ binders, premises: [hole(1, x, y)], goal: gt(x, y) },
+			{ binders, premises: [eq(hole(1, y, x), C.Lit(Bool(true)))], goal: lt(y, x) },
 		]);
-		expect(assignment.get(1)).toEqual({
-			params: [{ name: "x", sort: Build.Int }],
-			body: and(gt(x, int(0)), lt(x, int(10)), DSL.implies(gt(x, int(2)), lt(x, int(5)))),
-		});
-		expect(Validity.check(hole(1, int(1)), assignment).tag).toBe("valid");
-		expect(Validity.check(hole(1, int(6)), assignment).tag).toBe("invalid");
+		expect(assignment.get(1)?.body).toMatchObject(shape(and(gt(x, y), lt(x, y))));
 	});
 
 	it("discharges a reflexive equality on an ambient variable while inferring a local predicate", () => {
-		const scope = { binders: [binder("x")], assumptions: [assume(1, "x")], guards: [] };
-		const assignment = Horn.solve([
-			{ ...scope, goal: gt(x, int(0)) },
-			{ ...scope, goal: eq(y, y) },
+		const assignment = solve([
+			{ ...scope, goal: gt(x, num(0)) },
+			{ ...scope, goal: eq(y, C.Rigid(1)) },
 		]);
-		expect(assignment.get(1)?.body).toEqual(gt(x, int(0)));
+		expect(assignment.get(1)?.body).toMatchObject(shape(gt(x, num(0))));
 	});
 
 	it("selects the innermost eligible assumption and projects a fresh alias", () => {
-		const scope = { binders: [binder("x"), binder("y")], assumptions: [assume(1, "x"), assume(2, "x"), assume(3, "y")], guards: [eq(y, x)] };
-		const assignment = Horn.solve([{ ...scope, goal: gt(x, int(0), "argument") }]);
-		expect(assignment.get(2)?.body).toEqual(gt(x, int(0), "argument"));
-		expect(assignment.get(1)?.body).toEqual(DSL.T);
-		expect(assignment.get(3)?.body).toEqual(DSL.T);
+		const assignment = solve([{ binders: [binder(0), binder(1)], premises: [hole(1, x), hole(2, x), hole(3, y), eq(y, x)], goal: gt(x, num(0)) }]);
+		expect(assignment.get(2)?.body).toMatchObject(shape(gt(x, num(0))));
+		expect(assignment.get(1)?.body).toMatchObject(shape(C.Lit(Bool(true))));
+		expect(assignment.get(3)?.body).toMatchObject(shape(C.Lit(Bool(true))));
 	});
 
 	it("keeps dependent premises and independent callback goals open", () => {
-		const binders = [binder("x")];
-		const assignment = Horn.solve([
-			{ binders, assumptions: [assume(1, "x")], guards: [], goal: hole(2, x) },
-			{ binders, assumptions: [assume(2, "x")], guards: [], goal: gt(x, int(0)) },
-			{ binders: [], assumptions: [], guards: [], goal: hole(3, int(1)) },
-		]);
+		const constraints = [
+			{ ...scope, goal: hole(2, x) },
+			{ ...scope, premises: [hole(2, x)], goal: gt(x, num(0)) },
+			{ binders: [], premises: [], goal: hole(3, num(1)) },
+		];
+		const assignment = solve(constraints);
 		expect([...assignment.keys()]).toEqual([2]);
-		expect(assignment.get(2)?.body).toEqual(gt(x, int(0)));
-		expect(Validity.check(hole(3, int(1)), assignment).tag).toBe("unknown");
+		expect(assignment.get(2)?.body).toMatchObject(shape(gt(x, num(0))));
+		const open = DSL.eq(Build.hole(3, [DSL.int(1)]), Build.bool(true));
+		expect(Validity.check(open, infer(constraints, defaultContext, registry)).tag).toBe("unknown");
 	});
 
-	it("recognizes reflexive goals and guards from different source locations", () => {
-		const scope = { binders: [binder("x")], assumptions: [assume(1, "x")], guards: [DSL.not(gt(x, int(0), "premise comparison"), "premise")] };
-		const concrete = DSL.lt(x, int(10));
-		const assignment = Horn.solve([
-			{ ...scope, guards: [], goal: concrete },
-			{ ...scope, goal: hole(1, x) },
-			{ ...scope, goal: DSL.not(gt(x, int(0), "goal comparison"), "goal") },
-			{ binders: [], assumptions: [], guards: [], goal: hole(1, int(1)) },
+	it("recognizes reflexive predicate goals and separately allocated guards", () => {
+		const concrete = lt(x, num(10));
+		const guarded = { ...scope, premises: [...scope.premises, not(gt(x, num(0)))] };
+		const assignment = solve([
+			{ ...scope, goal: concrete },
+			{ ...guarded, goal: hole(1, x) },
+			{ ...guarded, goal: not(gt(C.Rigid(0), num(0))) },
+			{ binders: [], premises: [], goal: hole(1, num(1)) },
 		]);
-		expect(assignment.get(1)?.body).toEqual(concrete);
+		expect(assignment.get(1)?.body).toMatchObject(shape(concrete));
 	});
 
 	it.each([
-		{ binders: [binder("x")], assumptions: [assume(1, "x", "x")], guards: [], goal: gt(x, int(0)) },
-		{ binders: [binder("x")], assumptions: [], guards: [hole(1, int(0))], goal: gt(x, int(0)) },
-		{ binders: [binder("x"), binder("x")], assumptions: [assume(1, "x")], guards: [], goal: gt(x, int(0)) },
-		{ binders: [binder("x"), binder("y")], assumptions: [assume(1, "x")], guards: [gt(y, int(0))], goal: lt(x, int(1)) },
-		{ binders: [binder("x")], assumptions: [assume(1, "x")], guards: [], goal: Build.exists([{ name: "y", sort: Build.Int }], gt(y, x)) },
-		{ binders: [binder("x")], assumptions: [assume(1, "x")], guards: [], goal: DSL.not(hole(1, int(0))) },
-	])("leaves a requirement outside the direct fragment open: $goal.tag", constraint => {
-		expect(Horn.solve([constraint]).size).toBe(0);
+		{ ...scope, premises: [hole(1, x, x)], goal: gt(x, num(0)) },
+		{ ...scope, premises: [hole(1, num(0))], goal: gt(x, num(0)) },
+		{ ...scope, binders: [binder(0), binder(0)], goal: gt(x, num(0)) },
+		{ binders: [binder(0), binder(1)], premises: [hole(1, x), gt(y, num(0))], goal: lt(x, num(1)) },
+		{ ...scope, goal: C.Exists("y", annotation, { ctx: defaultContext, value: gt(y, x) }) },
+		{ ...scope, goal: not(hole(1, num(0))) },
+	])("leaves a requirement outside the direct fragment open (%#)", constraint => {
+		expect(solve([constraint]).size).toBe(0);
 	});
 });

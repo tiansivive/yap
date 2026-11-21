@@ -17,7 +17,7 @@ import { collectSigmaBindings, noCapture } from "./utils/context";
 import { wrapPsiRequirement, extractModalities, meet, propagate } from "./utils/refinements";
 import { synth } from "./synth";
 import { subtype } from "./subtype";
-import { mkSort, formula, bindings, quantify, scope } from "./logic/translate";
+import { mkSort, hypothesis, bindings, quantify, scope } from "./logic/translate";
 
 export const check = function* (tm: EB.Term, ty: NF.Value): Verification<VerificationArtefacts> {
 	yield* logger.enter();
@@ -71,10 +71,10 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 							const modalities = yield* extractModalities(annotation, extended);
 							const sort = yield* mkSort(annotation);
 							const applied = yield* NF.reduce(modalities.liquid, NF.Constructors.Rigid(ctx.env.length), "Explicit");
-							const phi = yield* formula(applied);
 							const binder = { name, sort };
-							const artefacts = yield* hypotheses.local(VC.extend({ binder, premise: phi }), body);
-							const imp = yield* obligations.record("check.abs.quantification", Build.forall([binder], Build.implies(phi, artefacts.vc)), {
+							const entry = yield* hypothesis(binder, annotation, applied);
+							const artefacts = yield* hypotheses.local(VC.extend(entry), body);
+							const imp = yield* obligations.record("check.abs.quantification", Build.forall([binder], Build.implies(entry.premise, artefacts.vc)), {
 								type: p(() => NF.display(type)),
 								description: `Function term must satisfy body's postcondition under the precondition on ${term.binding.variable}`,
 							});

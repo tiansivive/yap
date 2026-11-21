@@ -73,7 +73,7 @@ export type Binder =
 export type Variable =
 	| { type: "Bound"; lvl: number }
 	| { type: "Free"; name: string }
-	| { type: "Label"; name: string }
+	| { type: "Label"; name: string; annotation?: Value }
 	| { type: "Foreign"; name: string }
 	| { type: "DepLabel"; name: string; lvl: number; annotation: Value }
 	/** `lvl` is a level on the label stack (`ctx.local`), which is separate from the env. */

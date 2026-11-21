@@ -1,10 +1,11 @@
-import { match, P } from "ts-pattern";
+import { isMatching, match, P } from "ts-pattern";
 
 import * as Eff from "@yap/utils/effects";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Metas from "@yap/elaboration/shared/metas";
+import { Bool } from "@yap/shared/literals";
 
 import {
 	OP_ADD,
@@ -25,6 +26,7 @@ import {
 	PrimOps,
 } from "@yap/shared/lib/primitives";
 
+import * as Horn from "../../horn";
 import { Patterns } from "../../solver/ivl/patterns";
 import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
@@ -289,6 +291,9 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 			}
 			if (v.variable.type === "Label") {
 				const name = v.variable.name;
+				if (v.variable.annotation) {
+					return Build.const_(name, yield* mkSort(v.variable.annotation));
+				}
 				const sig = ctx.sigma[name];
 				if (sig) {
 					const symbolic = match(sig.value)
@@ -430,6 +435,90 @@ export const scope = function* <A>(name: string, binder: EB.Binder, annotation: 
 	);
 };
 
+/* Horn clauses outlive their lexical scope. A name shared by separate visits to a binder
+ * denotes the same rigid, while two scopes at the same NbE depth can bind different variables. */
+const capture = function* (nf: NF.Value): Verification<NF.Value> {
+	const { value } = yield* NF.view(nf);
+	return yield* match(value)
+		.with(NF.Patterns.Modal, NF.Patterns.Neutral, ({ value }) => capture(value))
+		.with(
+			NF.Patterns.Existential,
+			ex => ex.assumptions.size > 0,
+			({ assumptions, body }) =>
+				definitions.local(outer => new Map([...outer, ...[...assumptions].map(([v, definition]) => [v.lvl, definition] as const)]), capture(body.value)),
+		)
+		.with(NF.Patterns.Label, function* ({ variable }) {
+			const ctx = yield* reader.ask();
+			const definition = ctx.sigma[variable.name]?.value;
+			if (definition && !isMatching({ ...NF.Patterns.Label, variable: { type: "Label", name: variable.name } }, NF.unwrapNeutral(definition))) {
+				return yield* capture(definition);
+			}
+			const annotation = ctx.labels[variable.name];
+			return NF.Constructors.Var({ ...variable, annotation: annotation ? yield* domain(annotation) : NF.Constructors.Atom("Label") });
+		})
+		.with(NF.Patterns.DepLabel, NF.Patterns.NuLabel, function* ({ variable }) {
+			return NF.Constructors.Var({ ...variable, annotation: yield* domain(variable.annotation) });
+		})
+		.with(NF.Patterns.Rigid, function* ({ variable }) {
+			const definition = (yield* definitions.ask()).get(variable.lvl);
+			if (definition) {
+				return yield* capture(definition);
+			}
+			const name = nameAt(yield* names.ask(), variable.lvl);
+			return NF.Constructors.Rigid(yield* supply.level(name));
+		})
+		.with(NF.Patterns.App, function* ({ func, arg, icit }) {
+			return NF.Constructors.App(yield* capture(func), yield* capture(arg), icit);
+		})
+		.with(NF.Patterns.External, function* ({ name, arity, compute, args }) {
+			return NF.Constructors.External(name, arity, compute, yield* Eff.traverse(args, capture));
+		})
+		.otherwise(() => Eff.of(value));
+};
+
+/* A domain can refer to an enclosing type variable whose level is local to this opening. */
+const domain = function* (annotation: NF.Value): Verification<NF.Value> {
+	const { value } = yield* NF.view(annotation);
+	return yield* match(value)
+		.with(NF.Patterns.Modal, ({ value }) => domain(value))
+		.with(NF.Patterns.Rigid, function* ({ variable }) {
+			const ctx = yield* reader.ask();
+			return yield* domain(ctx.env[EB.lvl2idx(ctx, variable.lvl)].type[2]);
+		})
+		.with(NF.Patterns.DepLabel, NF.Patterns.NuLabel, ({ variable }) => domain(variable.annotation))
+		.otherwise(() => Eff.of(value));
+};
+
+const formal = function* (name: string, annotation: NF.Value): Verification<Horn.Binder> {
+	return { lvl: yield* supply.level(name), name, annotation: yield* domain(annotation) };
+};
+
+export const condition = function* (predicate: NF.Value) {
+	const vc = yield* formula(predicate);
+	const value = vc.tag === "True" || vc.tag === "False" ? NF.Constructors.Lit(Bool(vc.tag === "True")) : yield* capture(predicate);
+	return { vc, value };
+};
+
+export const hypothesis = function* (binder: IVL.Binder, annotation: NF.Value, predicate: NF.Value) {
+	const { vc, value } = yield* condition(predicate);
+	return { binder, formal: yield* formal(binder.name, annotation), premise: vc, condition: value };
+};
+
+export const assignment = function* (solved: ReadonlyMap<number, Horn.Predicate>): Verification<Horn.Assignment> {
+	const ctx = yield* reader.ask();
+	const entries = yield* Eff.traverse([...solved], function* ([kappa, predicate]) {
+		const { params } = predicate;
+		const binders = yield* Eff.traverse(params, function* (p) {
+			return { name: p.name, sort: yield* mkSort(p.annotation) };
+		});
+		const actuals = params.map((_, i) => NF.Constructors.Rigid(ctx.env.length + i));
+		const body = Horn.instantiate(predicate, actuals);
+		const translate = params.reduceRight((program, p) => scope(p.name, { type: "Pi", variable: p.name }, p.annotation, program), formula(body));
+		return [kappa, { params: binders, body: yield* translate }] as const;
+	});
+	return new Map(entries);
+};
+
 /* The annotation is read in the binder's outer scope; its refinement is translated inside that binder. */
 export const bindings = function* (name: string, annotation: NF.Value): Verification<Hypothesis[]> {
 	const ctx = yield* reader.ask();
@@ -447,20 +536,20 @@ export const bindings = function* (name: string, annotation: NF.Value): Verifica
 		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: { modalities } }) {
 			const sort = yield* mkSort(annotation);
 			const value = NF.Constructors.Rigid(ctx.env.length);
-			const phi = yield* scope(
+			const entry = yield* scope(
 				name,
 				{ type: "Pi", variable: name },
 				annotation,
 				(function* () {
 					const applied = yield* NF.reduce(modalities.liquid, value, "Explicit");
-					return yield* formula(applied);
+					return yield* hypothesis({ name, sort }, annotation, applied);
 				})(),
 			);
-			return [{ binder: { name, sort }, premise: phi }];
+			return [entry];
 		})
 		.otherwise(function* () {
 			const sort = yield* mkSort(annotation);
-			return [{ binder: { name, sort } }];
+			return [{ binder: { name, sort }, formal: yield* formal(name, annotation) }];
 		});
 };
 
