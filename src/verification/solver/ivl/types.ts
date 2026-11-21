@@ -1,4 +1,5 @@
 export namespace IVL {
+	export type Assignment = ReadonlyMap<Kappa, { params: Binder[]; body: Formula }>;
 	export type Sort =
 		| { tag: "Bool" }
 		| { tag: "Int" }

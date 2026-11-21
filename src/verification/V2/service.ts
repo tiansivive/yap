@@ -8,7 +8,7 @@ import type { IVL } from "../solver/ivl/types";
 import type { VerificationArtefacts, SynthResult, Obligation } from "./types";
 import type { Err } from "./effects";
 import { run, type VerificationOptions } from "./effects";
-import { check } from "./check";
+import { binding } from "./check";
 import { synth } from "./synth";
 import { subtype } from "./subtype";
 
@@ -16,16 +16,17 @@ type Outcome<A> = {
 	answer: A | Eff.Aborted<Err>;
 	obligations: Obligation[];
 	constraints: Horn.Constraint[];
+	assignment: IVL.Assignment;
 	registry: Metas.Registry;
 };
 
 export const VerificationServiceV2 = (options: VerificationOptions = {}) => ({
 	check: (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry): Outcome<VerificationArtefacts> => {
-		return run(ctx, registry, () => check(tm, ty), options);
+		return run(ctx, registry, () => binding(tm, ty), options);
 	},
 	/* Let bodies retain the self-binder introduced during elaboration. */
 	letdec: (variable: string, tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry): Outcome<VerificationArtefacts> => {
-		return run(EB.bind(ctx, { type: "Let", variable }, ty), registry, () => check(tm, ty), options);
+		return run(EB.bind(ctx, { type: "Let", variable }, ty), registry, () => binding(tm, ty), options);
 	},
 	synth: (tm: EB.Term, ctx: EB.Context, registry: Metas.Registry): Outcome<SynthResult> => {
 		return run(ctx, registry, () => synth(tm), options);

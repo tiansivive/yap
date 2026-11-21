@@ -2,7 +2,6 @@
 // IVL = Intermediate Verification Language.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/cdcl-t-solver.md
 
-import type * as Horn from "../../../horn";
 import { Substitute } from "../../ivl/substitute";
 import { match, P } from "ts-pattern";
 import { Build } from "../../ivl/build";
@@ -15,7 +14,7 @@ const reject = (hole: IVL.Hole): never => {
 	throw new Error(`Unsolved predicate ?${hole.kappa}`, { cause: OpenPredicate });
 };
 
-export const normalize = (formula: IVL.Formula, assignment?: Horn.Assignment): IVL.Formula => {
+export const normalize = (formula: IVL.Formula, assignment?: IVL.Assignment): IVL.Formula => {
 	const visit = (formula: IVL.Formula): IVL.Formula =>
 		match(formula)
 			.with(Patterns.Formula.True, Patterns.Formula.False, f => f)

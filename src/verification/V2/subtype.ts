@@ -229,7 +229,7 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			const phiX = yield* scope(name, bt.binder, annotationB, formula(applied));
 
 			const binder = { name, sort };
-			const vcBody = yield* hypotheses.local(VC.extend({ binder, premise: phiX }), body);
+			const vcBody = yield* hypotheses.local(VC.extend({ level: lvl, premise: applied }), body);
 			const guarded = yield* obligations.record("subtype.pi.body", Build.forall([binder], Build.implies(phiX, vcBody)), {
 				type: `${display(() => NF.display(at))} <: ${display(() => NF.display(bt))}`,
 				description: `Function result must be subtype under parameter ${bt.binder.variable} assumption`,
@@ -265,19 +265,18 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			const name = yield* match(pAt)
 				.with(NF.Patterns.Lambda, ({ binder }) => supply.freshFrom(binder.variable))
 				.otherwise(() => supply.fresh());
-			const [phiAt, phiBt] = yield* scope(
+			const forall = yield* scope(
 				name,
 				{ type: "Pi", variable: name },
 				at.value,
-				(function* (): Verification<[IVL.Formula, IVL.Formula]> {
-					const appliedAt = yield* NF.reduce(pAt, value, "Explicit");
-					const appliedBt = yield* NF.reduce(pBt, value, "Explicit");
-					return [yield* formula(appliedAt), yield* formula(appliedBt)];
+				(function* () {
+					const left = yield* NF.reduce(pAt, value, "Explicit");
+					const right = yield* NF.reduce(pBt, value, "Explicit");
+					const binder = { name, sort };
+					const goal = yield* hypotheses.local(VC.extend({ level: ctx.env.length, premise: left }), VC.require(right));
+					return Build.forall([binder], Build.implies(yield* formula(left), goal));
 				})(),
 			);
-			const binder = { name, sort };
-			const required = yield* hypotheses.local(VC.extend({ binder, premise: phiAt }), VC.require(phiBt));
-			const forall = Build.forall([binder], Build.implies(phiAt, required));
 			return Build.and(baseVc, forall);
 		})
 		.with([{ type: "Modal" }, P._], function* ([at, bt]) {

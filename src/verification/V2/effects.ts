@@ -1,18 +1,16 @@
 /* eslint-disable no-restricted-syntax -- the handlers own their cells (indentation, obligations, name supplies); their clauses are the only way to move them */
+import { P } from "ts-pattern";
 import * as Eff from "@yap/utils/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as M from "@yap/elaboration/shared/effects";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
-import { getMonoid, partitionMap } from "fp-ts/Array";
-import * as E from "fp-ts/Either";
-import { identity, pipe } from "fp-ts/function";
+import { getMonoid } from "fp-ts/Array";
 import * as Horn from "../horn";
-import { Patterns } from "../solver/ivl/patterns";
+import { formula, predicate } from "./logic/translate";
 import type { IVL } from "../solver/ivl/types";
 import type { Obligation } from "./types";
-import { isMatching, match, P } from "ts-pattern";
 
 /*
  * The verification row. Metacontext state solutions, reader
@@ -170,45 +168,33 @@ export const supply = { fresh, freshNum, freshFrom, handlers: supplyHandlers };
 
 export const names = Eff.reader<ReadonlyMap<number, string>, "VC.Names">("VC.Names");
 export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
-export const definitions = Eff.reader<ReadonlyMap<number, NF.Value>, "VC.Definitions">("VC.Definitions");
+export type Definitions = ReadonlyMap<number, { value: NF.Value; env: Definitions }>;
+export const definitions = {
+	...Eff.reader<Definitions, "VC.Definitions">("VC.Definitions"),
+	extend:
+		(assumptions: ReadonlyMap<Extract<NF.Variable, { type: "Bound" }>, NF.Value>) =>
+		(outer: Definitions): Definitions =>
+			[...assumptions].reduce<Definitions>((env, [v, value]) => new Map([...env, [v.lvl, { value, env }]]), outer),
+};
 
-export const hypotheses = Eff.reader<Horn.Scope, "VC.Hypotheses">("VC.Hypotheses");
-const constraints = Eff.writer(getMonoid<Horn.Constraint>());
-
-export type Hypothesis = { binder: IVL.Binder; premise?: IVL.Formula };
-
-const Assumed = { ...Horn.Positive, args: [{ ...Patterns.Term.Hole, spine: P.array(Patterns.Term.Var) }, Horn.Positive.args[1]] } as const;
-
-const classify = (premise: IVL.Formula): E.Either<IVL.Formula, Horn.Assumption> =>
-	pipe(
-		premise,
-		E.fromPredicate((p: IVL.Formula): p is P.narrow<IVL.Formula, typeof Assumed> => isMatching(Assumed, p), identity),
-		E.map(({ args: [{ kappa, spine }] }) => ({ kappa, params: spine.map(({ name, sort }) => ({ name, sort })) })),
-	);
+export const hypotheses = Eff.reader<readonly Horn.Binder[], "VC.Hypotheses">("VC.Hypotheses");
+export const constraints = Eff.writer(getMonoid<Horn.Constraint>());
+export type Hypothesis = Horn.Binder & { binder: IVL.Binder; formula?: IVL.Formula };
 
 export const VC = {
 	extend:
-		(...entries: Hypothesis[]) =>
-		(scope: Horn.Scope): Horn.Scope => {
-			const premises = entries.flatMap(({ premise }) => (premise ? conjuncts(premise) : []));
-			const { left: guards, right: assumptions } = partitionMap(classify)(premises);
-			return {
-				binders: [...scope.binders, ...entries.map(entry => entry.binder)],
-				assumptions: [...scope.assumptions, ...assumptions],
-				guards: [...scope.guards, ...guards.filter(p => !isMatching(Patterns.Formula.True, p))],
-			};
-		},
-	require: function* (goal: IVL.Formula): Verification<IVL.Formula> {
+		(...entries: Horn.Binder[]) =>
+		(scope: readonly Horn.Binder[]): Horn.Binder[] => [...scope, ...entries.map(({ level, premise }) => ({ level, premise }))],
+	require: function* (goal: NF.Value): Verification<IVL.Formula> {
 		const scope = yield* hypotheses.ask();
-		yield* constraints.tell(conjuncts(goal).map(part => ({ ...scope, goal: part })));
-		return goal;
+		const binders = yield* Eff.traverse(scope, function* (b) {
+			return { ...b, premise: b.premise && (yield* Horn.prepare(b.premise)) };
+		});
+		const prepared = yield* Horn.prepare(goal);
+		yield* constraints.tell(Horn.conjuncts(prepared).map(part => ({ binders, goal: part })));
+		return yield* formula(goal);
 	},
 };
-
-const conjuncts = (formula: IVL.Formula, inherited?: string): IVL.Formula[] =>
-	match(formula)
-		.with(Patterns.Formula.And, ({ values, origin }) => values.flatMap(value => conjuncts(value, origin ?? inherited)))
-		.otherwise(f => [f.origin === undefined && inherited !== undefined ? { ...f, origin: inherited } : f]);
 
 const heads = { empty: "$empty", insert: "$insert" } as const;
 
@@ -283,16 +269,29 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 	};
 	const initialized = function* () {
 		const outer = yield* Eff.traverse([...ctx.env].reverse(), entry => supply.freshFrom(entry.name.variable));
-		return yield* names.local(() => new Map(outer.map((name, lvl) => [lvl, name])), program());
+		return yield* names.local(
+			() => new Map(outer.map((name, lvl) => [lvl, name])),
+			(function* () {
+				const answer = yield* program();
+				const current = yield* Metas.registry.get();
+				const inferred = Object.values(current).flatMap(p =>
+					p.kind === "Predicate" && p.solution && !Metas.solution(registry, p.meta.val) ? [{ id: p.meta.val, value: p.solution }] : [],
+				);
+				const entries = yield* Eff.traverse(inferred, function* ({ id, value }) {
+					return [id, yield* predicate(value)] as const;
+				});
+				return { answer, assignment: new Map(entries) };
+			})(),
+		);
 	};
-	const [answer, , registrySnapshot, , , collected, emitted] = Eff.run(initialized, [
+	const [outcome, , registrySnapshot, , , collected, emitted] = Eff.run(initialized, [
 		reader.handlers(context),
 		Metas.registry.handlers(registry),
 		except.handlers(),
 		logger.handlers(options.logging ?? false),
 		obligations.handlers(),
 		constraints.handlers(),
-		hypotheses.handlers({ binders: [], assumptions: [], guards: [] }),
+		hypotheses.handlers([]),
 		supply.handlers(),
 		names.handlers(new Map()),
 		state.handlers(options.state ?? context.ffi[State.heads.empty].compute()),
@@ -300,5 +299,6 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 		M.supply.handlers({ meta: Object.values(registry).reduce((max, entry) => Math.max(max, entry.meta.val), 0) }),
 	]);
 
-	return { answer, obligations: collected, constraints: emitted.slice(), registry: registrySnapshot } as const;
+	const { answer, assignment } = Eff.failed(outcome) ? { answer: outcome, assignment: new Map() satisfies IVL.Assignment } : outcome;
+	return { answer, assignment, obligations: collected, constraints: emitted.slice(), registry: registrySnapshot } as const;
 };

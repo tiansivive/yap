@@ -1,13 +1,12 @@
 // Formula transformation pipeline for the v2 solver.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/cdcl-t-solver.md
 
-import type * as Horn from "../../../horn";
 import type { IVL } from "../../ivl/types";
 import { normalize } from "./normalize";
 import { separate } from "./separate";
 import { skolemize } from "./skolem";
 
-export const run = (formula: IVL.Formula, assignment?: Horn.Assignment): Result => {
+export const run = (formula: IVL.Formula, assignment?: IVL.Assignment): Result => {
 	const normalized = normalize(formula, assignment);
 	const skolemized = skolemize(normalized);
 	const separated = separate(skolemized);
