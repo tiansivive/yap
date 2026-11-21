@@ -38,6 +38,7 @@ export namespace IVL {
 		| { tag: "Forall"; binders: Binder[]; body: Formula; triggers?: Trigger[]; origin?: string }
 		| { tag: "Exists"; binders: Binder[]; body: Formula; origin?: string };
 
+	export type Assignment = ReadonlyMap<Kappa, { params: Binder[]; body: Formula }>;
 	export type Binder = { name: string; sort: Sort };
 	export type Trigger = { terms: Term[] };
 	export type AtomOp = "=" | "!=" | "<" | "<=" | ">" | ">=";

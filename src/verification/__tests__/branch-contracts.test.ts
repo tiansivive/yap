@@ -1,5 +1,7 @@
 import assert from "node:assert";
 import { isMatching } from "ts-pattern";
+import * as NF from "@yap/elaboration/normalization";
+import { conjuncts } from "../horn";
 import { describe, expect, it } from "vitest";
 
 import * as Eff from "@yap/utils/effects";
@@ -32,24 +34,32 @@ describe("Branch contracts", () => {
 		const { answer, constraints } = VerificationServiceV2().letdec("guarded", tm, ty, ctx, registry);
 		assert(!Eff.failed(answer));
 
-		const input = { tag: "Hole", spine: [{ tag: "Var", sort: { tag: "String" } }] } as const;
-		const uses = constraints.flatMap(({ guards, goal }) => {
-			if (!isMatching({ tag: "Atom", op: "=", args: [input, { tag: "Bool", value: true }] }, goal)) {
+		const uses = constraints.flatMap(({ binders, premises, goal }) => {
+			if (goal.type !== "App") {
 				return [];
 			}
-			const [hole] = goal.args;
-			return [{ hole, guards }];
+			const head = NF.unwrapNeutral(goal.func);
+			const arg = NF.unwrapNeutral(goal.arg);
+			if (
+				!isMatching(NF.Patterns.Flex, head) ||
+				!isMatching(NF.Patterns.Rigid, arg) ||
+				!binders.some(p => p.lvl === arg.variable.lvl && isMatching({ ...NF.Patterns.Atom, value: { value: "String" } }, p.annotation))
+			) {
+				return [];
+			}
+			const guards = premises.flatMap(conjuncts).filter(g => g.type === "External");
+			return [{ kappa: head.variable.val, guards }];
 		});
 		expect(uses).toHaveLength(2);
-		expect(uses[0].hole.kappa).toBe(uses[1].hole.kappa);
+		expect(uses[0].kappa).toBe(uses[1].kappa);
 		expect(uses.map(({ guards }) => guards)).toMatchObject(
 			[
 				[true, "yes"],
 				[false, "no"],
 			].map(([value, key]) => [
-				{ tag: "Atom" },
-				{ tag: "Atom", args: [{ tag: "Var" }, { tag: "Bool", value }] },
-				{ tag: "Atom", args: [{ tag: "Var" }, { tag: "Str", value: key }] },
+				{ name: "$eq" },
+				{ name: "$eq", args: [{ value: NF.Patterns.Rigid }, { value: { type: "Bool", value } }] },
+				{ name: "$eq", args: [{ value: NF.Patterns.Rigid }, { value: { type: "String", value: key } }] },
 			]),
 		);
 	});

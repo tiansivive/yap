@@ -3,7 +3,7 @@ import { Build } from "./build";
 import { Patterns } from "./patterns";
 import type { IVL } from "./types";
 
-// MBQI returns a standalone residual formula, and Horn combines bodies under common parameter names.
+// MBQI returns a standalone residual formula, and normalization instantiates predicate definitions.
 // TODO: Let both consumers resolve variables from the environment as they visit a body,
 // materializing the result only when a caller needs a standalone formula.
 export namespace Substitute {
