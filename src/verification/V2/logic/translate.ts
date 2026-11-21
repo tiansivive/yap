@@ -28,7 +28,7 @@ import {
 import { Patterns } from "../../solver/ivl/patterns";
 import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
-import { reader, obligations, names, state, State, definitions, supply, type Verification, type Hypothesis } from "../effects";
+import { reader, obligations, names, state, State, definitions, supply, type Verification, type Hypothesis, type Fact, VC } from "../effects";
 
 const BooleanExternal = { ...NF.Patterns.External, name: P.union(OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LTE, OP_GTE, OP_AND, OP_OR, OP_NOT, OP_LIVE) } as const;
 const ForeignConstant = { ...NF.Patterns.External, arity: 0, args: [] } as const;
@@ -334,17 +334,26 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 		});
 };
 
+export const requirePredicate = function* (value: NF.Value): Verification<IVL.Formula> {
+	const { premise, parts } = yield* predicate(value);
+	return yield* VC.require(premise, parts);
+};
+
 export const formula = function* (nf: NF.Value): Verification<IVL.Formula> {
+	return (yield* predicate(nf)).premise;
+};
+
+export const predicate = function* (nf: NF.Value): Verification<{ premise: IVL.Formula; parts: Fact[] }> {
 	/* As in `term`, the kind is set aside: a formula encodes only the structure. */
 	const { value: structure } = yield* NF.view(nf);
-	return yield* match(structure)
+	const result = yield* match(structure)
 		.with(
 			NF.Patterns.Existential,
 			ex => ex.assumptions.size > 0,
 			function* ({ assumptions, body }) {
 				return yield* definitions.local(
 					outer => new Map([...outer, ...[...assumptions].map(([variable, value]) => [variable.lvl, value] as const)]),
-					formula(body.value),
+					predicate(body.value),
 				);
 			},
 		)
@@ -354,13 +363,13 @@ export const formula = function* (nf: NF.Value): Verification<IVL.Formula> {
 			if (!definition) {
 				return Build.atom("=", yield* term(nf), Build.bool(true));
 			}
-			return yield* formula(definition);
+			return yield* predicate(definition);
 		})
 		.with({ type: "Neutral" }, function* ({ value }) {
-			return yield* formula(value);
+			return yield* predicate(value);
 		})
 		.with({ type: "Modal" }, function* ({ value }) {
-			return yield* formula(value);
+			return yield* predicate(value);
 		})
 		.with(NF.Patterns.Lit, function* ({ value }) {
 			if (value.type === "Bool") {
@@ -375,7 +384,14 @@ export const formula = function* (nf: NF.Value): Verification<IVL.Formula> {
 					return yield* live(current, identity);
 				})
 				.with(OP_AND, function* () {
-					return Build.and(yield* formula(args[0]), yield* formula(args[1]));
+					const left = yield* predicate(args[0]);
+					const right = yield* predicate(args[1]);
+					const premise = Build.and(left.premise, right.premise);
+
+					if (premise.tag === "False" || premise.tag === "True") {
+						return premise;
+					}
+					return { premise, parts: [...left.parts, ...right.parts].filter(p => p.formula.tag !== "True") };
 				})
 				.with(OP_OR, function* () {
 					return Build.or(yield* formula(args[0]), yield* formula(args[1]));
@@ -408,6 +424,16 @@ export const formula = function* (nf: NF.Value): Verification<IVL.Formula> {
 		.otherwise(function* () {
 			return Build.atom("=", yield* term(nf), Build.bool(true));
 		});
+
+	if ("premise" in result) {
+		return result;
+	}
+	const locals = yield* names.ask();
+	const known = yield* definitions.ask();
+	// A rigid expanded by translation can only be retained through its definition.
+	const visible = known.size ? new Map([...locals].filter(([level]) => !known.has(level))) : locals;
+	const source = { value: nf, ctx: yield* reader.ask(), names: visible };
+	return { premise: result, parts: result.tag === "And" ? result.values.map(formula => ({ formula })) : [{ formula: result, source }] };
 };
 
 const nameAt = (bound: ReadonlyMap<number, string>, lvl: number): string =>
@@ -453,10 +479,10 @@ export const bindings = function* (name: string, annotation: NF.Value): Verifica
 				annotation,
 				(function* () {
 					const applied = yield* NF.reduce(modalities.liquid, value, "Explicit");
-					return yield* formula(applied);
+					return yield* predicate(applied);
 				})(),
 			);
-			return [{ binder: { name, sort }, premise: phi }];
+			return [{ binder: { name, sort }, ...phi }];
 		})
 		.otherwise(function* () {
 			const sort = yield* mkSort(annotation);

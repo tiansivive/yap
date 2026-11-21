@@ -2,6 +2,8 @@
 // whose formal parameters can express it. IVL = Intermediate Verification Language.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/refinement-inference.md
 
+import type * as EB from "@yap/elaboration";
+import type * as NF from "@yap/elaboration/normalization";
 import * as O from "fp-ts/lib/Option";
 import { pipe } from "fp-ts/lib/function";
 import * as RA from "fp-ts/ReadonlyArray";
@@ -27,15 +29,18 @@ export const solve = (constraints: readonly Constraint[]): Assignment =>
 	);
 
 export type Assumption = { kappa: IVL.Kappa; params: IVL.Binder[] };
-export type Scope = { binders: readonly IVL.Binder[]; assumptions: readonly Assumption[]; guards: readonly IVL.Formula[] };
+export type Source = { value: NF.Value; ctx: EB.Context; names: ReadonlyMap<number, string> };
+export type Sources = ReadonlyMap<IVL.Formula, Source>;
+export type Part = { params: IVL.Binder[]; guards: Source[]; goal: Source };
+export type Scope = { sources?: Sources; binders: readonly IVL.Binder[]; assumptions: readonly Assumption[]; guards: readonly IVL.Formula[] };
 export type Constraint = Scope & { goal: IVL.Formula };
-export type Predicate = { params: IVL.Binder[]; body: IVL.Formula };
+export type Predicate = { params: IVL.Binder[]; body: IVL.Formula; parts?: Part[] };
 export type Assignment = ReadonlyMap<IVL.Kappa, Predicate>;
 
 type Definition = { tag: "Definition"; kappa: IVL.Kappa; predicate: Predicate };
 type Use = Definition | { tag: "Open"; kappa: IVL.Kappa } | { tag: "Goal"; kappa: IVL.Kappa };
 
-const requirements = ({ binders, assumptions, guards, goal }: Constraint): O.Option<Use[]> => {
+const requirements = ({ binders, assumptions, guards, goal, sources }: Constraint): O.Option<Use[]> => {
 	if (guards.some(isMatching(Patterns.Formula.False))) {
 		return O.some([]);
 	}
@@ -62,7 +67,7 @@ const requirements = ({ binders, assumptions, guards, goal }: Constraint): O.Opt
 		.when(
 			g => scoped(g, bound),
 			g => {
-				const selected = innermost(candidates, guards, g);
+				const selected = innermost(candidates, guards, g, sources);
 				return O.some(selected ? [...definitions, selected] : open());
 			},
 		)
@@ -85,16 +90,16 @@ const ignoreOrigin = (left: unknown, right: unknown): boolean | undefined =>
 		? isEqualWith(omit(left, "origin"), omit(right, "origin"), ignoreOrigin)
 		: undefined;
 
-const innermost = (candidates: Assumption[], guards: readonly IVL.Formula[], goal: IVL.Formula): Definition | undefined =>
+const innermost = (candidates: Assumption[], guards: readonly IVL.Formula[], goal: IVL.Formula, sources?: Sources): Definition | undefined =>
 	candidates.reduceRight<Definition | undefined>((selected, { kappa, params }) => {
 		if (selected) {
 			return selected;
 		}
-		const body = abstract(params, guards, goal);
-		return body && { tag: "Definition", kappa, predicate: { params, body } };
+		const predicate = abstract(params, guards, goal, sources);
+		return predicate && { tag: "Definition", kappa, predicate };
 	}, undefined);
 
-const abstract = (params: IVL.Binder[], guards: readonly IVL.Formula[], goal: IVL.Formula): IVL.Formula | undefined => {
+const abstract = (params: IVL.Binder[], guards: readonly IVL.Formula[], goal: IVL.Formula, sources?: Sources): Predicate | undefined => {
 	const accepts = (v: IVL.Binder) => params.some(p => sameBinder(p, v));
 	if (!scoped(goal, accepts)) {
 		return undefined;
@@ -112,7 +117,10 @@ const abstract = (params: IVL.Binder[], guards: readonly IVL.Formula[], goal: IV
 	if (!local.every(g => scoped(g, accepts))) {
 		return undefined;
 	}
-	return local.length ? Build.implies(Build.and(...local), goal, goal.origin) : goal;
+	const body = local.length ? Build.implies(Build.and(...local), goal, goal.origin) : goal;
+	const source = sources?.get(goal);
+	const premises = local.flatMap(guard => sources?.get(guard) ?? []);
+	return source && premises.length === local.length ? { params, body, parts: [{ params, guards: premises, goal: source }] } : { params, body };
 };
 
 const scoped = (f: IVL.Formula, accepts: (v: IVL.Binder) => boolean): boolean =>
@@ -146,11 +154,12 @@ const combine = (uses: Use[]): [IVL.Kappa, Predicate][] => {
 		return [];
 	}
 	const args = spine(params);
-	const bodies = definitions
-		.filter(d => !isMatching(Patterns.Formula.True, d.body))
-		.map(d => Substitute.formula(d.body, new Map(d.params.map((p, i) => [p.name, args[i]]))));
+	const selected = definitions.filter(d => !isMatching(Patterns.Formula.True, d.body));
+	const bodies = selected.map(d => Substitute.formula(d.body, new Map(d.params.map((p, i) => [p.name, args[i]]))));
 	if (!bodies.length && uses.some(isMatching({ tag: "Goal" }))) {
 		return [];
 	}
-	return [[uses[0].kappa, { params, body: bodies.length === 1 ? bodies[0] : Build.and(...bodies) }]];
+	const body = bodies.length === 1 ? bodies[0] : Build.and(...bodies);
+	const parts = selected.flatMap(d => d.parts ?? []);
+	return [[uses[0].kappa, selected.length && selected.every(d => d.parts) ? { params, body, parts } : { params, body }]];
 };

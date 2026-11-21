@@ -173,9 +173,10 @@ export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
 export const definitions = Eff.reader<ReadonlyMap<number, NF.Value>, "VC.Definitions">("VC.Definitions");
 
 export const hypotheses = Eff.reader<Horn.Scope, "VC.Hypotheses">("VC.Hypotheses");
-const constraints = Eff.writer(getMonoid<Horn.Constraint>());
+export const constraints = Eff.writer(getMonoid<Horn.Constraint>());
 
-export type Hypothesis = { binder: IVL.Binder; premise?: IVL.Formula };
+export type Fact = { formula: IVL.Formula; source?: Horn.Source };
+export type Hypothesis = { binder: IVL.Binder; premise?: IVL.Formula; parts?: Fact[] };
 
 const Assumed = { ...Horn.Positive, args: [{ ...Patterns.Term.Hole, spine: P.array(Patterns.Term.Var) }, Horn.Positive.args[1]] } as const;
 
@@ -190,25 +191,30 @@ export const VC = {
 	extend:
 		(...entries: Hypothesis[]) =>
 		(scope: Horn.Scope): Horn.Scope => {
-			const premises = entries.flatMap(({ premise }) => (premise ? conjuncts(premise) : []));
-			const { left: guards, right: assumptions } = partitionMap(classify)(premises);
+			const premises = entries.flatMap(({ premise, parts }) => parts ?? (premise ? conjuncts(premise) : []));
+			const { left: guards, right: assumptions } = partitionMap(classify)(premises.map(p => p.formula));
+			const sources = new Map(scope.sources);
+			premises.forEach(({ formula, source }) => source && sources.set(formula, source));
 			return {
+				...(sources.size ? { sources } : {}),
 				binders: [...scope.binders, ...entries.map(entry => entry.binder)],
 				assumptions: [...scope.assumptions, ...assumptions],
 				guards: [...scope.guards, ...guards.filter(p => !isMatching(Patterns.Formula.True, p))],
 			};
 		},
-	require: function* (goal: IVL.Formula): Verification<IVL.Formula> {
+	require: function* (goal: IVL.Formula, parts = conjuncts(goal)): Verification<IVL.Formula> {
 		const scope = yield* hypotheses.ask();
-		yield* constraints.tell(conjuncts(goal).map(part => ({ ...scope, goal: part })));
+		yield* constraints.tell(
+			parts.map(({ formula, source }) => ({ ...scope, goal: formula, ...(source ? { sources: new Map([...(scope.sources ?? []), [formula, source]]) } : {}) })),
+		);
 		return goal;
 	},
 };
 
-const conjuncts = (formula: IVL.Formula, inherited?: string): IVL.Formula[] =>
+const conjuncts = (formula: IVL.Formula, inherited?: string): Fact[] =>
 	match(formula)
 		.with(Patterns.Formula.And, ({ values, origin }) => values.flatMap(value => conjuncts(value, origin ?? inherited)))
-		.otherwise(f => [f.origin === undefined && inherited !== undefined ? { ...f, origin: inherited } : f]);
+		.otherwise(f => [{ formula: f.origin === undefined && inherited !== undefined ? { ...f, origin: inherited } : f }]);
 
 const heads = { empty: "$empty", insert: "$insert" } as const;
 

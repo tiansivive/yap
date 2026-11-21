@@ -343,10 +343,14 @@ const displayValue = (v: Pipeline.Value): string => {
 	return String(v);
 };
 
-const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry, display: DisplayOpts, binder?: string): void => {
+const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry, display: DisplayOpts, binder?: string): Metas.Registry => {
 	try {
 		const svc = VerificationServiceV2();
-		const { answer, constraints } = match(binder)
+		const {
+			answer,
+			constraints,
+			registry: verified,
+		} = match(binder)
 			.with(P.string, name => svc.letdec(name, tm, ty, ctx, registry))
 			.otherwise(() => svc.check(tm, ty, ctx, registry));
 
@@ -374,12 +378,19 @@ const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: M
 					console.log(`? Verification inconclusive: ${reason}\n`);
 				})
 				.exhaustive();
+			if (binder && validity.tag === "valid") {
+				return Object.values(registry).reduce((published, entry) => {
+					const value = Metas.solution(verified, entry.meta.val);
+					return entry.kind === "Predicate" && !entry.solution && value ? Metas.solve(published, entry.meta.val, value) : published;
+				}, registry);
+			}
 		} else {
 			console.warn("Verification error:", answer[Eff.ABORT]);
 		}
 	} catch (err) {
 		console.warn("Verification failed:", err instanceof Error ? err.message : String(err));
 	}
+	return registry;
 };
 
 const evalCodegenJS = (mod: MIR.Module, ffi: Record<string, (...args: unknown[]) => unknown>): unknown => {
@@ -482,14 +493,14 @@ const interpret = (stmt: Src.Statement, state: ReplState, opts: ReplOpts): ReplS
 			return { ...state, ctx: next, boundary: nextBoundary };
 		})
 		.with({ type: "let" }, s => {
-			const [name, result, nextBoundary] = EB.Mod.letdec(s, state.ctx, state.boundary);
+			const [name, result, elaboratedBoundary] = EB.Mod.letdec(s, state.ctx, state.boundary);
 			if (E.isLeft(result)) {
 				console.warn(EB.V2.display(result.left));
 				return state;
 			}
 
 			const [[tm, ty, _us], next] = result.right;
-			const disp = shown(next, nextBoundary.registry);
+			const disp = shown(next, elaboratedBoundary.registry);
 
 			if (state.display.elaboration) {
 				console.log("\n------------ Elaboration ------------");
@@ -499,15 +510,15 @@ const interpret = (stmt: Src.Statement, state: ReplState, opts: ReplOpts): ReplS
 			}
 
 			if (state.display.nf) {
-				const normal = normalize(next, nextBoundary.registry, tm);
+				const normal = normalize(next, elaboratedBoundary.registry, tm);
 				console.log("\n--------------- NF ------------------");
 				console.log(`let ${name} = ${disp(() => EB.Display.Term(normal))}`);
 				console.log("-------------------------------------\n");
 			}
 
-			if (opts.verify) {
-				runVerification(tm, ty, next, nextBoundary.registry, state.display, name);
-			}
+			const nextBoundary = opts.verify
+				? { ...elaboratedBoundary, registry: runVerification(tm, ty, next, elaboratedBoundary.registry, state.display, name) }
+				: elaboratedBoundary;
 
 			const compiled = Pipeline.lowerTermWithContext(tm, next, Metas.solutions(nextBoundary.registry), { parentBinders: [name] });
 			if (E.isLeft(compiled)) {
