@@ -34,6 +34,7 @@ import { emit as emitC } from "../Codegen/v2/c/emit";
 import { print as printC } from "../Codegen/v2/c/print";
 import { emit as emitErl } from "../Codegen/v2/erlang/emit";
 import { print as printErl } from "../Codegen/v2/erlang/print";
+import * as Horn from "../verification/horn";
 import { VerificationServiceV2 } from "../verification/V2/service";
 import { Build } from "../verification/solver/ivl/build";
 import { Print as IVLPrint } from "../verification/solver/ivl/print";
@@ -345,7 +346,7 @@ const displayValue = (v: Pipeline.Value): string => {
 const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry, display: DisplayOpts, binder?: string): void => {
 	try {
 		const svc = VerificationServiceV2();
-		const { answer } = match(binder)
+		const { answer, constraints } = match(binder)
 			.with(P.string, name => svc.letdec(name, tm, ty, ctx, registry))
 			.otherwise(() => svc.check(tm, ty, ctx, registry));
 
@@ -358,7 +359,8 @@ const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: M
 				console.log("-------------------------------------\n");
 			}
 
-			const validity = Validity.check(vc);
+			const assignment = Horn.solve(constraints);
+			const validity = Validity.check(vc, assignment);
 
 			match(validity)
 				.with({ tag: "valid" }, () => {

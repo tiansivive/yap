@@ -3,6 +3,7 @@ import * as Metas from "@yap/elaboration/shared/metas";
 
 import * as EB from "@yap/elaboration";
 import type * as NF from "@yap/elaboration/normalization";
+import type * as Horn from "../horn";
 import type { IVL } from "../solver/ivl/types";
 import type { VerificationArtefacts, SynthResult, Obligation } from "./types";
 import type { Err } from "./effects";
@@ -14,6 +15,7 @@ import { subtype } from "./subtype";
 type Outcome<A> = {
 	answer: A | Eff.Aborted<Err>;
 	obligations: Obligation[];
+	constraints: Horn.Constraint[];
 	registry: Metas.Registry;
 };
 

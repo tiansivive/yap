@@ -1,5 +1,6 @@
 import { match } from "ts-pattern";
 
+import type * as Horn from "./horn";
 import { Build } from "./solver/ivl/build";
 import { Patterns } from "./solver/ivl/patterns";
 import type { IVL } from "./solver/ivl/types";
@@ -8,7 +9,7 @@ import { Solver, type Model } from "./solver/v2/solver";
 export type Validity = { tag: "valid" } | { tag: "invalid"; model: Model } | { tag: "unknown"; reason: string };
 
 export const Validity = {
-	check: (formula: IVL.Formula): Validity => prove([], formula),
+	check: (formula: IVL.Formula, assignment?: Horn.Assignment): Validity => prove([], formula, assignment),
 
 	display: (validity: Validity): string =>
 		match(validity)
@@ -18,16 +19,16 @@ export const Validity = {
 			.exhaustive(),
 };
 
-const prove = (assumptions: readonly IVL.Formula[], formula: IVL.Formula): Validity =>
+const prove = (assumptions: readonly IVL.Formula[], formula: IVL.Formula, assignment?: Horn.Assignment): Validity =>
 	match(formula)
-		.with(Patterns.Formula.And, ({ values }) => combine(values.map(f => prove(assumptions, f))))
-		.with(Patterns.Formula.Forall, ({ body }) => proveGuarded(assumptions, body))
-		.otherwise(goal => discharge(assumptions, goal));
+		.with(Patterns.Formula.And, ({ values }) => combine(values.map(f => prove(assumptions, f, assignment))))
+		.with(Patterns.Formula.Forall, ({ body }) => proveGuarded(assumptions, body, assignment))
+		.otherwise(goal => discharge(assumptions, goal, assignment));
 
-const proveGuarded = (assumptions: readonly IVL.Formula[], formula: IVL.Formula): Validity =>
+const proveGuarded = (assumptions: readonly IVL.Formula[], formula: IVL.Formula, assignment?: Horn.Assignment): Validity =>
 	match(formula)
-		.with(Patterns.Formula.Implies, ({ left, right }) => proveGuarded([...assumptions, left], right))
-		.otherwise(goal => prove(assumptions, goal));
+		.with(Patterns.Formula.Implies, ({ left, right }) => proveGuarded([...assumptions, left], right, assignment))
+		.otherwise(goal => prove(assumptions, goal, assignment));
 
 const combine = (results: readonly Validity[]): Validity =>
 	match(results.find(r => r.tag === "invalid"))
@@ -38,8 +39,8 @@ const combine = (results: readonly Validity[]): Validity =>
 				.otherwise(() => ({ tag: "valid" })),
 		);
 
-const discharge = (assumptions: readonly IVL.Formula[], goal: IVL.Formula): Validity =>
-	match(Solver.check(Build.and(...assumptions, Build.not(goal))))
+const discharge = (assumptions: readonly IVL.Formula[], goal: IVL.Formula, assignment?: Horn.Assignment): Validity =>
+	match(Solver.check(Build.and(...assumptions, Build.not(goal)), assignment))
 		.with({ tag: "unsat" }, () => ({ tag: "valid" }) satisfies Validity)
 		.with({ tag: "sat" }, ({ model }) => ({ tag: "invalid", model }) satisfies Validity)
 		.with({ tag: "unknown" }, ({ reason }) => ({ tag: "unknown", reason }) satisfies Validity)
