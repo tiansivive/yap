@@ -12,7 +12,7 @@ import * as E from "fp-ts/Either";
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import type { VerificationArtefacts } from "./types";
-import { reader, fail, logger, obligations, supply, type Verification } from "./effects";
+import { reader, fail, logger, obligations, supply, VC, type Verification } from "./effects";
 import { collectSigmaBindings, noCapture } from "./utils/context";
 import { wrapPsiRequirement, extractModalities, meet, propagate } from "./utils/refinements";
 import { synth } from "./synth";
@@ -63,17 +63,18 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 						(function* () {
 							const extended = yield* reader.ask();
 							const tyBody = yield* NF.apply(type.binder, type.closure, NF.Constructors.Rigid(ctx.env.length));
-							const artefacts = yield* check(term.body, tyBody);
-
-							const modalities = yield* extractModalities(annotation, extended);
+							const body = check(term.body, tyBody);
 							if (isMatching(NF.View.Sealed({ type: "Abs" }), yield* NF.view(annotation))) {
-								return artefacts;
+								return yield* body;
 							}
 
+							const modalities = yield* extractModalities(annotation, extended);
 							const sort = yield* mkSort(annotation);
 							const applied = yield* NF.reduce(modalities.liquid, NF.Constructors.Rigid(ctx.env.length), "Explicit");
 							const phi = yield* formula(applied);
-							const imp = yield* obligations.record("check.abs.quantification", Build.forall([{ name, sort }], Build.implies(phi, artefacts.vc)), {
+							const binder = VC.forall({ name, sort }, phi);
+							const artefacts = yield* binder.under(body);
+							const imp = yield* obligations.record("check.abs.quantification", yield* binder.close(artefacts.vc), {
 								type: p(() => NF.display(type)),
 								description: `Function term must satisfy body's postcondition under the precondition on ${term.binding.variable}`,
 							});
@@ -250,15 +251,14 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					})
 					.otherwise(function* ([[variable, binderTy], ...rest]) {
 						const name = yield* supply.freshFrom(variable);
-						const vc = yield* scope(name, { type: "Lambda", variable }, binderTy, telescope(rest));
-						return yield* quantify(name, binderTy, vc);
+						const binder = yield* quantify(name, binderTy);
+						const vc = yield* binder.under(scope(name, { type: "Lambda", variable }, binderTy, telescope(rest)));
+						return yield* binder.close(vc);
 					});
 			};
 
-			const quantified = yield* telescope(binders);
-
-			const freshVar = yield* supply.freshNum();
-			const vc = yield* quantify(freshVar, met, quantified);
+			const matched = yield* quantify(yield* supply.freshNum(), met);
+			const vc = yield* matched.close(yield* matched.under(telescope(binders)));
 			const combinedVc = Build.and(scrutineeArtefacts.vc, patternArtefacts.vc, vc);
 
 			return { vc: combinedVc } satisfies VerificationArtefacts;

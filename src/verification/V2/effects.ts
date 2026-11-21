@@ -5,6 +5,8 @@ import * as M from "@yap/elaboration/shared/effects";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
+import type { Horn } from "../horn";
+import { Build } from "../solver/ivl/build";
 import type { IVL } from "../solver/ivl/types";
 import type { Obligation } from "./types";
 import { P } from "ts-pattern";
@@ -167,6 +169,41 @@ export const names = Eff.reader<ReadonlyMap<number, string>, "VC.Names">("VC.Nam
 export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
 export const definitions = Eff.reader<ReadonlyMap<number, NF.Value>, "VC.Definitions">("VC.Definitions");
 
+const hypotheses = Eff.reader<readonly Horn.Frame[], "VC.Hypotheses">("VC.Hypotheses");
+type RequireAction = Eff.Action<"VC.require", Horn.Constraint, IVL.Formula>;
+
+export type Quantifier = {
+	under: <A>(program: Verification<A>) => Verification<A>;
+	close: (vc: IVL.Formula) => Verification<IVL.Formula>;
+};
+
+export const VC = {
+	forall: (binder: IVL.Binder, predicate?: IVL.Formula, record: Quantifier["close"] = Eff.of): Quantifier => ({
+		under: program =>
+			hypotheses.local(
+				path => (predicate ? [...path, { tag: "forall", binder }, { tag: "assume", predicate }] : [...path, { tag: "forall", binder }]),
+				program,
+			),
+		close: vc => record(Build.forall([binder], predicate ? Build.implies(predicate, vc) : vc)),
+	}),
+	require: function* (goal: IVL.Formula): Verification<IVL.Formula> {
+		const scope = yield* hypotheses.ask();
+		return yield* Eff.ctl.action<RequireAction>("VC.require", { scope, goal });
+	},
+	handlers: (): Eff.Handler<RequireAction, Horn.Constraint[]> => {
+		const emitted: Horn.Constraint[] = [];
+		return {
+			clauses: {
+				"VC.require": constraint => {
+					emitted.push(constraint);
+					return Eff.ctl.resume(constraint.goal);
+				},
+			},
+			output: () => emitted,
+		};
+	},
+};
+
 const heads = { empty: "$empty", insert: "$insert" } as const;
 
 export const State = {
@@ -192,6 +229,8 @@ export type Verification<A> = Eff.Eff<
 	| Eff.Actions<typeof M.supply>
 	| Eff.Actions<typeof state>
 	| Eff.Actions<typeof definitions>
+	| Eff.Actions<typeof hypotheses>
+	| RequireAction
 	| Eff.Actions<typeof except>
 	| LoggerActions
 	| RecordAction
@@ -240,12 +279,14 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 		const outer = yield* Eff.traverse([...ctx.env].reverse(), entry => supply.freshFrom(entry.name.variable));
 		return yield* names.local(() => new Map(outer.map((name, lvl) => [lvl, name])), program());
 	};
-	const [answer, , registrySnapshot, , , collected] = Eff.run(initialized, [
+	const [answer, , registrySnapshot, , , collected, emitted] = Eff.run(initialized, [
 		reader.handlers(context),
 		Metas.registry.handlers(registry),
 		except.handlers(),
 		logger.handlers(options.logging ?? false),
 		obligations.handlers(),
+		VC.handlers(),
+		hypotheses.handlers([]),
 		supply.handlers(),
 		names.handlers(new Map()),
 		state.handlers(options.state ?? context.ffi[State.heads.empty].compute()),
@@ -253,5 +294,5 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 		M.supply.handlers({ meta: Object.values(registry).reduce((max, entry) => Math.max(max, entry.meta.val), 0) }),
 	]);
 
-	return { answer, obligations: collected, registry: registrySnapshot } as const;
+	return { answer, obligations: collected, constraints: emitted, registry: registrySnapshot } as const;
 };

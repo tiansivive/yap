@@ -28,7 +28,7 @@ import {
 import { Patterns } from "../../solver/ivl/patterns";
 import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
-import { reader, obligations, names, state, State, definitions, supply, type Verification } from "../effects";
+import { reader, obligations, names, state, State, definitions, supply, type Verification, type Quantifier, VC } from "../effects";
 
 const BooleanExternal = { ...NF.Patterns.External, name: P.union(OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LTE, OP_GTE, OP_AND, OP_OR, OP_NOT, OP_LIVE) } as const;
 const ForeignConstant = { ...NF.Patterns.External, arity: 0, args: [] } as const;
@@ -431,19 +431,25 @@ export const scope = function* <A>(name: string, binder: EB.Binder, annotation: 
 };
 
 /* The annotation is read in the binder's outer scope; its refinement is translated inside that binder. */
-export const quantify = function* (name: string, annotation: NF.Value, vc: IVL.Formula): Verification<IVL.Formula> {
+export const quantify = function* (name: string, annotation: NF.Value): Verification<Quantifier> {
 	const ctx = yield* reader.ask();
 	return yield* match(yield* NF.view(annotation))
-		.with(NF.View.Sealed({ type: "Existential" }), function* ({ value: ex }) {
+		.with(NF.View.Sealed({ type: "Existential" }), function* ({ value: ex }): Verification<Quantifier> {
 			const existential = yield* supply.freshFrom(ex.variable);
 			const inner = yield* reader.local(
 				() => ex.body.ctx,
-				scope(existential, { type: "Pi", variable: ex.variable }, ex.annotation, quantify(name, ex.body.value, vc)),
+				scope(existential, { type: "Pi", variable: ex.variable }, ex.annotation, quantify(name, ex.body.value)),
 			);
-			return yield* reader.local(() => ex.body.ctx, quantify(existential, ex.annotation, inner));
+			const outer = yield* reader.local(() => ex.body.ctx, quantify(existential, ex.annotation));
+			return {
+				under: body => outer.under(inner.under(body)),
+				close: function* (vc) {
+					return yield* outer.close(yield* inner.close(vc));
+				},
+			};
 		})
-		.with(NF.View.Sealed(NF.Patterns.Pi), NF.View.Sealed(NF.Patterns.Psi), function* () {
-			return vc;
+		.with(NF.View.Sealed(NF.Patterns.Pi), NF.View.Sealed(NF.Patterns.Psi), function* (): Verification<Quantifier> {
+			return { under: body => body, close: Eff.of };
 		})
 		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: { modalities } }) {
 			const sort = yield* mkSort(annotation);
@@ -457,15 +463,11 @@ export const quantify = function* (name: string, annotation: NF.Value, vc: IVL.F
 					return yield* formula(applied);
 				})(),
 			);
-			return yield* obligations.record(`quantify:${name}`, Build.forall([{ name, sort }], Build.implies(phi, vc)), {
-				description: `Quantifying refined ${name}`,
-			});
+			return VC.forall({ name, sort }, phi, vc => obligations.record(`quantify:${name}`, vc, { description: `Quantifying refined ${name}` }));
 		})
 		.otherwise(function* () {
 			const sort = yield* mkSort(annotation);
-			return yield* obligations.record(`quantify:${name}`, Build.forall([{ name, sort }], vc), {
-				description: `Quantifying over ${name}`,
-			});
+			return VC.forall({ name, sort }, undefined, vc => obligations.record(`quantify:${name}`, vc, { description: `Quantifying over ${name}` }));
 		});
 };
 

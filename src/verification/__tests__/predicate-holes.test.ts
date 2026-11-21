@@ -8,7 +8,7 @@ import { mkCtx } from "../../elaboration/inference/__tests__/util";
 import { run } from "../V2/effects";
 import { scope, term } from "../V2/logic/translate";
 import { VerificationServiceV2 } from "../V2/service";
-import { Build, Print } from "../solver/ivl";
+import { Build, Print, type IVL } from "../solver/ivl";
 import { Solver } from "../solver/v2/solver";
 import { Validity } from "../validity";
 
@@ -41,6 +41,18 @@ describe("Open predicate translation", () => {
 		const row = Build.row(Build.rowExtend("field", Build.prop(open), Build.rowEmpty), Build.Row);
 		const nested = Build.atom("=", Build.app("f", [row], Build.Bool), x);
 		expect(Solver.check(nested)).toEqual({ tag: "unknown", reason: `Unsolved predicate ?${predicateId}` });
+	});
+
+	it("reads a solved predicate at its actual argument inside an application", () => {
+		const kappa = 7;
+		const param = { name: "x", sort: Build.Int };
+		const positive = Build.atom(">", Build.var_(param.name, param.sort), Build.num(0, Build.Int));
+		const assignment = new Map([[kappa, { params: [param], body: positive }]]);
+		const wrapped = (arg: IVL.Term) => Build.app("f", [Build.num(3, Build.Int), arg], Build.Int);
+		const input = Build.hole(kappa, [Build.num(-1, Build.Int)]);
+		const formula = Build.atom("=", wrapped(input), wrapped(Build.bool(false)));
+		expect(Validity.check(formula, assignment).tag).toBe("valid");
+		expect(Validity.check(formula).tag).toBe("unknown");
 	});
 
 	it.each([

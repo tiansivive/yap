@@ -1,4 +1,5 @@
 import assert from "node:assert";
+import { isMatching } from "ts-pattern";
 import { describe, expect, it } from "vitest";
 
 import * as Eff from "@yap/utils/effects";
@@ -20,6 +21,37 @@ describe("Branch contracts", () => {
 		[String.raw`Bool [| \b -> b |]`, "valid"],
 	] as const)("uses branch facts under the parameter contract %s", (parameter, expected) => {
 		expect(verify(String.raw`let served: ${parameter} -> Num = \b -> match b | true -> 0 | false -> ask !;`)).toBe(expected);
+	});
+
+	it("emits each callback argument constraint under its own match guard", () => {
+		const [guarded] = elaborateModule(
+			String.raw`let guarded: (get: String -> Num) -> Bool -> Num = \get b -> match b | true -> get "yes" | false -> get "no";`,
+		).declarations;
+		assert(guarded.elaborated, guarded.error);
+		const { tm, ty, ctx, registry } = guarded.elaborated;
+		const { answer, constraints } = VerificationServiceV2().letdec("guarded", tm, ty, ctx, registry);
+		assert(!Eff.failed(answer));
+
+		const input = { tag: "Hole", spine: [{ tag: "Var", sort: { tag: "String" } }] } as const;
+		const uses = constraints.flatMap(({ scope, goal }) => {
+			if (!isMatching({ tag: "Atom", op: "=", args: [input, { tag: "Bool", value: true }] }, goal)) {
+				return [];
+			}
+			const [hole] = goal.args;
+			const guards = scope.flatMap(f => (f.tag === "assume" && f.predicate.tag !== "True" ? [f.predicate] : []));
+			return [{ hole, guards }];
+		});
+		expect(uses).toHaveLength(2);
+		expect(uses[0].hole.kappa).toBe(uses[1].hole.kappa);
+		expect(uses.map(({ guards }) => guards)).toMatchObject(
+			[
+				[true, "yes"],
+				[false, "no"],
+			].map(([value, key]) => [
+				{ tag: "And", values: [{ tag: "Atom" }, { tag: "Atom", args: [{ tag: "Var" }, { tag: "Bool", value }] }] },
+				{ tag: "Atom", args: [{ tag: "Var" }, { tag: "Str", value: key }] },
+			]),
+		);
 	});
 });
 

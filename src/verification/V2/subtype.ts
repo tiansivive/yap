@@ -11,7 +11,7 @@ import { Build } from "../solver/ivl/build";
 import { Liquid } from "../modalities";
 import { wrapPsiRequirement, extractModalities, isFirstOrder } from "./utils/refinements";
 import { noCapture, withRowLabels } from "./utils/context";
-import { reader, fail, logger, obligations, supply, type Verification } from "./effects";
+import { reader, fail, logger, obligations, supply, VC, type Verification } from "./effects";
 import { mkSort, formula, quantify, scope } from "./logic/translate";
 
 export const subtype = function* (left: NF.Value, right: NF.Value): Verification<IVL.Formula> {
@@ -119,7 +119,7 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			return Build.true_();
 		})
 		.with([NF.Patterns.Lit, NF.Patterns.Lit], function* ([{ value: v1 }, { value: v2 }]) {
-			return isEqual(v1, v2) ? Build.true_() : Build.false_();
+			return isEqual(v1, v2) ? Build.true_() : yield* VC.require(Build.false_());
 		})
 		.with([NF.Patterns.Rigid, NF.Patterns.Rigid], function* ([rigid1, rigid2]) {
 			if (rigid1.variable.lvl === rigid2.variable.lvl) {
@@ -211,9 +211,10 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			const anf = yield* NF.apply(at.binder, at.closure, NF.Constructors.Rigid(lvl));
 			const bnf = yield* NF.apply(bt.binder, bt.closure, NF.Constructors.Rigid(lvl));
 			const name = yield* supply.freshFrom(bt.binder.variable);
-			const vcBody = yield* scope(name, bt.binder, annotationB, subtype(anf, bnf));
+			const body = scope(name, bt.binder, annotationB, subtype(anf, bnf));
 
 			if (!(yield* isFirstOrder(annotationB))) {
+				const vcBody = yield* body;
 				yield* obligations.record("subtype.pi.nonrefinable", vcBody, {
 					type: `${display(() => NF.display(at))} <: ${display(() => NF.display(bt))}`,
 					description: `Function result must be subtype (non-refinable parameter ${bt.binder.variable})`,
@@ -227,7 +228,9 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			const applied = yield* NF.reduce(modalities.liquid, NF.Constructors.Rigid(lvl), "Explicit");
 			const phiX = yield* scope(name, bt.binder, annotationB, formula(applied));
 
-			const guarded = yield* obligations.record("subtype.pi.body", Build.forall([{ name, sort }], Build.implies(phiX, vcBody)), {
+			const binder = VC.forall({ name, sort }, phiX);
+			const vcBody = yield* binder.under(body);
+			const guarded = yield* obligations.record("subtype.pi.body", yield* binder.close(vcBody), {
 				type: `${display(() => NF.display(at))} <: ${display(() => NF.display(bt))}`,
 				description: `Function result must be subtype under parameter ${bt.binder.variable} assumption`,
 			});
@@ -240,8 +243,9 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 
 		.with([{ type: "Existential" }, P._], function* ([sig, ty]) {
 			const name = yield* supply.freshFrom(sig.variable);
-			const vc = yield* scope(name, { type: "Pi", variable: sig.variable }, sig.annotation, subtype(sig.body.value, ty));
-			return yield* quantify(name, sig.annotation, vc);
+			const binder = yield* quantify(name, sig.annotation);
+			const vc = yield* binder.under(scope(name, { type: "Pi", variable: sig.variable }, sig.annotation, subtype(sig.body.value, ty)));
+			return yield* binder.close(vc);
 		})
 		.with([P._, { type: "Existential" }], function* ([ty, sig]) {
 			return yield* scope(yield* supply.freshFrom(sig.variable), { type: "Pi", variable: sig.variable }, sig.annotation, subtype(ty, sig.body.value));
@@ -268,7 +272,8 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 					return [yield* formula(appliedAt), yield* formula(appliedBt)];
 				})(),
 			);
-			const forall = Build.forall([{ name, sort }], Build.implies(phiAt, phiBt));
+			const binder = VC.forall({ name, sort }, phiAt);
+			const forall = yield* binder.close(yield* binder.under(VC.require(phiBt)));
 			return Build.and(baseVc, forall);
 		})
 		.with([{ type: "Modal" }, P._], function* ([at, bt]) {

@@ -22,6 +22,7 @@ import { emit as emitErl } from "../../Codegen/v2/erlang/emit";
 import { print as printErl } from "../../Codegen/v2/erlang/print";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as Sub from "../../elaboration/unification/substitution";
+import { Horn } from "../../verification/horn";
 import { VerificationServiceV2 } from "../../verification/V2/service";
 import { Build } from "../../verification/solver/ivl/build";
 import { Print as IVLPrint } from "../../verification/solver/ivl/print";
@@ -274,29 +275,33 @@ export const run = (source: string, opts: Options): Result => {
 		"Verification / IVL",
 		() => {
 			const svc = VerificationServiceV2();
-			const { answer } = svc.check(tm, ty, ctx, elabRegistry);
+			const { answer, constraints } = svc.check(tm, ty, ctx, elabRegistry);
 
 			if (Eff.failed(answer)) {
 				return undefined;
 			}
-			return answer;
+			return { vc: answer.vc, constraints };
 		},
 		errors,
 	);
 
 	if (ivlArtefacts) {
-		result.ivl = attempt("Verification / IVL display", () => IVLPrint.formula(ivlArtefacts.vc), errors) ?? "";
-		result.validity = attempt("Verification / validity", () => Validity.display(Validity.check(ivlArtefacts.vc)), errors) ?? "";
+		const { vc, constraints } = ivlArtefacts;
+		result.ivl = attempt("Verification / IVL display", () => IVLPrint.formula(vc), errors) ?? "";
+		const assignment = attempt("Verification / Horn inference", () => Horn.solve(constraints), errors);
+		if (assignment) {
+			result.validity = attempt("Verification / validity", () => Validity.display(Validity.check(vc, assignment)), errors) ?? "";
 
-		result.solverTrace =
-			attempt(
-				"Verification / solver trace",
-				() => {
-					const checked = Solver.run(ivlArtefacts.vc);
-					return Replay.replay({ formula: IVLPrint.formula(ivlArtefacts.vc), steps: checked.steps, encoding: checked.encoding, arena: checked.arena });
-				},
-				errors,
-			) ?? "";
+			result.solverTrace =
+				attempt(
+					"Verification / solver trace",
+					() => {
+						const checked = Solver.run(vc, assignment);
+						return Replay.replay({ formula: IVLPrint.formula(vc), steps: checked.steps, encoding: checked.encoding, arena: checked.arena });
+					},
+					errors,
+				) ?? "";
+		}
 	}
 
 	const arities = Pipeline.deriveAritiesFromContext(ctx);
